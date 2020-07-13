@@ -1,5 +1,5 @@
 # x264 or x265 presets comparer
-A command line program that automates the testing of x264 presets with FFmpeg. A for-loop is used to encode the chosen video with every preset from "veryslow" to "ultrafast. This saves you from manually having to start a new encode with each preset. Also, the time taken for each preset, the resulting file size and the product of the two is logged to a .txt file.
+A command line program that automates the testing of x264 or x265 presets with FFmpeg. A for-loop is used to encode the chosen video with every preset from "veryslow" to "ultrafast. This saves you from manually having to start a new encode with each preset. Also, the time taken for each preset, the resulting file size and the product of the two is logged to a .txt file.
 # Features
 - Automatically encodes your chosen video file with each preset from "veryslow" to "ultrafast". 
 - Choose whether you want the libx264 or libx265 encoder to be used.
