@@ -9,10 +9,10 @@ A command line program that automates the testing of x264 presets with FFmpeg. A
 
 *If you want to change which presets are tested, simply edit the `presets` list in preset-comparer.py*
 # Requirements
-Python 3.6+
-FFmpeg installed and in your PATH.
-`pip install PrettyTable`
-# Output .txt file example
+- Python 3.6+
+- FFmpeg installed and in your PATH.
+- `pip install PrettyTable`
+# Example
 Below is an example of the type of .txt file that is produced. I chose to encode 5 seconds of the video:
 ```
 You chose to encode trim2.mp4 for 5 seconds using libx264 with a CRF of 23.
