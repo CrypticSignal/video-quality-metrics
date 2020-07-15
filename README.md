@@ -11,7 +11,7 @@ A command line program that automates the testing of x264 or x265 presets with F
 *If you want to change which presets are tested, simply edit the `presets` list in preset-comparer.py*
 # Requirements
 - Python 3.6+
-- FFmpeg installed and in your PATH.
+- FFmpeg installed and in your PATH. The build of FFmpeg must have `--enable-libvmaf` in the configuration. If you're on Windows, you can download a compatible FFmpeg binary by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
 - `pip install PrettyTable`
 # Example
 Below is an example of the type of .txt file that is produced. I chose to encode 5 seconds of the video:
