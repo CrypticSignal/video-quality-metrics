@@ -4,7 +4,7 @@ A command line program that automates the testing of x264 or x265 presets with F
 - Automatically encodes your chosen video file with each preset from "veryslow" to "ultrafast". 
 - Choose whether you want the libx264 or libx265 encoder to be used.
 - Choose the CRF value to be used.
-- You can choose to only encode x seconds of the video, if you want to save time.
+- You can choose whether you want the whole video to be encoded or just a certain amount of seconds.
 - The time taken for each preset, the resulting file size and other data is saved to a .txt file.
 
 *If you want to change which presets are tested, simply edit the `presets` list in preset-comparer.py*
