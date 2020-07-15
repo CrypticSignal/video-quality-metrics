@@ -6,6 +6,7 @@ A command line program that automates the testing of x264 or x265 presets with F
 - Choose the CRF value to be used.
 - You can choose whether you want the whole video to be encoded or just a certain amount of seconds.
 - The time taken for each preset, the resulting file size and other data is saved to a .txt file.
+- NEW: Compare VMAF.
 
 *If you want to change which presets are tested, simply edit the `presets` list in preset-comparer.py*
 # Requirements
