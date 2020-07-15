@@ -1,108 +1,119 @@
-import time, os
+import argparse, time, os, json
 from prettytable import PrettyTable
 
 def separator():
 	print('-----------------------------------------------------------------------------------------------------------') 
 
 separator()
-print('This program must be in the same directory as the video file that you want to encode. '
-		'If it\'s not, close this window and make sure that this is the case before re-opening this program.')
+print("Example of how to use: "
+	"'python compare-presets.py -path C:/Users/H/Desktop/file.mp4 -encoder libx264 -crf 23 -t 60'")
+print("For more information, enter 'compare-presets.py -h'")
 separator()
 
-encoders = ['libx264', 'libx265']
-# Remove presets that you don't want to be tested.
-presets = ['veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast']
-# Add extensions if necessary.
-video_extensions = ['mp4', 'mkv', 'mov', 'flv', 'wmv', 'avi', 'webm', 'MTS']
+parser = argparse.ArgumentParser(description='Compare the encoding time, resulting filesize and (optionally) the VMAF '
+	'value obtained with the different encoder presets: '
+	"'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast' and 'ultrafast'. "
+	'You can edit the presets that are tested by editing the presets list in line 50 of compare-presets.py')
+
+parser.add_argument('-path', '--video-path', type=str, required=True, help='Enter the path of the video.')
+
+parser.add_argument('-encoder', '--video-encoder', type=str, required=True, choices=['libx264', 'libx265'],
+	help='Specify the encoder to use. Must enter libx264 or libx265')
+
+parser.add_argument('-crf', '--crf-value', type=str, required=True, help='Enter the CRF value to be used.')
+
+parser.add_argument('-t', '--encoding-time', type=str, help='Encode this many seconds of the video.')
+
+parser.add_argument('-vmaf', '--calculate-vmaf', action='store_true', 
+	help='Specify this argument if you want the VMAF value to be calculated for each preset. '
+	'(drastically increases completion time)')
+
+args = parser.parse_args()
 
 # Initialise the comparison table that will be created.
 table = PrettyTable()
-table.field_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original', 'Product of Time and Size']
 
-print('The following video files found in the current directory:')
-separator()
+filename = args.video_path.split('/')[-1]
+print(f'File: {filename}')
+ext = os.path.splitext(filename)[-1]
+characters_to_remove = len(ext)
+name_without_ext = filename[:- characters_to_remove]
 
-video_files = [filename for filename in os.listdir() if filename.split(".")[-1] in video_extensions]
-num_video_files = len(video_files)
+# A .txt file will be created that contains certain information and the comparison table.
 
-if num_video_files >= 1:
-
-	for position, file in enumerate(video_files):
-		print(position, file)
-
-	separator()
-	chosen_file = input('Select the video you wish to encode by entering the number that appears before it: ')
-	video = video_files[int(chosen_file)]
-	print(f'You chose {video}')
-	separator()
-
+if not args.encoding_time:
+	txt_file_message = ''
 else:
-	print('No video files found in the current directory.')
+	txt_file_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
-original_video_size = os.path.getsize(video) / 1_000_000
+with open(f'[CRF {args.crf_value}] {name_without_ext} [Presets Log].txt', 'w') as f:
+	f.write(f'You chose to encode {args.video_path}{txt_file_message} using {args.video_encoder} '
+		f'with a CRF of {args.crf_value}.\n')
 
-print('The file can be encoded using one of the following encoders:')
+# This will be used when comparing the size of the encoded file to the original.
+original_video_size = os.path.getsize(args.video_path) / 1_000_000
 
-for position, encoder in enumerate(encoders):
-    print(position, encoder)
-
-encoder = input('Enter 0 or 1, depending on which encoder you want to be used: ').strip()
-encoder = 'libx264' if encoder == '0' else 'libx265'
-print(f'You chose {encoder}')
-separator()
-
-crf_value = input('Enter a CRF value to use (0-51): ')
-print(f'A CRF value of {crf_value} will be used.')
-separator()
-
-encoding_time = input('Desired encoding time in seconds (enter 0 if you want to encode the whole file): ').strip()
-
-ext = video.split('.')[-1]
-characters_to_remove = len(ext) + 1
-name_without_ext = video[:- characters_to_remove]
-
-if encoding_time.strip() == '0':
-	log_file_message = ''
-else:
-	log_file_message = f' for {encoding_time} seconds' if int(encoding_time) > 1 else 'for 1 second'
-
-with open(f'[CRF {crf_value}] {name_without_ext} [Presets Log].txt', 'a') as f:
-	f.write(f'You chose to encode {video}{log_file_message} using {encoder} with a CRF of {crf_value}.\n')
-
-time_encodings_began = time.time()
+# Remove the presets that you don't want to be tested.
+presets = ['veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast']
 
 for preset in presets:
 
-	encoding_time_flag = f'-t {encoding_time}' if encoding_time != '0' else ''
-	output_filename = f'"{name_without_ext} [{preset}].mkv"'
+	encoding_time_flag = f'-t {args.encoding_time}' if args.encoding_time else ''
+	print(encoding_time_flag)
+	output_filename = f'{name_without_ext} [{preset}].mkv'
+
+	separator()
+	print(f'Encoding with preset {preset}...')
 
 	start_time = time.time()
-	print(f'Encoding with preset {preset}...')
-	os.system(f'ffmpeg -hide_banner -y -i "{video}" {encoding_time_flag} -c:v {encoder} -crf {crf_value} \
-		-preset {preset} -c:a copy -movflags +faststart {output_filename}')
-		
+
+	os.system(f'ffmpeg -loglevel warning -stats -y -i "{args.video_path}" {encoding_time_flag} '
+		f'-c:v {args.video_encoder} -crf {args.crf_value} -preset {preset} -c:a copy -c:s copy '
+		f'-movflags +faststart "{output_filename}"')
+
 	end_time = time.time()
 	time_to_convert = end_time - start_time
 	time_rounded = round(time_to_convert, 2)
+	print('Done!')
 
-	size_of_file = os.path.getsize(f'{name_without_ext} [{preset}].mkv') / 1_000_000
+	size_of_file = os.path.getsize(output_filename) / 1_000_000
 	size_compared_to_original = round(((size_of_file / original_video_size) * 100), 2) 
 	size_rounded = round(size_of_file, 2)
-	
 	product = round(time_to_convert * size_of_file, 2)
 
-	table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%', product])
+	if args.calculate_vmaf: # -vmaf argument specified
 
-time_encodings_finished = time.time()
-total_time = round((time_encodings_finished - time_encodings_began), 1)
+		separator()
+		print(f'Calculating VMAF with preset {preset}...')
 
-with open(f'[CRF {crf_value}] {name_without_ext} [Presets Log].txt', 'a') as f:
+		vmaf_start_time = time.time()
+
+		os.system(f'ffmpeg -loglevel warning -stats -i "{output_filename}" -i "{args.video_path}" '
+			f'-lavfi libvmaf=model_path=vmaf_v0.6.1.pkl:log_path=vmaf.json:log_fmt=json -report -f null -')
+
+		vmaf_end_time = time.time()
+		calculation_time = round(vmaf_end_time - vmaf_start_time, 1)
+		print(f'Time taken to calculate VMAF: {calculation_time} seconds.')
+
+		with open('vmaf.json', 'r') as f:
+			my_json_dict = json.load(f)
+
+		vmaf = round(my_json_dict['VMAF score'], 2)
+
+		table.field_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original',
+			'Product of Time and Size', 'VMAF']
+
+		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%', product, vmaf])
+
+	else: # -vmaf argument not specified.
+
+		table.field_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original',
+			'Product of Time and Size']
+
+		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%', product])
+		
+with open(f'[CRF {args.crf_value}] {name_without_ext} [Presets Log].txt', 'a') as f:
 	f.write(table.get_string())
 
-
-with open(f'[CRF {crf_value}] {name_without_ext} [Presets Log].txt', 'a') as f:
-	f.write(f'\nTime taken to encode with all presets: {total_time} seconds.')
-
-print(f'Done! Time taken to encode with all presets: {total_time} seconds.')
-print(f'Log file saved as [CRF {crf_value}] {name_without_ext} [Presets Log].txt')
+print(f'Done! Log file saved as [CRF {args.crf_value}] {name_without_ext} [Presets Log].txt')
 input('You may now close this window.')
