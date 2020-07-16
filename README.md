@@ -1,9 +1,9 @@
 # Compare x264 or x265 presets
-A command line program that automates the testing of x264 or x265 presets with FFmpeg. A for-loop is used to encode the chosen video with every preset apart from 'placebo' ('veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast' and 'ultrafast'). This saves you from manually having to start a new encode with each preset. You can change the presets that are testing by simply editing the list in line 2 of compare-presets.py. The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage) and (optionally) the VMAF value of each encode is presented in a table.
+A command line program that automates the testing of x264 or x265 presets with FFmpeg. A for-loop is used to encode the chosen video with every preset apart from 'placebo' ('veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast' and 'ultrafast'). This saves you from manually having to start a new encode with each preset. The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage) and (optionally) the VMAF value of each encode is presented in a table. **You can change the presets that are tested by editing the list on line 2 of compare-presets.py**. 
 # Features
 - Automatically encodes a video file with each preset ('veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast' and 'ultrafast').
 
-*If you want to change which presets are tested, simply edit the `presets` list in preset-comparer.py*
+*If you want to change which presets are tested, simply edit the `presets` list on line 2 of preset-comparer.py*
 - Choose whether you want the libx264 or libx265 encoder to be used.
 - Choose the CRF value to be used.
 - You can choose whether you want the whole video to be encoded or just a certain amount of seconds.
