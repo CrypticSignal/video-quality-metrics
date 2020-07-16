@@ -1,5 +1,5 @@
 # Compare x264 or x265 presets
-A command line program that automates the testing of x264 or x265 presets with FFmpeg. A for-loop is used to encode the chosen video with every preset from "veryslow" to "ultrafast. This saves you from manually having to start a new encode with each preset. Also, the time taken for each preset, the resulting file size and the product of the two is logged to a .txt file.
+A command line program that automates the testing of x264 or x265 presets with FFmpeg. A for-loop is used to encode the chosen video with every preset apart from 'placebo' ('veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast' and 'ultrafast'). This saves you from manually having to start a new encode with each preset. You can change the presets that are testing by simply editing the list in line 2 of compare-presets.py. The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage) and (optionally) the VMAF value of each encode is presented in a table.
 # Features
 - Automatically encodes a video file with each preset ('veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast' and 'ultrafast').
 
@@ -7,8 +7,7 @@ A command line program that automates the testing of x264 or x265 presets with F
 - Choose whether you want the libx264 or libx265 encoder to be used.
 - Choose the CRF value to be used.
 - You can choose whether you want the whole video to be encoded or just a certain amount of seconds.
-- The time taken for each preset, the resulting file size and other data is saved to a .txt file.
-- NEW: Compare VMAF.
+- The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage) and (optionally) the VMAF value of each encode is presented in a table.
 # How to use
 ```
 Arguments in square brackets are optional:
@@ -20,7 +19,7 @@ python compare-presets.py -path "C:/Users/H/Desktop/file 1.mp4" -encoder libx264
 optional arguments:
   -h, --help            show this help message and exit
   -path VIDEO_PATH, --video-path VIDEO_PATH
-                        Enter the path of the video.
+                        Enter the path of the video. A relative or absolute path can be specified. If the path contains a space, it might be surrounded in double quotes.
   -encoder {libx264,libx265}, --video-encoder {libx264,libx265}
                         Specify the encoder to use. Must enter libx264 or libx265
   -crf CRF_VALUE, --crf-value CRF_VALUE
@@ -48,21 +47,18 @@ optional arguments:
 - FFmpeg installed and in your PATH. The build of FFmpeg must have `--enable-libvmaf` in the configuration. If you're on Windows, you can download a compatible FFmpeg binary by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
 - `pip install PrettyTable`
 # Example
-Below is an example of the type of .txt file that is produced. I chose to encode 5 seconds of the video:
+The table is saved in a .txt file. Here's an example of the type of .txt file that is produced. In this example, I chose to encode only with the presets from 'slow' onwards:
 ```
-You chose to encode trim2.mp4 for 5 seconds using libx264 with a CRF of 23.
-+-----------+-------------------+---------+---------------------------+--------------------------+
-|   Preset  | Encoding Time (s) |   Size  | Size Compared to Original | Product of Time and Size |
-+-----------+-------------------+---------+---------------------------+--------------------------+
-|  veryslow |       57.11       | 1.55 MB |           77.41%          |          88.67           |
-|   slower  |       19.33       | 1.64 MB |           81.64%          |          31.65           |
-|    slow   |       11.25       | 1.68 MB |           83.93%          |          18.93           |
-|   medium  |        8.95       | 1.72 MB |           85.95%          |          15.43           |
-|    fast   |        7.98       | 1.81 MB |           90.25%          |          14.44           |
-|   faster  |        6.56       | 1.82 MB |           90.61%          |          11.92           |
-|  veryfast |        4.33       | 1.64 MB |           82.01%          |           7.13           |
-| superfast |        2.87       | 2.57 MB |          127.93%          |           7.35           |
-| ultrafast |        1.86       | 3.52 MB |          175.59%          |           6.53           |
-+-----------+-------------------+---------+---------------------------+--------------------------+
-Time taken to encode with all presets: 120.2 seconds.
+You chose to encode aqp.mkv using libx264 with a CRF of 23.
++-----------+-------------------+----------+---------------------------+--------------------------+-------+
+|   Preset  | Encoding Time (s) |   Size   | Size Compared to Original | Product of Time and Size |  VMAF |
++-----------+-------------------+----------+---------------------------+--------------------------+-------+
+|    slow   |       228.54      | 28.09 MB |           25.45%          |         6419.36          | 88.03 |
+|   medium  |       162.43      | 28.75 MB |           26.05%          |          4670.3          | 88.01 |
+|    fast   |       117.7       | 30.36 MB |           27.51%          |         3573.64          | 87.82 |
+|   faster  |       97.84       | 28.47 MB |           25.79%          |         2785.08          |  87.6 |
+|  veryfast |       52.06       | 24.59 MB |           22.28%          |         1279.98          | 85.75 |
+| superfast |       38.99       | 45.58 MB |           41.3%           |         1777.32          | 87.24 |
+| ultrafast |       25.45       | 60.17 MB |           54.52%          |         1531.35          | 88.81 |
++-----------+-------------------+----------+---------------------------+--------------------------+-------+
 ```
