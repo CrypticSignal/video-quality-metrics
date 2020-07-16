@@ -8,8 +8,8 @@ def separator():
 	print('-----------------------------------------------------------------------------------------------------------') 
 
 separator()
-print("If the filename of the video or the path contains a space, the path argument must be surrounded in double quotes"
-	"Example: 'python compare-presets.py -path C:/Users/H/Desktop/file.mp4 -encoder libx264 -crf 23 -t 60'")
+print('If the path contains a space, the path argument must be surrounded in double quotes.')
+print('Example: python compare-presets.py -path "C:/Users/H/Desktop/test file.mp4" -encoder libx264 -crf 23 -t 60')
 print("For more information, enter 'compare-presets.py -h'")
 separator()
 
@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser(description='Compare the encoding time, resulti
 
 parser.add_argument('-path', '--video-path', type=str, required=True, help='Enter the path of the video. '
 	'A relative or absolute path can be specified. '
-	'If the path contains a space, it might be surrounded in double quotes.')
+	'If the path contains a space, it must be surrounded in double quotes.')
 
 parser.add_argument('-encoder', '--video-encoder', type=str, required=True, choices=['libx264', 'libx265'],
 	help='Specify the encoder to use. Must enter libx264 or libx265')
