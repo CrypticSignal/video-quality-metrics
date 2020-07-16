@@ -44,7 +44,7 @@ print(f'File: {filename}')
 output_folder = f'({filename})'
 os.makedirs(output_folder, exist_ok=True)
 
-comparison_file_dir = f'{output_folder}/Presets Comparison (CRF {args.crf_value}).txt'
+comparison_file_dir = os.path.join(output_folder, f'Presets Comparison (CRF {args.crf_value}).txt')
 
 if not args.encoding_time:
 	txt_file_message = ''
@@ -62,7 +62,7 @@ for preset in presets:
 
 	encoding_time_flag = f'-t {args.encoding_time}' if args.encoding_time else ''
 	print(encoding_time_flag)
-	output_file_path = f'{output_folder}/{preset}.mkv'
+	output_file_path = os.path.join(output_folder, f'{preset}.mkv')
 
 	separator()
 	print(f'Encoding with preset {preset}...')
@@ -85,8 +85,7 @@ for preset in presets:
 
 	if args.calculate_vmaf: # -vmaf argument specified
 
-		json_file_path = f'{output_folder}/VMAF with preset {preset}.json'
-		json_path_no_quotes = f'"{output_folder}/VMAF with preset {preset}".json'
+		json_file_path = os.path.join(output_folder, f'VMAF with preset {preset}.json')
 
 		separator()
 		print(f'Calculating the VMAF achieved with preset {preset}...')
