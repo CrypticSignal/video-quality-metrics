@@ -13,13 +13,13 @@ A command line program that automates the testing of x264 or x265 presets with F
 Arguments in square brackets are optional:
 python compare-presets.py [-h] -path VIDEO_PATH -encoder {libx264,libx265} -crf CRF_VALUE [-t ENCODING_TIME] [-vmaf]
 
-If there is a space in the path of filename, the path must be surrounded in double quotes. Example:
+If there is a space in the path, it must be surrounded with double quotes. Example:
 python compare-presets.py -path "C:/Users/H/Desktop/file 1.mp4" -encoder libx264 -crf 23 -t 60
 
 optional arguments:
   -h, --help            show this help message and exit
   -path VIDEO_PATH, --video-path VIDEO_PATH
-                        Enter the path of the video. A relative or absolute path can be specified. If the path contains a space, it might be surrounded in double quotes.
+                        Enter the path of the video. A relative or absolute path can be specified. If the path contains a space, it must be surrounded with double quotes.
   -encoder {libx264,libx265}, --video-encoder {libx264,libx265}
                         Specify the encoder to use. Must enter libx264 or libx265
   -crf CRF_VALUE, --crf-value CRF_VALUE
