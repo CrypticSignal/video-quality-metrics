@@ -46,13 +46,13 @@ os.makedirs(output_folder, exist_ok=True)
 
 comparison_file_dir = os.path.join(output_folder, f'Presets Comparison (CRF {args.crf_value}).txt')
 
-if not args.encoding_time:
-	txt_file_message = ''
+if args.encoding_time:
+	time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 else:
-	txt_file_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
+	time_message = ''
 
 with open(comparison_file_dir, 'w') as f:
-	f.write(f'You chose to encode {args.video_path}{txt_file_message} using {args.video_encoder} '
+	f.write(f'You chose to encode {args.video_path}{time_message} using {args.video_encoder} '
 		f'with a CRF of {args.crf_value}.\n')
 
 # This will be used when comparing the size of the encoded file to the original.
@@ -60,18 +60,27 @@ original_video_size = os.path.getsize(args.video_path) / 1_000_000
 
 for preset in presets:
 
-	encoding_time_flag = f'-t {args.encoding_time}' if args.encoding_time else ''
-	print(encoding_time_flag)
 	output_file_path = os.path.join(output_folder, f'{preset}.mkv')
+
+	subprocess_args = [
+		"ffmpeg", "-loglevel", "warning", "-stats", "-y",
+		"-i", args.video_path,
+		"-c:v", args.video_encoder, "-crf", args.crf_value, "-preset", preset,
+		"-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", output_file_path
+	]
+
+	if args.encoding_time:
+		subprocess_args.insert(7, "-t")
+		subprocess_args.insert(8, args.encoding_time)
+
+	print(subprocess_args)
 
 	separator()
 	print(f'Encoding with preset {preset}...')
 
 	start_time = time.time()
 
-	os.system(f'ffmpeg -loglevel warning -stats -y -i "{args.video_path}" {encoding_time_flag} '
-		f'-c:v {args.video_encoder} -crf {args.crf_value} -preset {preset} -c:a copy -c:s copy '
-		f'-movflags +faststart "{output_file_path}"')
+	subprocess.run(subprocess_args)
 
 	end_time = time.time()
 	time_to_convert = end_time - start_time
@@ -86,7 +95,7 @@ for preset in presets:
 	if args.calculate_vmaf: # -vmaf argument specified
 
 		json_file_path = f'{output_folder}/VMAF with preset {preset}.json'
-		# (os.path.join doesn't work with log_path= when using libvmaf)
+		# (os.path.join doesn't work with libvmaf's log_path option)
 
 		separator()
 		print(f'Calculating the VMAF achieved with preset {preset}...')
@@ -100,15 +109,11 @@ for preset in presets:
 		}
 
 		vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
-		print('vmaf options is:')
-		print(vmaf_options)
 
 		subprocess.run(
 			[
-			"ffmpeg", "-loglevel", "error", "-stats",
-			"-i", output_file_path, "-i", args.video_path,
-			"-lavfi", f'libvmaf={vmaf_options}',
-			"-f", "null", "-"
+			"ffmpeg", "-loglevel", "error", "-stats", "-i", output_file_path, "-i", args.video_path,
+			"-lavfi", f'libvmaf={vmaf_options}', "-f", "null", "-"
 			]
 		)
 
