@@ -1,7 +1,7 @@
 # Remove the presets that you don't want to be tested.
-presets = ['veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast']
+presets = ['superfast', 'ultrafast']
 
-import argparse, time, os, json
+import argparse, time, os, subprocess, json
 from prettytable import PrettyTable
 
 def separator():
@@ -85,12 +85,32 @@ for preset in presets:
 
 	if args.calculate_vmaf: # -vmaf argument specified
 
-		json_file_path = os.path.join(output_folder, f'VMAF with preset {preset}.json')
+		# os.path.join doesn't work with log_path= when using libvmaf
+		json_file_path = f'{output_folder}/VMAF with preset {preset}.json'
 
 		separator()
 		print(f'Calculating the VMAF achieved with preset {preset}...')
 
 		vmaf_start_time = time.time()
+
+		# vmaf_options = {
+		# 	"model_path": "vmaf_v0.6.1.pkl",
+		# 	"log_path": f'"{json_file_path}"',
+		# 	"log_fmt": "json"
+		# }
+
+		# vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
+		# print('vmaf options is:')
+		# print(vmaf_options)
+
+		# subprocess.run(
+		# 	[
+		# 	"ffmpeg", "-loglevel", "error", "-stats",
+		# 	"-i", output_file_path, "-i", args.video_path,
+		# 	"-lavfi", f'libvmaf={vmaf_options}',
+		# 	"-f", "null", "-"
+		# 	]
+		# )
 
 		os.system(f'ffmpeg -loglevel error -stats -i "{output_file_path}" -i "{args.video_path}" '
 			f'-lavfi libvmaf=model_path=vmaf_v0.6.1.pkl:log_path="{json_file_path}":log_fmt=json -f null -')
