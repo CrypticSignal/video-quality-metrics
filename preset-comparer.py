@@ -85,35 +85,32 @@ for preset in presets:
 
 	if args.calculate_vmaf: # -vmaf argument specified
 
-		# os.path.join doesn't work with log_path= when using libvmaf
 		json_file_path = f'{output_folder}/VMAF with preset {preset}.json'
+		# (os.path.join doesn't work with log_path= when using libvmaf)
 
 		separator()
 		print(f'Calculating the VMAF achieved with preset {preset}...')
 
 		vmaf_start_time = time.time()
 
-		# vmaf_options = {
-		# 	"model_path": "vmaf_v0.6.1.pkl",
-		# 	"log_path": f'"{json_file_path}"',
-		# 	"log_fmt": "json"
-		# }
+		vmaf_options = {
+			"model_path": "vmaf_v0.6.1.pkl",
+			"log_path": json_file_path,
+			"log_fmt": "json"
+		}
 
-		# vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
-		# print('vmaf options is:')
-		# print(vmaf_options)
+		vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
+		print('vmaf options is:')
+		print(vmaf_options)
 
-		# subprocess.run(
-		# 	[
-		# 	"ffmpeg", "-loglevel", "error", "-stats",
-		# 	"-i", output_file_path, "-i", args.video_path,
-		# 	"-lavfi", f'libvmaf={vmaf_options}',
-		# 	"-f", "null", "-"
-		# 	]
-		# )
-
-		os.system(f'ffmpeg -loglevel error -stats -i "{output_file_path}" -i "{args.video_path}" '
-			f'-lavfi libvmaf=model_path=vmaf_v0.6.1.pkl:log_path="{json_file_path}":log_fmt=json -f null -')
+		subprocess.run(
+			[
+			"ffmpeg", "-loglevel", "error", "-stats",
+			"-i", output_file_path, "-i", args.video_path,
+			"-lavfi", f'libvmaf={vmaf_options}',
+			"-f", "null", "-"
+			]
+		)
 
 		vmaf_end_time = time.time()
 		calculation_time = round(vmaf_end_time - vmaf_start_time, 1)
@@ -140,4 +137,3 @@ with open(comparison_file_dir, 'a') as f:
 	f.write(table.get_string())
 
 print(f'Done! Comparison data saved in {comparison_file_dir}')
-input('You may now close this window.')
