@@ -1,7 +1,5 @@
-# Remove the presets that you don't want to be tested.
-presets = ['veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast']
-
 import argparse, time, os, subprocess, json
+from argparse import RawTextHelpFormatter
 from prettytable import PrettyTable
 
 def separator():
@@ -16,25 +14,35 @@ separator()
 parser = argparse.ArgumentParser(description='Compare the encoding time, resulting filesize and (optionally) the VMAF '
 	'value obtained with the different encoder presets: '
 	"'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast' and 'ultrafast'. "
-	'You can edit the presets that are tested by editing the presets list on line 2 of compare-presets.py')
+	'You can edit the presets that are tested by editing the presets list on line 2 of compare-presets.py',
+	formatter_class=RawTextHelpFormatter)
 
 parser.add_argument('-path', '--video-path', type=str, required=True, help='Enter the path of the video. '
-	'A relative or absolute path can be specified. '
-	'If the path contains a space, it must be surrounded in double quotes.')
+	'A relative or absolute path can be specified.'
+	'If the path contains a space, it must be surrounded in double quotes.\n'
+	'Example: -path "C:/Users/H/Desktop/file 1.mp4"')
 
-parser.add_argument('-encoder', '--video-encoder', type=str, required=True, choices=['libx264', 'libx265'],
-	help='Specify the encoder to use. Must enter libx264 or libx265')
+parser.add_argument('-e', '--video-encoder', type=str, default='libx264', choices=['libx264', 'libx265'],
+	help='Specify the encoder to use. Must enter libx264 or libx265. Default: libx264\nExample: -e libx265')
 
-parser.add_argument('-crf', '--crf-value', type=str, required=True, help='Enter the CRF value to be used.')
+parser.add_argument('-crf', '--crf-value', type=str, default='23', help='Enter the CRF value to be used. Default: 23')
 
 parser.add_argument('-t', '--encoding-time', type=str, help='Encode this many seconds of the video. '
 	'If not specified, the whole video will get encoded.')
+
+parser.add_argument('-p', '--presets', nargs='+', required=True,
+	choices=['placebo', 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'],
+	help="List the presets you want to be tested (separated by a space).\n"
+	"Choose from: 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'\n"
+	"Example: -p fast veryfast ultrafast", metavar='presets')
 
 parser.add_argument('-vmaf', '--calculate-vmaf', action='store_true', 
 	help='Specify this argument if you want the VMAF value to be calculated for each preset. '
 	'(drastically increases completion time)')
 
 args = parser.parse_args()
+
+chosen_presets = args.presets
 
 # Initialise the comparison table that will be created.
 table = PrettyTable()
@@ -58,7 +66,11 @@ with open(comparison_file_dir, 'w') as f:
 # This will be used when comparing the size of the encoded file to the original.
 original_video_size = os.path.getsize(args.video_path) / 1_000_000
 
-for preset in presets:
+for preset in chosen_presets:
+
+	crf_value = '23' # Default CRF value.
+	if args.crf_value:
+		crf_value = args.crf_value
 
 	output_file_path = os.path.join(output_folder, f'{preset}.mkv')
 
@@ -72,8 +84,6 @@ for preset in presets:
 	if args.encoding_time:
 		subprocess_args.insert(7, "-t")
 		subprocess_args.insert(8, args.encoding_time)
-
-	print(subprocess_args)
 
 	separator()
 	print(f'Encoding with preset {preset}...')
