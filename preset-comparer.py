@@ -1,5 +1,5 @@
 # Remove the presets that you don't want to be tested.
-presets = ['superfast', 'ultrafast']
+presets = ['veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast']
 
 import argparse, time, os, subprocess, json
 from prettytable import PrettyTable
