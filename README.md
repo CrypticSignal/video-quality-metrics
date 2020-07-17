@@ -1,9 +1,7 @@
 # Compare x264 or x265 presets
-A command line program that automates the testing of x264 or x265 presets with FFmpeg. A for-loop is used to encode the chosen video with every preset apart from 'placebo' ('veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast' and 'ultrafast'). This saves you from manually having to start a new encode with each preset. The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage) and (optionally) the VMAF value of each encode is presented in a table. **You can change the presets that are tested by editing the list on line 2 of compare-presets.py**. 
+A command line program that automates the testing of x264 or x265 presets with FFmpeg. A for-loop is used to encode the chosen video with the specified preset(s) (you can choose from: 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast' and 'ultrafast'). This saves you from manually having to start a new encode with each preset. The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage) and (optionally) the VMAF value of each encode is presented in a table. 
 # Features
-- Automatically encodes a video file with each preset ('veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast' and 'ultrafast').
-
-*If you want to change which presets are tested, simply edit the `presets` list on line 2 of preset-comparer.py*
+- Automatically encodes a video file with the specified preset(s).
 - Choose whether you want the libx264 or libx265 encoder to be used.
 - Choose the CRF value to be used.
 - You can choose whether you want the whole video to be encoded or just a certain amount of seconds.
@@ -11,21 +9,27 @@ A command line program that automates the testing of x264 or x265 presets with F
 # How to use
 ```
 Arguments in square brackets are optional:
-python compare-presets.py [-h] -path VIDEO_PATH -encoder {libx264,libx265} -crf CRF_VALUE [-t ENCODING_TIME] [-vmaf]
+python compare-presets.py [-h] -path VIDEO_PATH [-e {libx264,libx265}] [-crf CRF_VALUE] [-t ENCODING_TIME] -p presets [presets ...] [-vmaf]
 
 If there is a space in the path, it must be surrounded with double quotes. Example:
-python compare-presets.py -path "C:/Users/H/Desktop/file 1.mp4" -encoder libx264 -crf 23 -t 60
+python compare-presets.py -path "C:/Users/H/Desktop/file 1.mp4" -p veryfast superfast
 
 optional arguments:
   -h, --help            show this help message and exit
   -path VIDEO_PATH, --video-path VIDEO_PATH
-                        Enter the path of the video. A relative or absolute path can be specified. If the path contains a space, it must be surrounded with double quotes.
-  -encoder {libx264,libx265}, --video-encoder {libx264,libx265}
-                        Specify the encoder to use. Must enter libx264 or libx265
+                        Enter the path of the video. A relative or absolute path can be specified.If the path contains a space, it must be surrounded in double quotes.
+                        Example: -path "C:/Users/H/Desktop/file 1.mp4"
+  -e {libx264,libx265}, --video-encoder {libx264,libx265}
+                        Specify the encoder to use. Must enter libx264 or libx265. Default: libx264
+                        Example: -e libx265
   -crf CRF_VALUE, --crf-value CRF_VALUE
-                        Enter the CRF value to be used.
+                        Enter the CRF value to be used. Default: 23
   -t ENCODING_TIME, --encoding-time ENCODING_TIME
                         Encode this many seconds of the video. If not specified, the whole video will get encoded.
+  -p presets [presets ...], --presets presets [presets ...]
+                        List the presets you want to be tested (separated by a space).
+                        Choose from: 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'
+                        Example: -p fast veryfast ultrafast
   -vmaf, --calculate-vmaf
                         Specify this argument if you want the VMAF value to be calculated for each preset. (drastically increases completion time)
 
