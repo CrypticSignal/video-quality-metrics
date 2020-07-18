@@ -32,19 +32,6 @@ optional arguments:
                         Example: -p fast veryfast ultrafast
   -vmaf, --calculate-vmaf
                         Specify this argument if you want the VMAF value to be calculated for each preset. (drastically increases completion time)
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -path VIDEO_PATH, --video-path VIDEO_PATH
-                        Enter the path of the video.
-  -encoder {libx264,libx265}, --video-encoder {libx264,libx265}
-                        Specify the encoder to use. Must enter libx264 or libx265
-  -crf CRF_VALUE, --crf-value CRF_VALUE
-                        Enter the CRF value to be used.
-  -t ENCODING_TIME, --encoding-time ENCODING_TIME
-                        Encode this many seconds of the video.
-  -vmaf, --calculate-vmaf
-                        Specify this argument if you want the VMAF value to be calculated for each preset. (drastically increases completion time)
 ```
 # Requirements
 - Python 3.6+
