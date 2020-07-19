@@ -53,4 +53,6 @@ You chose to encode aqp60.mkv using libx264 with a CRF of 23.
 | ultrafast |       10.03       | 53.61 MB |           57.71%          |          537.63          | 98.26 |
 +-----------+-------------------+----------+---------------------------+--------------------------+-------+
 ```
-*(A 1 minute long file was encoded.)*
+*Note: A 1 minute long file was encoded.*
+
+*Command: `python compare-presets.py -f aqp60.mkv -p slow medium fast faster veryfast superfast ultrafast -vmaf`*
