@@ -9,16 +9,16 @@ A command line program that automates the testing of x264 or x265 presets with F
 # How to use
 ```
 Arguments in square brackets are optional:
-python compare-presets.py [-h] -path VIDEO_PATH [-e {libx264,libx265}] [-crf CRF_VALUE] [-t ENCODING_TIME] -p presets [presets ...] [-vmaf]
+python compare-presets.py [-h] -f VIDEO_PATH [-e {libx264,libx265}] [-crf CRF_VALUE] [-t ENCODING_TIME] -p presets [presets ...] [-vmaf]
 
 If there is a space in the path, it must be surrounded with double quotes. Example:
-python compare-presets.py -path "C:/Users/H/Desktop/file 1.mp4" -p veryfast superfast
+python compare-presets.py -f "C:/Users/H/Desktop/file 1.mp4" -p veryfast superfast
 
 optional arguments:
   -h, --help            show this help message and exit
-  -path VIDEO_PATH, --video-path VIDEO_PATH
+  -f VIDEO_PATH, --video-path VIDEO_PATH
                         Enter the path of the video. A relative or absolute path can be specified.If the path contains a space, it must be surrounded in double quotes.
-                        Example: -path "C:/Users/H/Desktop/file 1.mp4"
+                        Example: -f "C:/Users/H/Desktop/file 1.mp4"
   -e {libx264,libx265}, --video-encoder {libx264,libx265}
                         Specify the encoder to use. Must enter libx264 or libx265. Default: libx264
                         Example: -e libx265
@@ -36,6 +36,7 @@ optional arguments:
 # Requirements
 - Python 3.6+
 - FFmpeg installed and in your PATH. The build of FFmpeg must have `--enable-libvmaf` in the configuration. If you're on Windows, you can download a compatible FFmpeg binary by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
+- `pip install opencv-python`
 - `pip install PrettyTable`
 - The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as compare-presets.py
 # Example
