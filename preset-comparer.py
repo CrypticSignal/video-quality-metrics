@@ -1,4 +1,4 @@
-import argparse, time, os, subprocess, json
+import argparse, cv2, time, os, subprocess, json
 from argparse import RawTextHelpFormatter
 from prettytable import PrettyTable
 
@@ -7,7 +7,7 @@ def separator():
 
 separator()
 print('If the path contains a space, the path argument must be surrounded in double quotes.')
-print('Example: python compare-presets.py -path "C:/Users/H/Desktop/test file.mp4" -encoder libx264 -crf 23 -t 60')
+print('Example: python compare-presets.py -f "C:/Users/H/Desktop/test file.mp4" -p fast veryfast')
 print("For more information, enter 'compare-presets.py -h'")
 separator()
 
@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(description='Compare the encoding time, resulti
 	'You can edit the presets that are tested by editing the presets list on line 2 of compare-presets.py',
 	formatter_class=RawTextHelpFormatter)
 
-parser.add_argument('-path', '--video-path', type=str, required=True, help='Enter the path of the video. '
+parser.add_argument('-f', '--video-path', type=str, required=True, help='Enter the path of the video. '
 	'A relative or absolute path can be specified.'
 	'If the path contains a space, it must be surrounded in double quotes.\n'
 	'Example: -path "C:/Users/H/Desktop/file 1.mp4"')
@@ -42,13 +42,19 @@ parser.add_argument('-vmaf', '--calculate-vmaf', action='store_true',
 
 args = parser.parse_args()
 
+filename = args.video_path.split('/')[-1]
+print(f'File: {filename}')
+
+video = args.video_path
+cap = cv2.VideoCapture(video)
+fps = str(cap.get(cv2.CAP_PROP_FPS))
+print(f'Framerate: {fps}')
+
 chosen_presets = args.presets
 
 # Initialise the comparison table that will be created.
 table = PrettyTable()
 
-filename = args.video_path.split('/')[-1]
-print(f'File: {filename}')
 output_folder = f'({filename})'
 os.makedirs(output_folder, exist_ok=True)
 
@@ -114,18 +120,21 @@ for preset in chosen_presets:
 
 		vmaf_options = {
 			"model_path": "vmaf_v0.6.1.pkl",
-			"log_path": json_file_path,
+			#"psnr": "1",
+			"log_path": json_file_path, 
 			"log_fmt": "json"
 		}
 
 		vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
 
-		subprocess.run(
-			[
-			"ffmpeg", "-loglevel", "error", "-stats", "-i", output_file_path, "-i", args.video_path,
-			"-lavfi", f'libvmaf={vmaf_options}', "-f", "null", "-"
-			]
-		)
+		subprocess_args = [
+			"ffmpeg", "-loglevel", "error", "-stats", "-r", fps, "-i", output_file_path,
+			"-r", fps, "-i", args.video_path,
+			"-lavfi", "[0:v]setpts=PTS-STARTPTS[dist];[1:v]setpts=PTS-STARTPTS[ref];[dist][ref]"
+			f'libvmaf={vmaf_options}', "-f", "null", "-"
+		]
+
+		subprocess.run(subprocess_args)
 
 		vmaf_end_time = time.time()
 		calculation_time = round(vmaf_end_time - vmaf_start_time, 1)
