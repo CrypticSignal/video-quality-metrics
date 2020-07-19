@@ -36,8 +36,6 @@ optional arguments:
 # Requirements
 - Python 3.6+
 - FFmpeg installed and in your PATH. The build of FFmpeg must have `--enable-libvmaf` in the configuration. If you're on Windows, you can download a compatible FFmpeg binary by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
-- `pip install opencv-python`
-- `pip install PrettyTable`
 - The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as compare-presets.py
 # Example
 The table is saved in a .txt file. Here's an example of the type of .txt file that is produced. In this example, I chose to encode only with the presets from 'slow' onwards:
