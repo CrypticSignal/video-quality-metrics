@@ -38,18 +38,19 @@ optional arguments:
 - FFmpeg installed and in your PATH. The build of FFmpeg must have `--enable-libvmaf` in the configuration. If you're on Windows, you can download a compatible FFmpeg binary by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
 - The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as compare-presets.py
 # Example
-The table is saved in a .txt file. Here's an example of the type of .txt file that is produced. In this example, I chose to encode only with the presets from 'slow' onwards:
+The table is saved in a .txt file. Here's an example of the table that is produced:
 ```
-You chose to encode aqp.mkv using libx264 with a CRF of 23.
+You chose to encode aqp60.mkv using libx264 with a CRF of 23.
 +-----------+-------------------+----------+---------------------------+--------------------------+-------+
 |   Preset  | Encoding Time (s) |   Size   | Size Compared to Original | Product of Time and Size |  VMAF |
 +-----------+-------------------+----------+---------------------------+--------------------------+-------+
-|    slow   |       228.54      | 28.09 MB |           25.45%          |         6419.36          | 88.03 |
-|   medium  |       162.43      | 28.75 MB |           26.05%          |          4670.3          | 88.01 |
-|    fast   |       117.7       | 30.36 MB |           27.51%          |         3573.64          | 87.82 |
-|   faster  |       97.84       | 28.47 MB |           25.79%          |         2785.08          |  87.6 |
-|  veryfast |       52.06       | 24.59 MB |           22.28%          |         1279.98          | 85.75 |
-| superfast |       38.99       | 45.58 MB |           41.3%           |         1777.32          | 87.24 |
-| ultrafast |       25.45       | 60.17 MB |           54.52%          |         1531.35          | 88.81 |
+|    slow   |       71.36       | 24.95 MB |           26.86%          |         1780.55          | 97.55 |
+|   medium  |       49.72       | 25.64 MB |           27.6%           |         1274.53          | 97.55 |
+|    fast   |       42.29       | 27.27 MB |           29.36%          |         1153.51          | 97.34 |
+|   faster  |       33.48       | 25.66 MB |           27.62%          |          858.81          | 97.12 |
+|  veryfast |       21.51       | 22.1 MB  |           23.79%          |          475.38          | 95.08 |
+| superfast |        15.8       | 39.41 MB |           42.43%          |          622.9           | 96.75 |
+| ultrafast |       10.03       | 53.61 MB |           57.71%          |          537.63          | 98.26 |
 +-----------+-------------------+----------+---------------------------+--------------------------+-------+
 ```
+*(A 1 minute long file was encoded.)*
