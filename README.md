@@ -1,11 +1,9 @@
-# Compare x264 or x265 presets
-A command line program that automates the testing of x264 or x265 presets with FFmpeg. A for-loop is used to encode the chosen video with the specified preset(s) (you can choose from: 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast' and 'ultrafast'). This saves you from manually having to start a new encode with each preset. The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage) and (optionally) the VMAF value of each encode is presented in a table. 
 # Features
-- Automatically encodes a video file with the specified preset(s).
+- Encodes a video file with every specified preset without having to manually start a new encode with each preset.
 - Choose whether you want the libx264 or libx265 encoder to be used.
 - Choose the CRF value to be used.
 - You can choose whether you want the whole video to be encoded or just a certain amount of seconds.
-- The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage) and (optionally) the VMAF value of each encode is presented in a table.
+- The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage) and the PSNR/SSMI/VMAF value of each encode is presented in a table.
 # How to use
 ```
 Arguments in square brackets are optional:
