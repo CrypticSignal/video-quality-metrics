@@ -25,7 +25,7 @@ parser.add_argument('-f', '--video-path', type=str, required=True, help='Enter t
 parser.add_argument('-e', '--video-encoder', type=str, default='libx264', choices=['libx264', 'libx265'],
 	help='Specify the encoder to use. Must enter libx264 or libx265. Default: libx264\nExample: -e libx265')
 
-parser.add_argument('-crf', '--crf-value', type=str, default='23', help='Enter the CRF value to be used. Default: 23')
+parser.add_argument('-crf', '--crf-value', type=str, default='23', help='Enter the CRF value to be used (default: 23)')
 
 parser.add_argument('-t', '--encoding-time', type=str, help='Encode this many seconds of the video. '
 	'If not specified, the whole video will get encoded.')
@@ -36,9 +36,11 @@ parser.add_argument('-p', '--presets', nargs='+', required=True,
 	"Choose from: 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'\n"
 	"Example: -p fast veryfast ultrafast", metavar='presets')
 
-parser.add_argument('-vmaf', '--calculate-vmaf', action='store_true', 
-	help='Specify this argument if you want the VMAF value to be calculated for each preset. '
-	'(drastically increases completion time)')
+parser.add_argument('-pm', '--phone-model', action='store_true', 
+	help='Enable VMAF phone model (default: False)')
+
+parser.add_argument('-dqs', '--disable-quality-stats', action='store_true', 
+	help='Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).')
 
 args = parser.parse_args()
 
@@ -106,24 +108,30 @@ for preset in chosen_presets:
 	size_of_file = os.path.getsize(output_file_path) / 1_000_000
 	size_compared_to_original = round(((size_of_file / original_video_size) * 100), 2) 
 	size_rounded = round(size_of_file, 2)
-	product = round(time_to_convert * size_of_file, 2)
+	#product = round(time_to_convert * size_of_file, 2)
 
-	if args.calculate_vmaf: # -vmaf argument specified
+	if args.disable_quality_stats: # -vmaf argument specified
 
-		json_file_path = f'{output_folder}/VMAF with preset {preset}.json'
+		table.field_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original',
+			'Product of Time and Size']
+
+		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
+
+	else:
+
+		json_file_path = f'{output_folder}/Quality stats with preset {preset}.json'
 		# (os.path.join doesn't work with libvmaf's log_path option)
-
-		separator()
-		print(f'Calculating the VMAF achieved with preset {preset}...')
-
-		vmaf_start_time = time.time()
 
 		vmaf_options = {
 			"model_path": "vmaf_v0.6.1.pkl",
-			#"psnr": "1",
 			"log_path": json_file_path, 
-			"log_fmt": "json"
+			"log_fmt": "json",
+			"psnr": "1",
+			"ssim": "1"
 		}
+
+		if args.phone_model:
+			vmaf_options["phone_model"] = "1"
 
 		vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
 
@@ -134,28 +142,22 @@ for preset in chosen_presets:
 			f'libvmaf={vmaf_options}', "-f", "null", "-"
 		]
 
+		separator()
+		print(f'Calculating the quality achieved with preset {preset}...')
 		subprocess.run(subprocess_args)
-
-		vmaf_end_time = time.time()
-		calculation_time = round(vmaf_end_time - vmaf_start_time, 1)
-		print(f'Time taken to calculate VMAF: {calculation_time} seconds.')
 
 		with open(json_file_path, 'r') as f:
 			json_dict = json.load(f)
 
+		psnr = round(json_dict['PSNR score'], 2)
+		ssim = round(json_dict['SSIM score'], 2)
 		vmaf = round(json_dict['VMAF score'], 2)
 
 		table.field_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original',
-			'Product of Time and Size', 'VMAF']
+			'PSNR', 'SSIM', 'VMAF']
 
-		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%', product, vmaf])
-
-	else: # -vmaf argument not specified.
-
-		table.field_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original',
-			'Product of Time and Size']
-
-		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%', product])
+		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%',
+			psnr, ssim, vmaf])
 		
 with open(comparison_file_dir, 'a') as f:
 	f.write(table.get_string())
