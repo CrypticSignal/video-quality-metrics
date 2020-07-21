@@ -110,7 +110,7 @@ for preset in chosen_presets:
 	size_rounded = round(size_of_file, 2)
 	#product = round(time_to_convert * size_of_file, 2)
 
-	if args.disable_quality_stats: # -vmaf argument specified
+	if args.disable_quality_stats: # -dqs argument specified.
 
 		table.field_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original',
 			'Product of Time and Size']
@@ -120,18 +120,16 @@ for preset in chosen_presets:
 	else:
 
 		json_file_path = f'{output_folder}/Quality stats with preset {preset}.json'
-		# (os.path.join doesn't work with libvmaf's log_path option)
+		# (The os.path.join variant doesn't work with libvmaf's log_path option)
 
 		vmaf_options = {
 			"model_path": "vmaf_v0.6.1.pkl",
+			"phone_model": "1" if args.phone_model else "0"
 			"log_path": json_file_path,
 			"log_fmt": "json",
 			"psnr": "1",
 			"ssim": "1"
 		}
-
-		if args.phone_model:
-			vmaf_options["phone_model"] = "1"
 
 		vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
 
