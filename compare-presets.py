@@ -3,7 +3,7 @@ from argparse import RawTextHelpFormatter
 from prettytable import PrettyTable
 
 def separator():
-	print('-----------------------------------------------------------------------------------------------------------') 
+	print('-----------------------------------------------------------------------------------------------------------')
 
 separator()
 print('If the path contains a space, the path argument must be surrounded in double quotes.')
@@ -36,10 +36,10 @@ parser.add_argument('-p', '--presets', nargs='+', required=True,
 	"Choose from: 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'\n"
 	"Example: -p fast veryfast ultrafast", metavar='presets')
 
-parser.add_argument('-pm', '--phone-model', action='store_true', 
+parser.add_argument('-pm', '--phone-model', action='store_true',
 	help='Enable VMAF phone model (default: False)')
 
-parser.add_argument('-dqs', '--disable-quality-stats', action='store_true', 
+parser.add_argument('-dqs', '--disable-quality-stats', action='store_true',
 	help='Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).')
 
 args = parser.parse_args()
@@ -106,7 +106,7 @@ for preset in chosen_presets:
 	print('Done!')
 
 	size_of_file = os.path.getsize(output_file_path) / 1_000_000
-	size_compared_to_original = round(((size_of_file / original_video_size) * 100), 2) 
+	size_compared_to_original = round(((size_of_file / original_video_size) * 100), 2)
 	size_rounded = round(size_of_file, 2)
 	#product = round(time_to_convert * size_of_file, 2)
 
@@ -124,7 +124,7 @@ for preset in chosen_presets:
 
 		vmaf_options = {
 			"model_path": "vmaf_v0.6.1.pkl",
-			"log_path": json_file_path, 
+			"log_path": json_file_path,
 			"log_fmt": "json",
 			"psnr": "1",
 			"ssim": "1"
@@ -158,7 +158,7 @@ for preset in chosen_presets:
 
 		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%',
 			psnr, ssim, vmaf])
-		
+
 with open(comparison_file_dir, 'a') as f:
 	f.write(table.get_string())
 
