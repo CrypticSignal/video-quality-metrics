@@ -1,9 +1,10 @@
 import argparse, cv2, time, os, subprocess, json
+import numpy as np
 from argparse import RawTextHelpFormatter
 from prettytable import PrettyTable
 
 def separator():
-	print('-----------------------------------------------------------------------------------------------------------')
+	print('-----------------------------------------------------------------------------------------------------------') 
 
 separator()
 print('If the path contains a space, the path argument must be surrounded in double quotes.')
@@ -36,10 +37,16 @@ parser.add_argument('-p', '--presets', nargs='+', required=True,
 	"Choose from: 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'\n"
 	"Example: -p fast veryfast ultrafast", metavar='presets')
 
-parser.add_argument('-pm', '--phone-model', action='store_true',
+parser.add_argument('-psnr', '--calculate-psnr', action='store_true', 
+	help='Calculate PSNR in addition to VMAF for each preset.')
+
+parser.add_argument('-ssim', '--calculate-ssim', action='store_true', 
+	help='Calculate SSIM in addition to VMAF for each preset.')
+
+parser.add_argument('-pm', '--phone-model', action='store_true', 
 	help='Enable VMAF phone model (default: False)')
 
-parser.add_argument('-dqs', '--disable-quality-stats', action='store_true',
+parser.add_argument('-dqs', '--disable-quality-stats', action='store_true', 
 	help='Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).')
 
 args = parser.parse_args()
@@ -69,7 +76,7 @@ else:
 
 with open(comparison_file_dir, 'w') as f:
 	f.write(f'You chose to encode {args.video_path}{time_message} using {args.video_encoder} '
-		f'with a CRF of {args.crf_value}.\n')
+		f'with a CRF of {args.crf_value}.\nPSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Max\n')
 
 # This will be used when comparing the size of the encoded file to the original.
 original_video_size = os.path.getsize(args.video_path) / 1_000_000
@@ -102,33 +109,27 @@ for preset in chosen_presets:
 
 	end_time = time.time()
 	time_to_convert = end_time - start_time
-	time_rounded = round(time_to_convert, 2)
+	time_rounded = round(time_to_convert, 3)
 	print('Done!')
 
 	size_of_file = os.path.getsize(output_file_path) / 1_000_000
-	size_compared_to_original = round(((size_of_file / original_video_size) * 100), 2)
-	size_rounded = round(size_of_file, 2)
-	#product = round(time_to_convert * size_of_file, 2)
+	size_compared_to_original = round(((size_of_file / original_video_size) * 100), 3) 
+	size_rounded = round(size_of_file, 3)
 
-	if args.disable_quality_stats: # -dqs argument specified.
-
-		table.field_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original',
-			'Product of Time and Size']
-
+	if args.disable_quality_stats: # -dqs argument specified
 		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
 
 	else:
-
 		json_file_path = f'{output_folder}/Quality stats with preset {preset}.json'
-		# (The os.path.join variant doesn't work with libvmaf's log_path option)
+		# (os.path.join doesn't work with libvmaf's log_path option)
 
 		vmaf_options = {
 			"model_path": "vmaf_v0.6.1.pkl",
-			"phone_model": "1" if args.phone_model else "0"
-			"log_path": json_file_path,
-			"log_fmt": "json",
-			"psnr": "1",
-			"ssim": "1"
+			"phone_model": "1" if args.phone_model else "0",
+			"psnr": "1" if args.calculate_psnr else "0",
+			"ssim": "1" if args.calculate_ssim else "0",
+			"log_path": json_file_path, 
+			"log_fmt": "json"
 		}
 
 		vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
@@ -145,17 +146,38 @@ for preset in chosen_presets:
 		subprocess.run(subprocess_args)
 
 		with open(json_file_path, 'r') as f:
-			json_dict = json.load(f)
+			file_contents = json.load(f)
 
-		psnr = round(json_dict['PSNR score'], 2)
-		ssim = round(json_dict['SSIM score'], 2)
-		vmaf = round(json_dict['VMAF score'], 2)
+		vmaf_scores = [frame['metrics']['vmaf'] for frame in file_contents['frames']]
+		vmaf = round(np.average(vmaf_scores), 3)
+		vmaf_min = round(min(vmaf_scores), 3)
+		vmaf_std = round(np.std(vmaf_scores), 3)
+		vmaf_data = f'{vmaf_min} | {vmaf_std} | {vmaf}'
 
-		table.field_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original',
-			'PSNR', 'SSIM', 'VMAF']
+		table_columns = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original', 'VMAF']
+		table_data = [preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%', vmaf_data]
 
-		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%',
-			psnr, ssim, vmaf])
+		if args.calculate_psnr:
+			psnr_scores = [frame['metrics']['psnr'] for frame in file_contents['frames']]
+			psnr = round(np.average(psnr_scores), 3)
+			psnr_min = round(min(psnr_scores), 3)
+			psnr_std = round(np.std(psnr_scores), 3)
+			psnr_data = f'{psnr_min} | {psnr_std} | {psnr}'
+			table_columns.insert(4, 'PSNR')
+			table_data.insert(4, psnr_data)
+
+		if args.calculate_ssim:
+			ssim_scores = [frame['metrics']['ssim'] for frame in file_contents['frames']]
+			ssim = round(np.average(ssim_scores), 3)
+			ssim_min = round(min(ssim_scores), 3)
+			ssim_std = round(np.std(ssim_scores), 3)
+			ssim_data = f'{ssim_min} | {ssim_std} | {ssim}'
+			table_columns.insert(4, 'SSIM')
+			table_data.insert(4, ssim_data)
+
+		table.add_row(table_data)
+
+table.field_names = table_columns
 
 with open(comparison_file_dir, 'a') as f:
 	f.write(table.get_string())
