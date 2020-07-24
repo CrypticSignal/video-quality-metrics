@@ -40,7 +40,7 @@ optional arguments:
 # Requirements
 - Python 3.6+
 - FFmpeg installed and in your PATH. The build of FFmpeg must have `--enable-libvmaf` in the configuration (unless you don't care about the quality metrics and you specify `-dqs` when running this command line program). If you're on Windows, you can download an FFmpeg binary which has `--enable-libvmaf` in the configuration by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
-- The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as compare-presets.py
+- The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as compare-presets.py. These files are not needed if you only want the encoding time and filesize to be shown (you must specify `-dqs` in this case).
 - `pip install -r requirements.txt`
 # Example
 The table is saved in a .txt file. Here's an example of the table that is produced:
