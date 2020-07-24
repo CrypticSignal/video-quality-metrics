@@ -1,9 +1,8 @@
 # Features
-- Encodes a video file with every specified preset without having to manually start a new encode with each preset.
+- Encodes a video file with every specified preset without having to manually start a new encode with each preset. The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage), the VMAF score and (optionally) the SSIM and/or PSNR of each encode is presented in a table.
 - Choose whether you want the libx264 or libx265 encoder to be used.
 - Choose the CRF value to be used.
 - You can choose whether you want the whole video to be encoded or just a certain amount of seconds.
-- The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage), the VMAF score and (optionally) the SSIM and/or PSNR of each encode is presented in a table.
 # How to use
 ```
 Arguments in square brackets are optional:
