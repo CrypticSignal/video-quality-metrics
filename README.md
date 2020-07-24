@@ -29,6 +29,10 @@ optional arguments:
                         List the presets you want to be tested (separated by a space).
                         Choose from: 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'
                         Example: -p fast veryfast ultrafast
+  -psnr, --calculate-psnr
+                        Calculate PSNR in addition to VMAF for each preset.
+  -ssim, --calculate-ssim
+                        Calculate SSIM in addition to VMAF for each preset.
   -pm, --phone-model    Enable VMAF phone model (default: False)
   -dqs, --disable-quality-stats
                         Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).
@@ -37,6 +41,7 @@ optional arguments:
 - Python 3.6+
 - FFmpeg installed and in your PATH. The build of FFmpeg must have `--enable-libvmaf` in the configuration. If you're on Windows, you can download a compatible FFmpeg binary by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
 - The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as compare-presets.py
+- `pip install -r requirements.txt`
 # Example
 The table is saved in a .txt file. Here's an example of the table that is produced:
 ```
