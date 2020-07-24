@@ -149,7 +149,7 @@ for preset in chosen_presets:
 			file_contents = json.load(f)
 
 		vmaf_scores = [frame['metrics']['vmaf'] for frame in file_contents['frames']]
-		vmaf = round(np.average(vmaf_scores), 3)
+		vmaf = round(np.mean(vmaf_scores), 3)
 		vmaf_min = round(min(vmaf_scores), 3)
 		vmaf_std = round(np.std(vmaf_scores), 3)
 		vmaf_data = f'{vmaf_min} | {vmaf_std} | {vmaf}'
@@ -159,7 +159,7 @@ for preset in chosen_presets:
 
 		if args.calculate_psnr:
 			psnr_scores = [frame['metrics']['psnr'] for frame in file_contents['frames']]
-			psnr = round(np.average(psnr_scores), 3)
+			psnr = round(np.mean(psnr_scores), 3)
 			psnr_min = round(min(psnr_scores), 3)
 			psnr_std = round(np.std(psnr_scores), 3)
 			psnr_data = f'{psnr_min} | {psnr_std} | {psnr}'
@@ -168,7 +168,7 @@ for preset in chosen_presets:
 
 		if args.calculate_ssim:
 			ssim_scores = [frame['metrics']['ssim'] for frame in file_contents['frames']]
-			ssim = round(np.average(ssim_scores), 3)
+			ssim = round(np.mean(ssim_scores), 3)
 			ssim_min = round(min(ssim_scores), 3)
 			ssim_std = round(np.std(ssim_scores), 3)
 			ssim_data = f'{ssim_min} | {ssim_std} | {ssim}'
