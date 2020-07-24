@@ -3,7 +3,7 @@
 - Choose whether you want the libx264 or libx265 encoder to be used.
 - Choose the CRF value to be used.
 - You can choose whether you want the whole video to be encoded or just a certain amount of seconds.
-- The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage) and the PSNR/SSMI/VMAF value of each encode is presented in a table.
+- The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage) and the PSNR/SSIM/VMAF value of each encode is presented in a table.
 # How to use
 ```
 Arguments in square brackets are optional:
