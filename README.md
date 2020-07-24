@@ -3,12 +3,12 @@
 - Choose whether you want the libx264 or libx265 encoder to be used.
 - Choose the CRF value to be used.
 - You can choose whether you want the whole video to be encoded or just a certain amount of seconds.
-- The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage) and the PSNR/SSIM/VMAF value of each encode is presented in a table.
+- The time taken for each preset, the resulting filesize, the filesize compared to the original (as a percentage), the VMAF score and (optionally) the SSIM and/or PSNR of each encode is presented in a table.
 # How to use
 ```
 Arguments in square brackets are optional:
 python compare-presets.py [-h] -f VIDEO_PATH [-e {libx264,libx265}] [-crf CRF_VALUE] [-t ENCODING_TIME] -p presets
-                          [presets ...] [-pm] [-dqs]
+                          [presets ...] [-psnr] [-ssim] [-pm] [-dqs]
 
 If there is a space in the path, it must be surrounded with double quotes. Example:
 python compare-presets.py -f "C:/Users/H/Desktop/file 1.mp4" -p veryfast superfast
@@ -39,7 +39,7 @@ optional arguments:
 ```
 # Requirements
 - Python 3.6+
-- FFmpeg installed and in your PATH. The build of FFmpeg must have `--enable-libvmaf` in the configuration. If you're on Windows, you can download a compatible FFmpeg binary by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
+- FFmpeg installed and in your PATH. The build of FFmpeg must have `--enable-libvmaf` in the configuration (unless you don't care about the quality metrics and you specify `-dqs` when running this command line program). If you're on Windows, you can download an FFmpeg binary which has `--enable-libvmaf` in the configuration by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
 - The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as compare-presets.py
 - `pip install -r requirements.txt`
 # Example
