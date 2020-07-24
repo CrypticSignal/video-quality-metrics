@@ -17,7 +17,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -f VIDEO_PATH, --video-path VIDEO_PATH
                         Enter the path of the video. A relative or absolute path can be specified.If the path contains a space, it must be surrounded in double quotes.
-                        Example: -path "C:/Users/H/Desktop/file 1.mp4"
+                        Example: -f "C:/Users/H/Desktop/file 1.mp4"
   -e {libx264,libx265}, --video-encoder {libx264,libx265}
                         Specify the encoder to use. Must enter libx264 or libx265. Default: libx264
                         Example: -e libx265
