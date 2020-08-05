@@ -38,14 +38,11 @@ parser.add_argument('-p', '--presets', nargs='+', required=True,
 	"Choose from: 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'\n"
 	"Example: -p fast veryfast ultrafast", metavar='presets')
 
-parser.add_argument('-psnr', '--calculate-psnr', action='store_true', 
-	help='Calculate PSNR in addition to VMAF for each preset.')
-
-parser.add_argument('-ssim', '--calculate-ssim', action='store_true', 
-	help='Calculate SSIM in addition to VMAF for each preset.')
-
 parser.add_argument('-pm', '--phone-model', action='store_true', 
 	help='Enable VMAF phone model (default: False)')
+
+parser.add_argument('-dp', '--decimal-places', default=3, help='The number of decimal places to be used for the data '
+				    'in the table (default: 3)')
 
 parser.add_argument('-dqs', '--disable-quality-stats', action='store_true', 
 	help='Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).')
@@ -61,16 +58,16 @@ fps = str(cap.get(cv2.CAP_PROP_FPS))
 print(f'Framerate: {fps} FPS')
 
 chosen_presets = args.presets
+decimal_places = int(args.decimal_places)
 
 crf_value = '23' # Default CRF value.
 if args.crf_value:
 	crf_value = args.crf_value
 
-# The folder where the encodings and quality data will be saved.
 output_folder = f'({filename})/CRF {crf_value}'
 os.makedirs(output_folder, exist_ok=True)
 # The comparison table will be in the following path:
-comparison_table = os.path.join(output_folder, 'Presets Comparison.txt')
+comparison_table = os.path.join(output_folder, 'Table.txt')
 
 time_message = ''
 if args.encoding_time:
@@ -110,25 +107,23 @@ for preset in chosen_presets:
 
 	end_time = time.time()
 	time_to_convert = end_time - start_time
-	time_rounded = round(time_to_convert, 3)
+	time_rounded = round(time_to_convert, decimal_places)
 	print('Done!')
 
 	size_of_file = os.path.getsize(output_file_path) / 1_000_000
 	size_compared_to_original = round(((size_of_file / original_video_size) * 100), 3) 
-	size_rounded = round(size_of_file, 3)
+	size_rounded = round(size_of_file, decimal_places)
 
-	if args.disable_quality_stats: # -dqs argument specified
-		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
-
-	else:
+	if not args.disable_quality_stats:
+		
 		json_file_path = f'{output_folder}/{preset}.json'
 		# (os.path.join doesn't work with libvmaf's log_path option)
 
 		vmaf_options = {
 			"model_path": "vmaf_v0.6.1.pkl",
 			"phone_model": "1" if args.phone_model else "0",
-			"psnr": "1" if args.calculate_psnr else "0",
-			"ssim": "1" if args.calculate_ssim else "0",
+			"psnr": "1",
+			"ssim": "1",
 			"log_path": json_file_path, 
 			"log_fmt": "json"
 		}
@@ -151,59 +146,57 @@ for preset in chosen_presets:
 			file_contents = json.load(f)
 
 		frame_numbers = [frame['frameNum'] for frame in file_contents['frames']]
-		vmaf_scores = [frame['metrics']['vmaf'] for frame in file_contents['frames']]
 
+		# SSIM
+		ssim_scores = [ssim['metrics']['ssim'] for ssim in file_contents['frames']]
+		mean_ssim = round(np.mean(ssim_scores), decimal_places)
+		min_ssim = round(min(ssim_scores), decimal_places)
+		ssim_std = round(np.std(ssim_scores), decimal_places) # Standard deviation.
+		ssim = f'{min_ssim} | {ssim_std} | {mean_ssim}'
+		# Plot a line showing the variation of the SSIM throughout the video.
+		print(f'Plotting SSIM graph for preset {preset}...')
+		plt.plot(frame_numbers, ssim_scores, label='SSIM')
+
+		# PSNR
+		psnr_scores = [psnr['metrics']['psnr'] for psnr in file_contents['frames']]
+		mean_psnr = round(np.mean(psnr_scores), decimal_places)
+		min_psnr = round(min(psnr_scores), decimal_places)
+		psnr_std = round(np.std(psnr_scores), decimal_places) # Standard deviation.
+		psnr = f'{min_psnr} | {psnr_std} | {mean_psnr}'
+		# Plot a line showing the variation of the PSNR throughout the video.
+		print(f'Plotting PSNR graph for preset {preset}...')
+		plt.plot(frame_numbers, psnr_scores, label='PSNR')
+
+		# VMAF
+		vmaf_scores = [frame['metrics']['vmaf'] for frame in file_contents['frames']]
+		mean_vmaf = round(np.mean(vmaf_scores), decimal_places)
+		min_vmaf = round(min(vmaf_scores), decimal_places)
+		vmaf_std = round(np.std(vmaf_scores), decimal_places) # Standard deviation.
+		vmaf = f'{min_vmaf} | {vmaf_std} | {mean_vmaf}'
 		# Plot a line showing the variation of the VMAF score throughout the video.
-		print('Plotting VMAF graph...')
+		print(f'Plotting VMAF graph for preset {preset}...')
 		plt.plot(frame_numbers, vmaf_scores, label='VMAF')
+
+		# Set the names of the columns for the presets comparison table.
+		table.field_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original', 'SSIM', 'PSNR', 'VMAF']
+		# The values for the row for the current preset.
+		row = [preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%', ssim, psnr, vmaf]
+		table.add_row(row)
+
 		plt.suptitle(f'Preset "{preset}"')
 		plt.xlabel('Frame Number')
 		plt.ylabel('Value of Quality Metric')
-		
-		mean_vmaf = round(np.mean(vmaf_scores), 3)
-		min_vmaf = round(min(vmaf_scores), 3)
-		vmaf_std = round(np.std(vmaf_scores), 3) # Standard deviation.
-		vmaf_data = f'{min_vmaf} | {vmaf_std} | {mean_vmaf}'
-
-		table_columns = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original', 'VMAF']
-		row = [preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%', vmaf_data]
-
-		if args.calculate_psnr:
-			psnr_scores = [psnr['metrics']['psnr'] for psnr in file_contents['frames']]
-			mean_psnr = round(np.mean(psnr_scores), 3)
-			min_psnr = round(min(psnr_scores), 3)
-			psnr_std = round(np.std(psnr_scores), 3) # Standard deviation.
-			psnr_data = f'{min_psnr} | {psnr_std} | {mean_psnr}'
-			table_columns.insert(4, 'PSNR')
-			row.insert(4, psnr_data)
-			# Plot a line showing the variation of the PSNR throughout the video.
-			print('Plotting PSNR graph...')
-			plt.plot(frame_numbers, psnr_scores, label='PSNR')
-
-		if args.calculate_ssim:
-			ssim_scores = [ssim['metrics']['ssim'] for ssim in file_contents['frames']]
-			mean_ssim = round(np.mean(ssim_scores), 3)
-			min_ssim = round(min(ssim_scores), 3)
-			ssim_std = round(np.std(ssim_scores), 3) # Standard deviation.
-			ssim_data = f'{min_ssim} | {ssim_std} | {mean_ssim}'
-			table_columns.insert(4, 'SSIM')
-			row.insert(4, ssim_data)
-			# Plot a line showing the variation of the SSIM throughout the video.
-			print('Plotting SSIM graph...')
-			plt.plot(frame_numbers, ssim_scores, label='SSIM')
-		
-		table.add_row(row)
-
 		plt.legend(loc='lower right')
 		plt.savefig(os.path.join(output_folder, f'{preset}.png'))
 		plt.clf()
 
-# Set the names of the columns.
-table.field_names = table_columns
+	# -dqs argument specified
+	else: 
+		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
+
 # Write the table to the .txt file.
 with open(comparison_table, 'a') as f:
 	f.write(table.get_string())
 
 separator()
-print(f'All done! Check out the folder named "{output_folder}"')
-print(f'Presets comparison table saved as "Presets Comparison (CRF {args.crf_value}).txt"')
+print(f'All done! Check out the ({filename}) folder.')
