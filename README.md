@@ -1,4 +1,4 @@
-# Features
+# Features:
 - Encodes a video file with every specified preset without having to manually start a new encode with each preset. Also, for every preset that the video was encoded with, the following data is presented in a table and saved as a file named "Table.txt":
     - Time taken to encode
     - Resulting filesize
@@ -8,11 +8,11 @@
     - [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) - a perceptual video quality assessment algorithm developed by Netflix.
     
     *([Here's](https://github.com/BassThatHertz/compare-x264-or-x265-presets#example) an example of the table that is saved.)*
-- In addition to the above, a graph is created for each preset that the video was encoded with, showing the variation of the SSIM, PSNR and VMAF throughout the encoded video.
+- In addition to the above, a graph is created for each preset that the video was encoded with, showing the variation of the SSIM, PSNR and VMAF throughout the encoded video. [Here's](example-graph.png) an example of the graph that is created.
 - Choose whether you want the libx264 (H.264/AVC) or libx265 (H.265/HEVC) encoder to be used.
 - Choose the CRF value to be used.
 - You can choose whether you want the whole video to be encoded or just a certain amount of seconds.
-# How to use
+# How to use:
 ```
 Arguments in square brackets are optional:
 usage: python compare-presets.py [-h] -f VIDEO_PATH [-e {libx264,libx265}] [-crf CRF_VALUE] [-t ENCODING_TIME] -p presets
@@ -43,12 +43,12 @@ optional arguments:
   -dqs, --disable-quality-stats
                         Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).
 ```
-# Requirements
+# Requirements:
 - Python **3.6+**
 - FFmpeg installed and in your PATH. The build of FFmpeg must have `--enable-libvmaf` in the configuration (unless you don't care about the quality metrics and you specify `-dqs` when running this command line program). If you're on Windows, you can download an FFmpeg binary which has `--enable-libvmaf` in the configuration by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
 - The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as compare-presets.py. These files are not needed if you only want the encoding time and filesize to be shown (you must specify `-dqs` in this case).
 - `pip install -r requirements.txt`
-# Example
+# An example of the table that is saved:
 The table is saved in a .txt file. Here's an example of the table that is produced:
 ```
 You chose to encode a30.mkv using libx264 with a CRF of 23.
