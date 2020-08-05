@@ -62,16 +62,21 @@ print(f'Framerate: {fps} FPS')
 
 chosen_presets = args.presets
 
-output_folder = f'({filename})'
-os.makedirs(output_folder, exist_ok=True)
+crf_value = '23' # Default CRF value.
+if args.crf_value:
+	crf_value = args.crf_value
 
-comparison_file_dir = os.path.join(output_folder, f'Presets Comparison (CRF {args.crf_value}).txt')
+# The folder where the encodings and quality data will be saved.
+output_folder = f'({filename})/CRF {crf_value}'
+os.makedirs(output_folder, exist_ok=True)
+# The comparison table will be in the following path:
+comparison_table = os.path.join(output_folder, 'Presets Comparison.txt')
 
 time_message = ''
 if args.encoding_time:
 	time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
-with open(comparison_file_dir, 'w') as f:
+with open(comparison_table, 'w') as f:
 	f.write(f'You chose to encode {args.video_path}{time_message} using {args.video_encoder} '
 		f'with a CRF of {args.crf_value}.\nPSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Max\n')
 
@@ -82,10 +87,6 @@ original_video_size = os.path.getsize(args.video_path) / 1_000_000
 table = PrettyTable()
 
 for preset in chosen_presets:
-
-	crf_value = '23' # Default CRF value.
-	if args.crf_value:
-		crf_value = args.crf_value
 
 	output_file_path = os.path.join(output_folder, f'{preset}.mkv')
 
@@ -178,7 +179,6 @@ for preset in chosen_presets:
 			# Plot a line showing the variation of the PSNR throughout the video.
 			print('Plotting PSNR graph...')
 			plt.plot(frame_numbers, psnr_scores, label='PSNR')
-		
 
 		if args.calculate_ssim:
 			ssim_scores = [ssim['metrics']['ssim'] for ssim in file_contents['frames']]
@@ -201,7 +201,7 @@ for preset in chosen_presets:
 # Set the names of the columns.
 table.field_names = table_columns
 # Write the table to the .txt file.
-with open(comparison_file_dir, 'a') as f:
+with open(comparison_table, 'a') as f:
 	f.write(table.get_string())
 
 separator()
