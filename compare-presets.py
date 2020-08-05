@@ -78,7 +78,7 @@ if args.encoding_time:
 
 with open(comparison_table, 'w') as f:
 	f.write(f'You chose to encode {args.video_path}{time_message} using {args.video_encoder} '
-		f'with a CRF of {args.crf_value}.\nPSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Max\n')
+		f'with a CRF of {args.crf_value}.\nPSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
 
 # This will be used when comparing the size of the encoded file to the original.
 original_video_size = os.path.getsize(args.video_path) / 1_000_000
