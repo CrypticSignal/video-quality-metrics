@@ -41,7 +41,7 @@ parser.add_argument('-p', '--presets', nargs='+', required=True,
 parser.add_argument('-pm', '--phone-model', action='store_true', 
 	help='Enable VMAF phone model (default: False)')
 
-parser.add_argument('-dp', '--decimal-places', default=3, help='The number of decimal places to be used for the data '
+parser.add_argument('-dp', '--decimal-places', default=3, help='The number of decimal places to use for the data '
 				    'in the table (default: 3)')
 
 parser.add_argument('-dqs', '--disable-quality-stats', action='store_true', 
@@ -58,11 +58,10 @@ fps = str(cap.get(cv2.CAP_PROP_FPS))
 print(f'Framerate: {fps} FPS')
 
 chosen_presets = args.presets
-decimal_places = int(args.decimal_places)
-
-crf_value = '23' # Default CRF value.
-if args.crf_value:
-	crf_value = args.crf_value
+# Default CRF value is 23 if -crf argument is not specified.
+crf_value = '23' if not args.crf_value else args.crf_value
+# Default number of decimal places is 3 if -dp argument is not specified.
+decimal_places = 3 if not args.decimal_places else int(args.decimal_places)
 
 output_folder = f'({filename})/CRF {crf_value}'
 os.makedirs(output_folder, exist_ok=True)
