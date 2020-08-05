@@ -1,7 +1,8 @@
 import argparse, cv2, time, os, subprocess, json
-import numpy as np
 from argparse import RawTextHelpFormatter
+import numpy as np
 from prettytable import PrettyTable
+import matplotlib.pyplot as plt
 
 def separator():
 	print('-----------------------------------------------------------------------------------------------------------') 
@@ -9,7 +10,7 @@ def separator():
 separator()
 print('If the path contains a space, the path argument must be surrounded in double quotes.')
 print('Example: python compare-presets.py -f "C:/Users/H/Desktop/test file.mp4" -p fast veryfast')
-print("For more information, enter 'compare-presets.py -h'")
+print("For more information, enter 'python compare-presets.py -h'")
 separator()
 
 parser = argparse.ArgumentParser(description='Compare the encoding time, resulting filesize and (optionally) the VMAF '
@@ -57,22 +58,18 @@ print(f'File: {filename}')
 video = args.video_path
 cap = cv2.VideoCapture(video)
 fps = str(cap.get(cv2.CAP_PROP_FPS))
-print(f'Framerate: {fps}')
+print(f'Framerate: {fps} FPS')
 
 chosen_presets = args.presets
-
-# Initialise the comparison table that will be created.
-table = PrettyTable()
 
 output_folder = f'({filename})'
 os.makedirs(output_folder, exist_ok=True)
 
 comparison_file_dir = os.path.join(output_folder, f'Presets Comparison (CRF {args.crf_value}).txt')
 
+time_message = ''
 if args.encoding_time:
 	time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
-else:
-	time_message = ''
 
 with open(comparison_file_dir, 'w') as f:
 	f.write(f'You chose to encode {args.video_path}{time_message} using {args.video_encoder} '
@@ -80,6 +77,9 @@ with open(comparison_file_dir, 'w') as f:
 
 # This will be used when comparing the size of the encoded file to the original.
 original_video_size = os.path.getsize(args.video_path) / 1_000_000
+
+# Initialise the comparison table that will be created.
+table = PrettyTable()
 
 for preset in chosen_presets:
 
@@ -120,7 +120,7 @@ for preset in chosen_presets:
 		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
 
 	else:
-		json_file_path = f'{output_folder}/Quality stats with preset {preset}.json'
+		json_file_path = f'{output_folder}/{preset}.json'
 		# (os.path.join doesn't work with libvmaf's log_path option)
 
 		vmaf_options = {
@@ -144,42 +144,66 @@ for preset in chosen_presets:
 		separator()
 		print(f'Calculating the quality achieved with preset {preset}...')
 		subprocess.run(subprocess_args)
+		print('Done!')
 
 		with open(json_file_path, 'r') as f:
 			file_contents = json.load(f)
 
+		frame_numbers = [frame['frameNum'] for frame in file_contents['frames']]
 		vmaf_scores = [frame['metrics']['vmaf'] for frame in file_contents['frames']]
-		vmaf = round(np.mean(vmaf_scores), 3)
-		vmaf_min = round(min(vmaf_scores), 3)
-		vmaf_std = round(np.std(vmaf_scores), 3)
-		vmaf_data = f'{vmaf_min} | {vmaf_std} | {vmaf}'
+
+		# Plot a line showing the variation of the VMAF score throughout the video.
+		print('Plotting VMAF graph...')
+		plt.plot(frame_numbers, vmaf_scores, label='VMAF')
+		plt.suptitle(f'Preset "{preset}"')
+		plt.xlabel('Frame Number')
+		plt.ylabel('Value of Quality Metric')
+		
+		mean_vmaf = round(np.mean(vmaf_scores), 3)
+		min_vmaf = round(min(vmaf_scores), 3)
+		vmaf_std = round(np.std(vmaf_scores), 3) # Standard deviation.
+		vmaf_data = f'{min_vmaf} | {vmaf_std} | {mean_vmaf}'
 
 		table_columns = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original', 'VMAF']
-		table_data = [preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%', vmaf_data]
+		row = [preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%', vmaf_data]
 
 		if args.calculate_psnr:
-			psnr_scores = [frame['metrics']['psnr'] for frame in file_contents['frames']]
-			psnr = round(np.mean(psnr_scores), 3)
-			psnr_min = round(min(psnr_scores), 3)
-			psnr_std = round(np.std(psnr_scores), 3)
-			psnr_data = f'{psnr_min} | {psnr_std} | {psnr}'
+			psnr_scores = [psnr['metrics']['psnr'] for psnr in file_contents['frames']]
+			mean_psnr = round(np.mean(psnr_scores), 3)
+			min_psnr = round(min(psnr_scores), 3)
+			psnr_std = round(np.std(psnr_scores), 3) # Standard deviation.
+			psnr_data = f'{min_psnr} | {psnr_std} | {mean_psnr}'
 			table_columns.insert(4, 'PSNR')
-			table_data.insert(4, psnr_data)
+			row.insert(4, psnr_data)
+			# Plot a line showing the variation of the PSNR throughout the video.
+			print('Plotting PSNR graph...')
+			plt.plot(frame_numbers, psnr_scores, label='PSNR')
+		
 
 		if args.calculate_ssim:
-			ssim_scores = [frame['metrics']['ssim'] for frame in file_contents['frames']]
-			ssim = round(np.mean(ssim_scores), 3)
-			ssim_min = round(min(ssim_scores), 3)
-			ssim_std = round(np.std(ssim_scores), 3)
-			ssim_data = f'{ssim_min} | {ssim_std} | {ssim}'
+			ssim_scores = [ssim['metrics']['ssim'] for ssim in file_contents['frames']]
+			mean_ssim = round(np.mean(ssim_scores), 3)
+			min_ssim = round(min(ssim_scores), 3)
+			ssim_std = round(np.std(ssim_scores), 3) # Standard deviation.
+			ssim_data = f'{min_ssim} | {ssim_std} | {mean_ssim}'
 			table_columns.insert(4, 'SSIM')
-			table_data.insert(4, ssim_data)
+			row.insert(4, ssim_data)
+			# Plot a line showing the variation of the SSIM throughout the video.
+			print('Plotting SSIM graph...')
+			plt.plot(frame_numbers, ssim_scores, label='SSIM')
+		
+		table.add_row(row)
 
-		table.add_row(table_data)
+		plt.legend(loc='lower right')
+		plt.savefig(os.path.join(output_folder, f'{preset}.png'))
+		plt.clf()
 
+# Set the names of the columns.
 table.field_names = table_columns
-
+# Write the table to the .txt file.
 with open(comparison_file_dir, 'a') as f:
 	f.write(table.get_string())
 
-print(f'Done! Comparison data saved in {comparison_file_dir}')
+separator()
+print(f'All done! Check out the folder named "{output_folder}"')
+print(f'Presets comparison table saved as "Presets Comparison (CRF {args.crf_value}).txt"')
