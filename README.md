@@ -7,7 +7,7 @@
     - Peak Signal-to-Noise-Ratio (PSNR)
     - [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) - a perceptual video quality assessment algorithm developed by Netflix.
     
-    *([Here's](https://github.com/BassThatHertz/compare-x264-or-x265-presets#example) an example of the table that is saved.)*
+    *([Here's](https://github.com/BassThatHertz/compare-x264-or-x265-presets#an-example-of-the-table-that-is-saved) an example of the table that is saved.)*
 - In addition to the above, a graph is created for each preset that the video was encoded with, showing the variation of the SSIM, PSNR and VMAF throughout the encoded video. [Here's](example-graph.png) an example of the graph that is created.
 - Choose whether you want the libx264 (H.264/AVC) or libx265 (H.265/HEVC) encoder to be used.
 - Choose the CRF value to be used.
