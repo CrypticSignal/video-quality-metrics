@@ -1,8 +1,11 @@
 import argparse, cv2, time, os, subprocess, json
 from argparse import RawTextHelpFormatter
-import numpy as np
 from prettytable import PrettyTable
+import numpy as np
 import matplotlib.pyplot as plt
+
+table = PrettyTable()
+
 
 def separator():
 	print('-----------------------------------------------------------------------------------------------------------') 
@@ -49,53 +52,62 @@ parser.add_argument('-dqs', '--disable-quality-stats', action='store_true',
 
 args = parser.parse_args()
 
-filename = args.video_path.split('/')[-1]
-print(f'File: {filename}')
+# Video path.
+reference_file = args.video_path
+# Just the filename
+filename = reference_file.split('/')[-1]
+output_ext = os.path.splitext(reference_file)[-1][1:]
 
-video = args.video_path
-cap = cv2.VideoCapture(video)
-fps = str(cap.get(cv2.CAP_PROP_FPS))
-print(f'Framerate: {fps} FPS')
-
+video_encoder = args.video_encoder
+crf_value = args.crf_value
 chosen_presets = args.presets
-# Default CRF value is 23 if -crf argument is not specified.
-crf_value = '23' if not args.crf_value else args.crf_value
-# Default number of decimal places is 3 if -dp argument is not specified.
-decimal_places = 3 if not args.decimal_places else int(args.decimal_places)
+decimal_places = args.decimal_places
 
 output_folder = f'({filename})/CRF {crf_value}'
 os.makedirs(output_folder, exist_ok=True)
+
 # The comparison table will be in the following path:
 comparison_table = os.path.join(output_folder, 'Table.txt')
 
+print(f'File: {filename}')
+cap = cv2.VideoCapture(reference_file)
+fps = str(cap.get(cv2.CAP_PROP_FPS))
+print(f'Framerate: {fps} FPS')
+
+# This will be used when comparing the size of the encoded file to the original (or cut version).
+original_video_size = os.path.getsize(reference_file) / 1_000_000
+
 time_message = ''
+
 if args.encoding_time:
+	cut_filename = f'{os.path.splitext(filename)[0]} [{args.encoding_time}s].{output_ext}'
+	# Output path for the cut video.
+	output_file_path = f'{output_folder}/{cut_filename}'
+	# If an encoding time is specified, the reference file becomes the cut version of the video.
+	reference_file = output_file_path 
+	original_video_size = os.path.getsize(reference_file) / 1_000_000
+	# Create the cut version.
+	print(f'Cutting the video to {args.encoding_time} seconds...')
+	os.system(f'ffmpeg -loglevel warning -y -i {args.video_path} -t {args.encoding_time} '
+		      f'-map 0 -c copy "{output_file_path}"')
+	print('Done!')
 	time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
 with open(comparison_table, 'w') as f:
-	f.write(f'You chose to encode {args.video_path}{time_message} using {args.video_encoder} '
-		f'with a CRF of {args.crf_value}.\nPSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+	f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder} with a CRF of {args.crf_value}.\n'
+		    f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
 
-# This will be used when comparing the size of the encoded file to the original.
-original_video_size = os.path.getsize(args.video_path) / 1_000_000
-
-# Initialise the comparison table that will be created.
-table = PrettyTable()
-
+# Encode the video file with each preset.
 for preset in chosen_presets:
 
-	output_file_path = os.path.join(output_folder, f'{preset}.mkv')
+	output_file_path = os.path.join(output_folder, f'{preset}.{output_ext}')
 
 	subprocess_args = [
 		"ffmpeg", "-loglevel", "warning", "-stats", "-y",
-		"-i", args.video_path,
-		"-c:v", args.video_encoder, "-crf", args.crf_value, "-preset", preset,
+		"-i", reference_file, "-map", "0",
+		"-c:v", video_encoder, "-crf", args.crf_value, "-preset", preset,
 		"-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", output_file_path
 	]
-
-	if args.encoding_time:
-		subprocess_args.insert(7, "-t")
-		subprocess_args.insert(8, args.encoding_time)
 
 	separator()
 	print(f'Encoding with preset {preset}...')
@@ -131,7 +143,7 @@ for preset in chosen_presets:
 
 		subprocess_args = [
 			"ffmpeg", "-loglevel", "error", "-stats", "-r", fps, "-i", output_file_path,
-			"-r", fps, "-i", args.video_path,
+			"-r", fps, "-i", reference_file,
 			"-lavfi", "[0:v]setpts=PTS-STARTPTS[dist];[1:v]setpts=PTS-STARTPTS[ref];[dist][ref]"
 			f'libvmaf={vmaf_options}', "-f", "null", "-"
 		]
@@ -154,7 +166,8 @@ for preset in chosen_presets:
 		ssim = f'{min_ssim} | {ssim_std} | {mean_ssim}'
 		# Plot a line showing the variation of the SSIM throughout the video.
 		print(f'Plotting SSIM graph for preset {preset}...')
-		plt.plot(frame_numbers, ssim_scores, label='SSIM')
+		plt.plot(frame_numbers, ssim_scores, label=f'SSIM ({mean_ssim})')
+		print('Done!')
 
 		# PSNR
 		psnr_scores = [psnr['metrics']['psnr'] for psnr in file_contents['frames']]
@@ -164,7 +177,8 @@ for preset in chosen_presets:
 		psnr = f'{min_psnr} | {psnr_std} | {mean_psnr}'
 		# Plot a line showing the variation of the PSNR throughout the video.
 		print(f'Plotting PSNR graph for preset {preset}...')
-		plt.plot(frame_numbers, psnr_scores, label='PSNR')
+		plt.plot(frame_numbers, psnr_scores, label=f'PSNR ({mean_psnr})')
+		print('Done!')
 
 		# VMAF
 		vmaf_scores = [frame['metrics']['vmaf'] for frame in file_contents['frames']]
@@ -174,7 +188,8 @@ for preset in chosen_presets:
 		vmaf = f'{min_vmaf} | {vmaf_std} | {mean_vmaf}'
 		# Plot a line showing the variation of the VMAF score throughout the video.
 		print(f'Plotting VMAF graph for preset {preset}...')
-		plt.plot(frame_numbers, vmaf_scores, label='VMAF')
+		plt.plot(frame_numbers, vmaf_scores, label=f'VMAF ({mean_vmaf})')
+		print('Done!')
 
 		# Set the names of the columns for the presets comparison table.
 		table.field_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original', 'SSIM', 'PSNR', 'VMAF']
@@ -193,7 +208,7 @@ for preset in chosen_presets:
 	else: 
 		table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
 
-# Write the table to the .txt file.
+# Write the table to the Table.txt file.
 with open(comparison_table, 'a') as f:
 	f.write(table.get_string())
 
