@@ -5,7 +5,7 @@ There are two main things that this program can do:
 
 You already have a transcoded and original video, and you want to calculate the quality of the transcoded video using the VMAF and (optionally) the SSIM and PSNR metrics. The data is saved in a file named **Table.txt**, and a graph is also created which shows the variation of the VMAF/SSIM/PSNR throughout the video. The graph is saved as a PNG file.
 
-Example: `python quality-metrics.py -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
+Example: `python video-metrics.py -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
 
 *(VMAF is calculated by default unless the `-dqs` argument is specified).*
 
@@ -21,7 +21,7 @@ Transcode a video file (using the x264 or x265 encoder) and calculate the qualit
 
 **In addition to the above, a graph is created for each preset that the video was encoded with, showing the variation of the SSIM, PSNR and VMAF throughout the encoded video. [Here's](example-graph.png) an example of the graph that is created.**
 
-Example: `python quality-metrics.py -ovp original.mp4 -e x264 -p medium fast faster veryfast -ssim -psnr`
+Example: `python video-metrics.py -ovp original.mp4 -e x264 -p medium fast faster veryfast -ssim -psnr`
 
 *(VMAF is calculated by default unless the `-dqs` argument is specified).*
 
@@ -39,7 +39,7 @@ usage: compare-presets.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {libx264,libx265}] [
                           [-tvp TRANSCODED_VIDEO_PATH]
                           
 If there is a space in the path, it must be surrounded with double quotes. Example:
-python compare-presets.py -ovp "C:/Users/H/Desktop/my file.mp4" -p veryfast superfast
+python video-metrics.py -ovp "C:/Users/H/Desktop/my file.mp4" -p veryfast superfast
 
 optional arguments:
   -h, --help            show this help message and exit
