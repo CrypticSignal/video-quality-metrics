@@ -10,8 +10,8 @@ def separator():
 
 separator()
 print('If the path contains a space, the path argument must be surrounded in double quotes.')
-print('Example: python compare-presets.py -ovp "C:/Users/H/Desktop/test file.mp4" -p fast veryfast')
-print("For more information, enter 'python compare-presets.py -h'")
+print('Example: python video-metrics.py -ovp "C:/Users/H/Desktop/test file.mp4" -p fast veryfast')
+print("For more information, enter 'python video-metrics.py -h'")
 separator()
 
 
@@ -186,7 +186,6 @@ print(f'Framerate: {fps} FPS')
 
 # Create a PrettyTable object.
 table = PrettyTable()
-
 
 # Base template for the column names.
 table_column_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original']
