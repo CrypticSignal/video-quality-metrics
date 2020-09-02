@@ -41,7 +41,7 @@ usage: compare-presets.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {libx264,libx265}] [
 If there is a space in the path, it must be surrounded with double quotes. Example:
 python video-metrics.py -ovp "C:/Users/H/Desktop/my file.mp4" -p veryfast superfast
 
-optional arguments:
+Available arguments:
   -h, --help            show this help message and exit
   -ovp ORIGINAL_VIDEO_PATH, --original-video-path ORIGINAL_VIDEO_PATH
                         Enter the path of the video. A relative or absolute path can be specified.If the path contains a space, it must be surrounded in double quotes.
