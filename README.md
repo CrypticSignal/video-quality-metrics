@@ -95,4 +95,4 @@ You chose to encode a30.mkv using x264 with a CRF of 23.
 ```
 *Note: A video file with a length of 30 seconds was encoded.*
 
-*Command: `python quality-metrics.py -ovp a30.mkv -p slow medium fast faster veryfast superfast ultrafast -ssim -psnr`*
+*Command: `python video-metrics.py -ovp a30.mkv -p slow medium fast faster veryfast superfast ultrafast -ssim -psnr`*
