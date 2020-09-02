@@ -5,7 +5,7 @@ There are two main things that this program can do:
 
 You already have a transcoded and original video, and you want to calculate the quality of the transcoded video using the VMAF and (optionally) the SSIM and PSNR metrics. The data is saved in a file named **Table.txt**, and a graph is also created which shows the variation of the VMAF/SSIM/PSNR throughout the video. The graph is saved as a PNG file.
 
-Example: `python video-metrics.py -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
+Example: `python video-metrics.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
 
 *(VMAF is calculated by default unless the `-dqs` argument is specified).*
 
