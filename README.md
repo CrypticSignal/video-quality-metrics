@@ -1,33 +1,51 @@
-# What does this program do?
-This command line program encodes a video file (using the x264 or x265 encoder) with every specified preset without having to manually start a new encode with each preset. Also, for every preset that the video was encoded with, the following data is presented in a table and saved as a file named "Table.txt":
+# What can this program do?
+There are two main things that this program can do:
+
+**Option 1:**
+
+You already have a transcoded and original video, and you want to calculate the quality of the transcoded video using the VMAF and (optionally) the SSIM and PSNR metrics. The data is saved in a file named **Table.txt**, and a graph is also created which shows the variation of the VMAF/SSIM/PSNR throughout the video. The graph is saved as a PNG file.
+
+Example: `python quality-metrics.py -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
+
+*(VMAF is calculated by default unless the `-dqs` argument is specified).*
+
+**Option 2:**
+
+Transcode a video file (using the x264 or x265 encoder) and calculate the quality of the transcoded video file(s). This is useful if you want to compare the quality achieved with the various presets that are available with x264 and x265 (check out the "Choose a preset and tune" section [here](https://trac.ffmpeg.org/wiki/Encode/H.264#FAQ)). This program will automatically transcode the original video with every preset that you specify (using the `-p` argument)  without having to manually start a new encode with each preset. Also, for each preset that the video was encoded with, the following data is presented in a table and saved in a file named **Table.txt**:
 1. Time taken to encode the video (in seconds)
 2. Resulting filesize (MB)
 3. Filesize compared to the original (as a percentage)
-4. Structural Similarity Index (SSIM) 
-5. Peak Signal-to-Noise-Ratio (PSNR)
+4. [Optional] Structural Similarity Index (SSIM) 
+5. [Optional] Peak Signal-to-Noise-Ratio (PSNR)
 6. [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) - a perceptual video quality assessment algorithm developed by Netflix.
 
-- In addition to the above, a graph is created for each preset that the video was encoded with, showing the variation of the SSIM, PSNR and VMAF throughout the encoded video. [Here's](example-graph.png) an example of the graph that is created.
+**In addition to the above, a graph is created for each preset that the video was encoded with, showing the variation of the SSIM, PSNR and VMAF throughout the encoded video. [Here's](example-graph.png) an example of the graph that is created.**
 
-# Options:
+Example: `python quality-metrics.py -ovp original.mp4 -e x264 -p medium fast faster veryfast -ssim -psnr`
+
+*(VMAF is calculated by default unless the `-dqs` argument is specified).*
+
+
+# Option 2 features:
 - Choose whether you want the x264 (H.264/AVC) or x265 (H.265/HEVC) encoder to be used.
-- Choose the CRF value to be used.
-- You can choose whether you want the whole video to be encoded or just a certain amount of seconds.
+- Choose the CRF value to be used with the `-crf` argument. Default: 23
+- You can choose whether you want the whole video to be encoded or just a certain amount of seconds (using the `-t` argument).
 
 # Usage:
 ```
 Arguments in square brackets are optional:
-usage: python compare-presets.py [-h] -f VIDEO_PATH [-e {libx264,libx265}] [-crf CRF_VALUE] [-t ENCODING_TIME] -p presets
-                          [presets ...] [-pm] [-dp DECIMAL_PLACES] [-dqs]
+usage: compare-presets.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {libx264,libx265}] [-crf CRF_VALUE] [-t ENCODING_TIME]
+                          [-p presets [presets ...]] [-pm] [-dp DECIMAL_PLACES] [-ssim] [-psnr] [-dqs] [-ntm]
+                          [-tvp TRANSCODED_VIDEO_PATH]
                           
 If there is a space in the path, it must be surrounded with double quotes. Example:
-python compare-presets.py -f "C:/Users/H/Desktop/my file.mp4" -p veryfast superfast
+python compare-presets.py -ovp "C:/Users/H/Desktop/my file.mp4" -p veryfast superfast
 
 optional arguments:
   -h, --help            show this help message and exit
-  -f VIDEO_PATH, --video-path VIDEO_PATH
+  -ovp ORIGINAL_VIDEO_PATH, --original-video-path ORIGINAL_VIDEO_PATH
                         Enter the path of the video. A relative or absolute path can be specified.If the path contains a space, it must be surrounded in double quotes.
-                        Example: -f "C:/Users/H/Desktop/my file.mp4"
+                        Example: -ovp "C:/Users/H/Desktop/file 1.mp4"
   -e {libx264,libx265}, --video-encoder {libx264,libx265}
                         Specify the encoder to use. Must enter libx264 or libx265. Default: libx264
                         Example: -e libx265
@@ -42,10 +60,17 @@ optional arguments:
   -pm, --phone-model    Enable VMAF phone model (default: False)
   -dp DECIMAL_PLACES, --decimal-places DECIMAL_PLACES
                         The number of decimal places to use for the data in the table (default: 3)
+  -ssim, --calculate-ssim
+                        Calculate SSIM in addition to VMAF.
+  -psnr, --calculate-psnr
+                        Calculate PSNR in addition to VMAF.
   -dqs, --disable-quality-stats
                         Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).
+  -ntm, --no-transcoding-mode
+                        Simply calculate the quality metrics of a transcoded video to the original.
+  -tvp TRANSCODED_VIDEO_PATH, --transcoded-video-path TRANSCODED_VIDEO_PATH
+                        The path of the transcoded video (only applicable when using the -ntm mode)
 ```
-
 # Requirements:
 - Python **3.6+**
 - FFmpeg installed and in your PATH. The build of FFmpeg must have `--enable-libvmaf` in the configuration (unless you don't care about the quality metrics and you specify `-dqs` when running this command line program). If you're on Windows, you can download an FFmpeg binary which has `--enable-libvmaf` in the configuration by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
@@ -53,9 +78,9 @@ optional arguments:
 - `pip install -r requirements.txt`
 
 # An example of the table that is saved:
-The table is saved in a .txt file. Here's an example of the table that is produced:
+The table is saved in a file named **Table.txt**. Here's an example of the table that is created:
 ```
-You chose to encode a30.mkv using libx264 with a CRF of 23.
+You chose to encode a30.mkv using x264 with a CRF of 23.
 +-----------+-------------------+----------+---------------------------+-------+------+-------+
 |   Preset  | Encoding Time (s) |   Size   | Size Compared to Original |  PSNR | SSIM |  VMAF |
 +-----------+-------------------+----------+---------------------------+-------+------+-------+
@@ -70,4 +95,4 @@ You chose to encode a30.mkv using libx264 with a CRF of 23.
 ```
 *Note: A video file with a length of 30 seconds was encoded.*
 
-*Command: `python compare-presets.py -f a30.mkv -p slow medium fast faster veryfast superfast ultrafast`*
+*Command: `python quality-metrics.py -ovp a30.mkv -p slow medium fast faster veryfast superfast ultrafast -ssim -psnr`*
