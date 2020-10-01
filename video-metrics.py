@@ -219,7 +219,7 @@ elif isinstance(args.crf_value, list):
 	print('More than one CRF value specified. CRF comparison mode activated.')
 	crf_values = args.crf_value
 	print(f'The video will be transoded using the following CRF values: {crf_values}')
-	chosen_preset = args.presets[0]
+	chosen_preset = args.preset[0]
 	print(f'Preset chosen: {chosen_preset}')
 	video_encoder = args.video_encoder
 	
@@ -258,7 +258,7 @@ elif isinstance(args.crf_value, list):
 	for crf in crf_values:
 
 		transcode_output_path = os.path.join(output_folder, f'CRF {crf}.{output_ext}')
-		graph_title = f'CRF {crf}'
+		graph_title = f'CRF {crf}, preset {chosen_preset}'
 
 		subprocess_args = [
 			"ffmpeg", "-loglevel", "warning", "-stats", "-y",
