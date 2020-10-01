@@ -238,7 +238,7 @@ elif isinstance(args.crf_value, list):
 	output_folder = f'({filename})/CRF Comparison'
 	os.makedirs(output_folder, exist_ok=True)
 	# The comparison table will be in the following path:
-	comparison_table = os.path.join(output_folder, 'CRF Comparison Table.txt')
+	comparison_table = os.path.join(output_folder, 'Table.txt')
 
 	table_column_names.insert(0, 'CRF')
 	# Set the names of the columns
@@ -315,7 +315,7 @@ else:
 	output_folder = f'({filename})/Presets comparison at CRF {crf_value}'
 	os.makedirs(output_folder, exist_ok=True)
 	# The comparison table will be in the following path:
-	comparison_table = os.path.join(output_folder, 'Presets Comparison Table.txt')
+	comparison_table = os.path.join(output_folder, 'Table.txt')
 
 	table_column_names.insert(0, 'Preset')
 	# Set the names of the columns
