@@ -9,7 +9,7 @@ You already have a transcoded video and you want to compare its quality to the o
 
 You already have a transcoded and original video, and you want to calculate the quality of the transcoded video using the VMAF and (optionally) the SSIM and PSNR metrics.
 
-# You already have a trancoded video:
+# You already have a transcoded video:
 
 You already have a transcoded and original video, and you want to calculate the quality of the transcoded video using the VMAF and (optionally) the SSIM and PSNR metrics. The data is saved in a file named **Table.txt**, and a graph is also created which shows the variation of the VMAF/SSIM/PSNR throughout the video. The graph is saved as a PNG file.
 
@@ -17,7 +17,7 @@ Example: `python video-metrics.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ss
 
 *(VMAF is calculated by default unless the `-dqs` argument is specified).*
 
-# You want to trancode a video and calculate the quality achieved with different CRF values OR presets:
+# You want to transcode a video and calculate the quality achieved with different CRF values OR presets:
 There are two options:
 
 1. **Calculate the quality achieved with different CRF values:**
@@ -49,7 +49,7 @@ Also, for each CRF value/preset that the video was encoded with, the following d
 # Option 2 features:
 - You can choose whether you want the whole video to be encoded or just a certain amount of seconds (using the `-t` argument).
 - Choose whether you want the x264 (H.264/AVC) or x265 (H.265/HEVC) encoder to be used.
-- You can specify whether you want the SSIM and/or PSNR to be calculated in addition to the VMAF. Or you can disable the computation of quality metrics entirely, if the only information you're interested in is the time taken to trancode and the resulting filesize.
+- You can specify whether you want the SSIM and/or PSNR to be calculated in addition to the VMAF. Or you can disable the computation of quality metrics entirely, if the only information you're interested in is the time taken to transcode and the resulting filesize.
 
 # Usage:
 ```
