@@ -9,9 +9,9 @@ def separator():
 	print('-----------------------------------------------------------------------------------------------------------') 
 
 separator()
-print('If the path contains a space, the path argument must be surrounded in double quotes.')
-print('Example: python compare-presets.py -ovp "C:/Users/H/Desktop/test file.mp4" -p fast veryfast')
-print("For more information, enter 'python compare-presets.py -h'")
+print('If the path contains a space, the path argument must be surrounded in double quotes. Example:')
+print('python video-metrics.py -ovp "C:/Users/H/Desktop/test file.mp4" -p fast veryfast')
+print("For more information, enter 'python video-metrics.py -h'")
 separator()
 
 
@@ -48,7 +48,6 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 		f'libvmaf={vmaf_options}', "-f", "null", "-"
 	]
 
-	separator()
 	print(f'Computing the quality metrics...')
 	subprocess.run(subprocess_args)
 	print('Done!')
@@ -130,53 +129,47 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 
 	# End of compute_metrics function
 
-parser = argparse.ArgumentParser(description='Compare the encoding time, resulting filesize and (optionally) the VMAF '
-	'value obtained with the different encoder presets: '
-	"'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast' and 'ultrafast'. "
-	'You can edit the presets that are tested by editing the presets list on line 2 of compare-presets.py',
-	formatter_class=RawTextHelpFormatter)
+parser = argparse.ArgumentParser(description='Calculate the quality of transcoded video(s). For more info, visit:\n'
+								 'https://github.com/BassThatHertz/video-quality-metrics')
 
 parser.add_argument('-ovp', '--original-video-path', type=str, required=True, help='Enter the path of the video. '
-	'A relative or absolute path can be specified.'
-	'If the path contains a space, it must be surrounded in double quotes.\n'
-	'Example: -ovp "C:/Users/H/Desktop/file 1.mp4"')
+				    'A relative or absolute path can be specified. '
+					'If the path contains a space, it must be surrounded in double quotes.\n'
+					'Example: -ovp "C:/Users/H/Desktop/file 1.mp4"')
 
 parser.add_argument('-e', '--video-encoder', type=str, default='x264', choices=['x264', 'x265'],
-	help='Specify the encoder to use. Must enter x264 or x265. Default: x264\nExample: -e x265')
+					help='Specify the encoder to use. Must enter x264 or x265. Default: x264\nExample: -e x265')
 
-parser.add_argument('-crf', '--crf-value', default=23, nargs='+', type=int, choices=range(0, 51), help='Enter the CRF value to be used (default: 23)')
+parser.add_argument('-crf', '--crf-value', nargs='+', type=int, choices=range(0, 51),
+				    help='Specify the CRF value(s) to use.', metavar='CRF_VALUE(s)')
 
 parser.add_argument('-t', '--encoding-time', type=str, help='Encode this many seconds of the video. '
 	'If not specified, the whole video will get encoded.')
 
-parser.add_argument('-p', '--presets', nargs='+',
-	choices=['placebo', 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'],
-	help="List the presets you want to be tested (separated by a space).\n"
-	"Choose from: 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'\n"
-	"Example: -p fast veryfast ultrafast", metavar='presets')
+parser.add_argument('-p', '--preset', nargs='+', choices=
+	                ['veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'],
+				    help='Specify the preset(s) to use.', metavar='PRESET(s)')
 
 parser.add_argument('-pm', '--phone-model', action='store_true', 
-	help='Enable VMAF phone model (default: False)')
+				    help='Enable VMAF phone model (default: False)')
 
 parser.add_argument('-dp', '--decimal-places', default=3, help='The number of decimal places to use for the data '
-				    'in the table (default: 3)')
+				    'in the table (default: 3).', metavar='<number of decimal places>')
 
 parser.add_argument('-ssim', '--calculate-ssim', action='store_true', help='Calculate SSIM in addition to VMAF.')
 parser.add_argument('-psnr', '--calculate-psnr', action='store_true', help='Calculate PSNR in addition to VMAF.')
 
-parser.add_argument('-dqs', '--disable-quality-stats', action='store_true',
-	help='Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).')
+parser.add_argument('-dqs', '--disable-quality-stats', action='store_true', help='Disable calculation of '
+					'PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).')
 
 parser.add_argument('-ntm', '--no-transcoding-mode', action='store_true', 
-	help='Simply calculate the quality metrics of a transcoded video to the original.')
+					help='Simply calculate the quality metrics of a transcoded video to the original.')
 
 parser.add_argument('-tvp', '--transcoded-video-path', 
-	help='The path of the transcoded video (only applicable when using the -ntm mode)')
+					help='The path of the transcoded video (only applicable when using the -ntm mode).')
 
 args = parser.parse_args()
-print(type(args.crf_value))
 decimal_places = args.decimal_places
-
 # Original video path.
 original_video = args.original_video_path
 # This will be used when comparing the size of the encoded file to the original (or cut version).
@@ -205,6 +198,7 @@ if args.calculate_psnr:
 if args.no_transcoding_mode:
 	del table_column_names[:2]
 
+# -ntm argument was specified.
 if args.no_transcoding_mode:
 
 	# Where the data will be saved.
@@ -223,15 +217,14 @@ if args.no_transcoding_mode:
 
 	compute_metrics(transcoded_video, output_folder, json_file_path, graph_title)
 
-# If args.crf_value is a list, that means more than one CRF value was specified.
+# If args.crf_value is a list, more than one CRF value was specified so the user wants to compare CRF values.
 elif isinstance(args.crf_value, list):
-	print('sdfjsgdfj')
+
 	print('More than one CRF value specified. CRF comparison mode activated.')
 	crf_values = args.crf_value
 	print(f'The video will be transoded using the following CRF values: {crf_values}')
 	chosen_preset = args.presets[0]
 	print(f'Preset chosen: {chosen_preset}')
-
 	video_encoder = args.video_encoder
 	
 	# Where the data will be saved.
@@ -304,7 +297,7 @@ elif isinstance(args.crf_value, list):
 			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
 
 
-# Transcode the video with each preset and compute the metrics.
+# The user wants to compare presets.
 else:
 
 	video_encoder = args.video_encoder
