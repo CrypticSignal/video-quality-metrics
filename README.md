@@ -44,7 +44,7 @@ Also, for each CRF value/preset that the video was encoded with, the following d
 5. [Optional] Peak Signal-to-Noise-Ratio (PSNR)
 6. [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) - a perceptual video quality assessment algorithm developed by Netflix.
 
-**In addition to the above, a graph is created for each CRF value/preset that the video was encoded with, showing the variation of the SSIM, PSNR and VMAF throughout the encoded video. [Here's](example-graph.png) an example of the graph that is created.**
+**In addition to the above, a graph is created for each CRF value/preset that the video was encoded with, showing the variation of the SSIM, PSNR and VMAF throughout the encoded video. [Here's](CRF 23.png) an example of the graph that is created.**
 
 # Option 2 features:
 - You can choose whether you want the whole video to be encoded or just a certain amount of seconds (using the `-t` argument).
