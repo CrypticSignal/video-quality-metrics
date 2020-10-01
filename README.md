@@ -54,10 +54,9 @@ Also, for each CRF value/preset that the video was encoded with, the following d
 # Usage:
 ```
 Arguments in square brackets are optional:
-usage: video-metrics.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}]
-                        [-crf {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50} ...]]
-                        [-t ENCODING_TIME] [-p presets [presets ...]] [-pm] [-dp DECIMAL_PLACES] [-ssim] [-psnr]
-                        [-dqs] [-ntm] [-tvp TRANSCODED_VIDEO_PATH]
+usage: video-metrics.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]]
+                        [-t ENCODING_TIME] [-p PRESET(s) [PRESET(s ...]] [-pm] [-dp <number of decimal places>]
+                        [-ssim] [-psnr] [-dqs] [-ntm] [-tvp TRANSCODED_VIDEO_PATH]
                           
 If there is a space in the path, it must be surrounded with double quotes. Example:
 python video-metrics.py -ovp "C:/Users/H/Desktop/my file.mp4" -p veryfast superfast
@@ -65,32 +64,31 @@ python video-metrics.py -ovp "C:/Users/H/Desktop/my file.mp4" -p veryfast superf
 Available arguments:
   -h, --help            show this help message and exit
   -ovp ORIGINAL_VIDEO_PATH, --original-video-path ORIGINAL_VIDEO_PATH
-                        Enter the path of the video. A relative or absolute path can be specified.If the path contains a space, it must be surrounded in double quotes.
-                        Example: -ovp "C:/Users/H/Desktop/file 1.mp4"
+                        Enter the path of the video. A relative or absolute path can be specified. If the path
+                        contains a space, it must be surrounded in double quotes. Example: -ovp
+                        "C:/Users/H/Desktop/file 1.mp4"
   -e {x264,x265}, --video-encoder {x264,x265}
-                        Specify the encoder to use. Must enter x264 or x265. Default: x264
-                        Example: -e x265
-  -crf {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50} ...], --crf-value {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50} ...]
-                        Enter the CRF value to be used (default: 23)
+                        Specify the encoder to use. Must enter x264 or x265. Default: x264 Example: -e x265
+  -crf CRF_VALUE(s) [CRF_VALUE(s) ...], --crf-value CRF_VALUE(s) [CRF_VALUE(s) ...]
+                        Specify the CRF value(s) to use.
+  -p PRESET(s) [PRESET(s) ...], --preset PRESET(s) [PRESET(s) ...]
+                        Specify the preset(s) to use.
   -t ENCODING_TIME, --encoding-time ENCODING_TIME
                         Encode this many seconds of the video. If not specified, the whole video will get encoded.
-  -p presets [presets ...], --presets presets [presets ...]
-                        List the presets you want to be tested (separated by a space).
-                        Choose from: 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'
-                        Example: -p fast veryfast ultrafast
   -pm, --phone-model    Enable VMAF phone model (default: False)
-  -dp DECIMAL_PLACES, --decimal-places DECIMAL_PLACES
-                        The number of decimal places to use for the data in the table (default: 3)
+  -dp <number of decimal places>, --decimal-places <number of decimal places>
+                        The number of decimal places to use for the data in the table (default: 3).
   -ssim, --calculate-ssim
                         Calculate SSIM in addition to VMAF.
   -psnr, --calculate-psnr
                         Calculate PSNR in addition to VMAF.
   -dqs, --disable-quality-stats
-                        Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).
+                        Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves
+                        completion time).
   -ntm, --no-transcoding-mode
                         Simply calculate the quality metrics of a transcoded video to the original.
   -tvp TRANSCODED_VIDEO_PATH, --transcoded-video-path TRANSCODED_VIDEO_PATH
-                        The path of the transcoded video (only applicable when using the -ntm mode)
+                        The path of the transcoded video (only applicable when using the -ntm mode).
 ```
 # Requirements:
 - Python **3.6+**
