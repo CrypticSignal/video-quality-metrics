@@ -6,16 +6,16 @@ import matplotlib.pyplot as plt
 
 
 def separator():
-	print('-----------------------------------------------------------------------------------------------------------')
+	print('-----------------------------------------------------------------------------------------------------------') 
 
 separator()
 print('If the path contains a space, the path argument must be surrounded in double quotes.')
-print('Example: python video-metrics.py -ovp "C:/Users/H/Desktop/test file.mp4" -p fast veryfast')
-print("For more information, enter 'python video-metrics.py -h'")
+print('Example: python compare-presets.py -ovp "C:/Users/H/Desktop/test file.mp4" -p fast veryfast')
+print("For more information, enter 'python compare-presets.py -h'")
 separator()
 
 
-def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title, preset=''):
+def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title, crf_or_preset):
 
 	# The comparison table will be in the following path:
 	#comparison_table = os.path.join(output_folder, 'Table.txt')
@@ -24,7 +24,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 		f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
 
 	size_of_file = os.path.getsize(transcoded_video) / 1_000_000
-	size_compared_to_original = round(((size_of_file / original_video_size) * 100), 3)
+	size_compared_to_original = round(((size_of_file / original_video_size) * 100), 3) 
 	size_rounded = round(size_of_file, decimal_places)
 
 	# Base template for the values in each row in the table.
@@ -35,7 +35,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 		"phone_model": "1" if args.phone_model else "0",
 		"psnr": "1" if args.calculate_psnr else "0",
 		"ssim": "1" if args.calculate_ssim else "0",
-		"log_path": json_file_path,
+		"log_path": json_file_path, 
 		"log_fmt": "json"
 	}
 
@@ -74,7 +74,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 		row.append(vmaf)
 
 		if args.calculate_ssim:
-
+			
 			ssim_scores = [ssim['metrics']['ssim'] for ssim in file_contents['frames']]
 			mean_ssim = round(np.mean(ssim_scores), decimal_places)
 			min_ssim = round(min(ssim_scores), decimal_places)
@@ -88,7 +88,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 			row.append(ssim)
 
 		if args.calculate_psnr:
-
+			
 			psnr_scores = [psnr['metrics']['psnr'] for psnr in file_contents['frames']]
 			mean_psnr = round(np.mean(psnr_scores), decimal_places)
 			min_psnr = round(min(psnr_scores), decimal_places)
@@ -102,12 +102,17 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 			row.append(psnr)
 
 		if not args.no_transcoding_mode:
-			row.insert(0, preset)
-			row.insert(1, f'{time_rounded}')
-
+			if isinstance(args.crf_value, list):
+				row.insert(0, crf)
+				row.insert(1, f'{time_rounded}')
+			else:
+				row.insert(0, preset)
+				row.insert(1, f'{time_rounded}')
+			
 		table.add_row(row)
 
-		graph_title = f'{preset}.png' if not args.no_transcoding_mode else 'VariationOfQuality.png'
+		if args.no_transcoding_mode:
+			graph_title = 'VariationOfQuality.png'
 
 		plt.suptitle(graph_title)
 		plt.xlabel('Frame Number')
@@ -139,7 +144,7 @@ parser.add_argument('-ovp', '--original-video-path', type=str, required=True, he
 parser.add_argument('-e', '--video-encoder', type=str, default='x264', choices=['x264', 'x265'],
 	help='Specify the encoder to use. Must enter x264 or x265. Default: x264\nExample: -e x265')
 
-parser.add_argument('-crf', '--crf-value', type=str, default='23', help='Enter the CRF value to be used (default: 23)')
+parser.add_argument('-crf', '--crf-value', default=23, nargs='+', type=int, choices=range(0, 51), help='Enter the CRF value to be used (default: 23)')
 
 parser.add_argument('-t', '--encoding-time', type=str, help='Encode this many seconds of the video. '
 	'If not specified, the whole video will get encoded.')
@@ -150,7 +155,7 @@ parser.add_argument('-p', '--presets', nargs='+',
 	"Choose from: 'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'\n"
 	"Example: -p fast veryfast ultrafast", metavar='presets')
 
-parser.add_argument('-pm', '--phone-model', action='store_true',
+parser.add_argument('-pm', '--phone-model', action='store_true', 
 	help='Enable VMAF phone model (default: False)')
 
 parser.add_argument('-dp', '--decimal-places', default=3, help='The number of decimal places to use for the data '
@@ -162,13 +167,14 @@ parser.add_argument('-psnr', '--calculate-psnr', action='store_true', help='Calc
 parser.add_argument('-dqs', '--disable-quality-stats', action='store_true',
 	help='Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).')
 
-parser.add_argument('-ntm', '--no-transcoding-mode', action='store_true',
+parser.add_argument('-ntm', '--no-transcoding-mode', action='store_true', 
 	help='Simply calculate the quality metrics of a transcoded video to the original.')
 
-parser.add_argument('-tvp', '--transcoded-video-path',
+parser.add_argument('-tvp', '--transcoded-video-path', 
 	help='The path of the transcoded video (only applicable when using the -ntm mode)')
 
 args = parser.parse_args()
+print(type(args.crf_value))
 decimal_places = args.decimal_places
 
 # Original video path.
@@ -188,7 +194,7 @@ print(f'Framerate: {fps} FPS')
 table = PrettyTable()
 
 # Base template for the column names.
-table_column_names = ['Preset', 'Encoding Time (s)', 'Size', 'Size Compared to Original']
+table_column_names = ['Encoding Time (s)', 'Size', 'Size Compared to Original']
 
 if not args.disable_quality_stats:
 	table_column_names.append('VMAF')
@@ -198,9 +204,6 @@ if args.calculate_psnr:
 	table_column_names.append('PSNR')
 if args.no_transcoding_mode:
 	del table_column_names[:2]
-
-# Set the names of the columns
-table.field_names = table_column_names
 
 if args.no_transcoding_mode:
 
@@ -220,21 +223,25 @@ if args.no_transcoding_mode:
 
 	compute_metrics(transcoded_video, output_folder, json_file_path, graph_title)
 
-# Transcode the video with each preset and compute the metrics.
-else:
+# If args.crf_value is a list, that means more than one CRF value was specified.
+elif isinstance(args.crf_value, list):
+	print('sdfjsgdfj')
+	print('More than one CRF value specified. CRF comparison mode activated.')
+	crf_values = args.crf_value
+	print(f'The video will be transoded using the following CRF values: {crf_values}')
+	chosen_preset = args.presets[0]
+	print(f'Preset chosen: {chosen_preset}')
 
 	video_encoder = args.video_encoder
-	crf_value = args.crf_value
-	chosen_presets = args.presets
-
+	
 	# Where the data will be saved.
-	output_folder = f'({filename})/CRF {crf_value}'
+	output_folder = f'({filename})/CRF Comparison'
 	os.makedirs(output_folder, exist_ok=True)
-
 	# The comparison table will be in the following path:
-	comparison_table = os.path.join(output_folder, 'Table.txt')
+	comparison_table = os.path.join(output_folder, 'CRF Comparison Table.txt')
 
-	# Set the names of the columns for the presets comparison table.
+	table_column_names.insert(0, 'CRF')
+	# Set the names of the columns
 	table.field_names = table_column_names
 
 	time_message = ''
@@ -245,7 +252,85 @@ else:
 		# Output path for the cut video.
 		output_file_path = f'{output_folder}/{cut_filename}'
 		# If an encoding time is specified, the reference file becomes the cut version of the video.
-		reference_file = output_file_path
+		reference_file = output_file_path 
+		original_video_size = os.path.getsize(original_video) / 1_000_000
+		# Create the cut version.
+		print(f'Cutting the video to {args.encoding_time} seconds...')
+		os.system(f'ffmpeg -loglevel warning -y -i {args.video_path} -t {args.encoding_time} '
+			      f'-map 0 -c copy "{output_file_path}"')
+		print('Done!')
+		time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
+
+	with open(comparison_table, 'w') as f:
+		f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.\n'
+			    f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+
+	# Transcode the video with each preset.
+	for crf in crf_values:
+
+		transcode_output_path = os.path.join(output_folder, f'CRF {crf}.{output_ext}')
+		graph_title = f'CRF {crf}'
+
+		subprocess_args = [
+			"ffmpeg", "-loglevel", "warning", "-stats", "-y",
+			"-i", original_video, "-map", "0",
+			"-c:v", f'lib{video_encoder}', "-crf", str(crf), "-preset", chosen_preset,
+			"-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
+		]
+
+		separator()
+		print(f'Transcoding the video with CRF {crf}...')
+
+		start_time = time.time()
+
+		subprocess.run(subprocess_args)
+
+		end_time = time.time()
+		time_to_convert = end_time - start_time
+		time_rounded = round(time_to_convert, decimal_places)
+		print('Done!')
+
+		if not args.disable_quality_stats:
+
+			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
+			json_file_path = f'{output_folder}/Raw JSON Data/CRF {crf}.json'
+			# (os.path.join doesn't work with libvmaf's log_path option)
+			graph_title = f'CRF {crf}'
+
+			compute_metrics(transcode_output_path, output_folder, json_file_path, graph_title, crf)
+
+		# -dqs argument specified
+		else: 
+			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
+
+
+# Transcode the video with each preset and compute the metrics.
+else:
+
+	video_encoder = args.video_encoder
+	crf_value = args.crf_value
+	chosen_presets = args.presets
+
+	# Where the data will be saved.
+	output_folder = f'({filename})/Presets comparison at CRF {crf_value}'
+	os.makedirs(output_folder, exist_ok=True)
+	# The comparison table will be in the following path:
+	comparison_table = os.path.join(output_folder, 'Presets Comparison Table.txt')
+
+	table_column_names.insert(0, 'Preset')
+	# Set the names of the columns
+	table.field_names = table_column_names
+
+
+	time_message = ''
+
+	if args.encoding_time:
+
+		cut_filename = f'{os.path.splitext(filename)[0]} [{args.encoding_time}s].{output_ext}'
+		# Output path for the cut video.
+		output_file_path = f'{output_folder}/{cut_filename}'
+		# If an encoding time is specified, the reference file becomes the cut version of the video.
+		reference_file = output_file_path 
 		original_video_size = os.path.getsize(original_video) / 1_000_000
 		# Create the cut version.
 		print(f'Cutting the video to {args.encoding_time} seconds...')
@@ -267,7 +352,7 @@ else:
 		subprocess_args = [
 			"ffmpeg", "-loglevel", "warning", "-stats", "-y",
 			"-i", original_video, "-map", "0",
-			"-c:v", video_encoder, "-crf", args.crf_value, "-preset", preset,
+			"-c:v", f'lib{video_encoder}', "-crf", str(args.crf_value), "-preset", preset,
 			"-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
 		]
 
@@ -285,13 +370,14 @@ else:
 
 		if not args.disable_quality_stats:
 
-			json_file_path = f'{output_folder}/{preset}.json'
+			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
+			json_file_path = f'{output_folder}/Raw JSON Data/{preset}.json'
 			# (os.path.join doesn't work with libvmaf's log_path option)
 
-			compute_metrics(transcode_output_path, output_folder, json_file_path, preset, graph_title)
+			compute_metrics(transcode_output_path, output_folder, json_file_path, preset, preset)
 
 		# -dqs argument specified
-		else:
+		else: 
 			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
 
 # Write the table to the Table.txt file.
