@@ -16,9 +16,6 @@ separator()
 
 
 def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title, crf_or_preset):
-
-	# The comparison table will be in the following path:
-	#comparison_table = os.path.join(output_folder, 'Table.txt')
 	# The first line of Table.txt:
 	with open(comparison_table, 'w') as f:
 		f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
@@ -26,8 +23,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 	size_of_file = os.path.getsize(transcoded_video) / 1_000_000
 	size_compared_to_original = round(((size_of_file / original_video_size) * 100), 3) 
 	size_rounded = round(size_of_file, decimal_places)
-
-	# Base template for the values in each row in the table.
+	# Add the values to the table.
 	row = [f'{size_rounded} MB', f'{size_compared_to_original}%']
 
 	vmaf_options = {
@@ -69,7 +65,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 		print(f'Plotting VMAF graph...')
 		plt.plot(frame_numbers, vmaf_scores, label=f'VMAF ({mean_vmaf})')
 		print('Done!')
-
+		# Add the VMAF values to the table.
 		row.append(vmaf)
 
 		if args.calculate_ssim:
@@ -83,7 +79,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 			print(f'Plotting SSIM graph...')
 			plt.plot(frame_numbers, ssim_scores, label=f'SSIM ({mean_ssim})')
 			print('Done!')
-
+			# Add the SSIM values to the table.
 			row.append(ssim)
 
 		if args.calculate_psnr:
@@ -97,7 +93,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 			print(f'Plotting PSNR graph...')
 			plt.plot(frame_numbers, psnr_scores, label=f'PSNR ({mean_psnr})')
 			print('Done!')
-
+			# Add the PSNR values to the table.
 			row.append(psnr)
 
 		if not args.no_transcoding_mode:
@@ -127,44 +123,44 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 		else:
 			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
 
-	# End of compute_metrics function
 
 parser = argparse.ArgumentParser(description='Calculate the quality of transcoded video(s). For more info, visit:\n'
 								 'https://github.com/BassThatHertz/video-quality-metrics')
-
+# Original video path.
 parser.add_argument('-ovp', '--original-video-path', type=str, required=True, help='Enter the path of the video. '
 				    'A relative or absolute path can be specified. '
 					'If the path contains a space, it must be surrounded in double quotes.\n'
 					'Example: -ovp "C:/Users/H/Desktop/file 1.mp4"')
-
+# Encoder.
 parser.add_argument('-e', '--video-encoder', type=str, default='x264', choices=['x264', 'x265'],
 					help='Specify the encoder to use. Must enter x264 or x265. Default: x264\nExample: -e x265')
-
-parser.add_argument('-crf', '--crf-value', nargs='+', type=int, choices=range(0, 51),
+# CRF value(s).
+parser.add_argument('-crf', '--crf-value', required=True, nargs='+', type=int, choices=range(0, 51),
 				    help='Specify the CRF value(s) to use.', metavar='CRF_VALUE(s)')
-
-parser.add_argument('-t', '--encoding-time', type=str, help='Encode this many seconds of the video. '
-	'If not specified, the whole video will get encoded.')
-
-parser.add_argument('-p', '--preset', nargs='+', choices=
+# Preset(s).
+parser.add_argument('-p', '--preset', required=True, nargs='+', choices=
 	                ['veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'],
 				    help='Specify the preset(s) to use.', metavar='PRESET(s)')
-
+# How many seconds to transcode.
+parser.add_argument('-t', '--encoding-time', type=str, help='Encode this many seconds of the video. '
+	'If not specified, the whole video will get encoded.')
+# Enable phone model?
 parser.add_argument('-pm', '--phone-model', action='store_true', 
 				    help='Enable VMAF phone model (default: False)')
-
+# Number of decimal places to use for the data.
 parser.add_argument('-dp', '--decimal-places', default=3, help='The number of decimal places to use for the data '
 				    'in the table (default: 3).', metavar='<number of decimal places>')
-
+# Calculate SSIM?
 parser.add_argument('-ssim', '--calculate-ssim', action='store_true', help='Calculate SSIM in addition to VMAF.')
+# Calculate psnr?
 parser.add_argument('-psnr', '--calculate-psnr', action='store_true', help='Calculate PSNR in addition to VMAF.')
-
+# Disable quality calculation?
 parser.add_argument('-dqs', '--disable-quality-stats', action='store_true', help='Disable calculation of '
 					'PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).')
-
+# No transcoding mode.
 parser.add_argument('-ntm', '--no-transcoding-mode', action='store_true', 
 					help='Simply calculate the quality metrics of a transcoded video to the original.')
-
+# Transcoded video path (only applicable when using the -ntm mode).
 parser.add_argument('-tvp', '--transcoded-video-path', 
 					help='The path of the transcoded video (only applicable when using the -ntm mode).')
 
