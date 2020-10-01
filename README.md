@@ -22,17 +22,17 @@ There are two options:
 
 1. **Calculate the quality achieved with different CRF values:**
 
-The program will automatically transcode the original video with every CRF value that you specify (using the `-crf` argument) without having to manually start a new transcode with a different CRF value.
+You want to calculate the quality achieved with certain CRF value. The program will automatically transcode the original video with every CRF value that you specify (using the `-crf` argument) without having to manually start a new transcode with a different CRF value. You must specify the CRF values that you want to compare and **one** preset. See the example below:
 
-Example: `python video-metrics.py -ovp original.mp4 -e x264 -crf 18 19 20 -p medium -ssim -psnr`
+`python video-metrics.py -ovp original.mp4 -e x264 -crf 18 19 20 -p medium -ssim -psnr`
 
 *(VMAF is calculated by default unless the `-dqs` argument is specified).*
 
 **2. Calculate the quality achieved with the various presets that are available with x264 and x265 (check out the "Choose a preset and tune" section [here](https://trac.ffmpeg.org/wiki/Encode/H.264#FAQ)):**
 
-The program will automatically transcode the original video with every preset that you specify (using the `-p` argument)  without having to manually start a new encode with each preset.
+You want to calculate the quality achieved with certain presets. The program will automatically transcode the original video with every preset that you specify (using the `-p` argument) without having to manually start a new encode with each preset. You must specify the presets that you want to compare and **one** CRF value. See the example below:
 
-Example: `python video-metrics.py -ovp original.mp4 -e x264 -p medium fast faster veryfast -ssim -psnr`
+`python video-metrics.py -ovp original.mp4 -e x264 -p medium fast faster veryfast -crf 18 -ssim -psnr`
 
 *(VMAF is calculated by default unless the `-dqs` argument is specified).*
 
@@ -47,8 +47,9 @@ Also, for each CRF value/preset that the video was encoded with, the following d
 **In addition to the above, a graph is created for each CRF value/preset that the video was encoded with, showing the variation of the SSIM, PSNR and VMAF throughout the encoded video. [Here's](example-graph.png) an example of the graph that is created.**
 
 # Option 2 features:
-- Choose whether you want the x264 (H.264/AVC) or x265 (H.265/HEVC) encoder to be used.
 - You can choose whether you want the whole video to be encoded or just a certain amount of seconds (using the `-t` argument).
+- Choose whether you want the x264 (H.264/AVC) or x265 (H.265/HEVC) encoder to be used.
+- You can specify whether you want the SSIM and/or PSNR to be calculated in addition to the VMAF. Or you can disable the computation of quality metrics entirely, if the only information you're interested in is the time taken to trancode and the resulting filesize.
 
 # Usage:
 ```
