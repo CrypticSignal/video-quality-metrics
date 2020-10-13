@@ -7,7 +7,9 @@ You already have a transcoded video and you want to compare its quality to the o
 
 **Option 2:**
 
-You already have a transcoded and original video, and you want to calculate the quality of the transcoded video using the VMAF and (optionally) the SSIM and PSNR metrics.
+Transcode a video using the x264 or x265 encoder with different CRF values OR presets, and calculate the quality of the transcoded video using the VMAF and (optionally) the SSIM and PSNR metrics.
+
+With both options, the data is shown in a table (see the example at the bottom of this README) and graph(s) which show the frame-by-frame VMAF/SSIM/PSNR (this shows you the variation of the quality throughout the video). [Here's](CRF%2023.png) an example graph.
 
 # You already have a transcoded video:
 
