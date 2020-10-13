@@ -1,15 +1,17 @@
 # What can this program do?
-There are two things that this program can do.
+There are two main things that this program can do.
 
 **Option 1:**
 
-You already have a transcoded video and you want to compare its quality to the original using the VMAF and (optionally) the SSIM and PSNR metrics.
+You already have a transcoded video (and the original) and you want the quality of the transcoded version to be calculated using the VMAF and (optionally) the SSIM and PSNR metrics.
 
 **Option 2:**
 
-Transcode a video using the x264 or x265 encoder with different CRF values OR presets, and calculate the quality of the transcoded video using the VMAF and (optionally) the SSIM and PSNR metrics.
+Transcode a video using the x264 or x265 encoder (you can specify multiple CRF values OR presets and this program will automatically transcode the video with each preset/CRF value), and the quality of each transcode is calculated using the VMAF and (optionally) the SSIM and PSNR metrics. Other factors such as the time taken to transcode the video and the resulting filesize (with each preset/CRF value) are also calculated and saved in a table (Table.txt).
 
-With both options, the data is shown in a table (see the example at the bottom of this README) and graph(s) which show the frame-by-frame VMAF/SSIM/PSNR (this shows you the variation of the quality throughout the video). [Here's](CRF%2023.png) an example graph.
+**With both options, the data is shown in a table (see the example at the bottom of this README) and graph(s) which show the frame-by-frame VMAF/SSIM/PSNR (this shows you the variation of the quality throughout the video). [Here's](CRF%2023.png) an example graph.**
+
+*Click [here](https://trac.ffmpeg.org/wiki/Encode/H.264) to learn more about CRF values and presets.*
 
 # You already have a transcoded video:
 
@@ -22,7 +24,7 @@ Example: `python video-metrics.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ss
 # You want to transcode a video and calculate the quality achieved with different CRF values OR presets:
 There are two options:
 
-1. **Calculate the quality achieved with different CRF values:**
+1. **Calculate the quality achieved with different *CRF values*:**
 
 You want to calculate the quality achieved with certain CRF value. The program will automatically transcode the original video with every CRF value that you specify (using the `-crf` argument) without having to manually start a new transcode with a different CRF value. You must specify the CRF values that you want to compare and **one** preset. See the example below:
 
@@ -30,7 +32,7 @@ You want to calculate the quality achieved with certain CRF value. The program w
 
 *(VMAF is calculated by default unless the `-dqs` argument is specified).*
 
-**2. Calculate the quality achieved with the various presets that are available with x264 and x265 (check out the "Choose a preset and tune" section [here](https://trac.ffmpeg.org/wiki/Encode/H.264#FAQ)):**
+**2. Calculate the quality achieved with different *presets*:**
 
 You want to calculate the quality achieved with certain presets. The program will automatically transcode the original video with every preset that you specify (using the `-p` argument) without having to manually start a new encode with each preset. You must specify the presets that you want to compare and **one** CRF value. See the example below:
 
