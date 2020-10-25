@@ -26,17 +26,17 @@ There are two options:
 
 1. **Calculate the quality achieved with different *CRF values*:**
 
-You want to calculate the quality achieved with certain CRF value. The program will automatically transcode the original video with every CRF value that you specify (using the `-crf` argument) without having to manually start a new transcode with a different CRF value. You must specify the CRF values that you want to compare and **one** preset. See the example below:
+You want to calculate the quality achieved with certain CRF value. The program will automatically transcode the original video with every CRF value that you specify (using the `-crf` argument) without having to manually start a new transcode with a different CRF value. You must specify the CRF values that you want to compare and (optionally) **one** preset (if you don't want the default preset (medium) to be used). See the example below:
 
-`python video-metrics.py -ovp original.mp4 -e x264 -crf 18 19 20 -p medium -ssim -psnr`
+`python video-metrics.py -ovp original.mp4 -e x264 -crf 18 19 20 -p veryfast -ssim -psnr`
 
 *(VMAF is calculated by default unless the `-dqs` argument is specified).*
 
 **2. Calculate the quality achieved with different *presets*:**
 
-You want to calculate the quality achieved with certain presets. The program will automatically transcode the original video with every preset that you specify (using the `-p` argument) without having to manually start a new encode with each preset. You must specify the presets that you want to compare and **one** CRF value. See the example below:
+You want to calculate the quality achieved with certain presets. The program will automatically transcode the original video with every preset that you specify (using the `-p` argument) without having to manually start a new encode with each preset. You must specify the presets that you want to compare and (optionally) **one** CRF value (if you don't want the default CRF value of 23 to be used). See the example below:
 
-`python video-metrics.py -ovp original.mp4 -e x264 -p medium fast faster veryfast -crf 18 -ssim -psnr`
+`python video-metrics.py -ovp original.mp4 -e x264 -p medium fast faster -crf 18 -ssim -psnr`
 
 *(VMAF is calculated by default unless the `-dqs` argument is specified).*
 
@@ -57,10 +57,8 @@ Also, for each CRF value/preset that the video was encoded with, the following d
 
 # Usage:
 ```
-Arguments in square brackets are optional:
-usage: video-metrics.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]]
-                        [-t ENCODING_TIME] [-p PRESET(s) [PRESET(s ...]] [-pm] [-dp <number of decimal places>]
-                        [-ssim] [-psnr] [-dqs] [-ntm] [-tvp TRANSCODED_VIDEO_PATH]
+usage: video-metrics.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]] [-p PRESET(s) [PRESET(s ...]] [-t ENCODING_TIME] [-pm]
+                        [-dp <number of decimal places>] [-ssim] [-psnr] [-dqs] [-ntm] [-tvp TRANSCODED_VIDEO_PATH]
                           
 If there is a space in the path, it must be surrounded with double quotes. Example:
 python video-metrics.py -ovp "C:/Users/H/Desktop/my file.mp4" -p veryfast superfast
@@ -68,8 +66,7 @@ python video-metrics.py -ovp "C:/Users/H/Desktop/my file.mp4" -p veryfast superf
 Available arguments:
   -h, --help            show this help message and exit
   -ovp ORIGINAL_VIDEO_PATH, --original-video-path ORIGINAL_VIDEO_PATH
-                        Enter the path of the video. A relative or absolute path can be specified. If the path
-                        contains a space, it must be surrounded in double quotes. Example: -ovp
+                        Enter the path of the video. A relative or absolute path can be specified. If the path contains a space, it must be surrounded in double quotes. Example: -ovp
                         "C:/Users/H/Desktop/file 1.mp4"
   -e {x264,x265}, --video-encoder {x264,x265}
                         Specify the encoder to use. Must enter x264 or x265. Default: x264 Example: -e x265
@@ -87,8 +84,7 @@ Available arguments:
   -psnr, --calculate-psnr
                         Calculate PSNR in addition to VMAF.
   -dqs, --disable-quality-stats
-                        Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves
-                        completion time).
+                        Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).
   -ntm, --no-transcoding-mode
                         Simply calculate the quality metrics of a transcoded video to the original.
   -tvp TRANSCODED_VIDEO_PATH, --transcoded-video-path TRANSCODED_VIDEO_PATH
