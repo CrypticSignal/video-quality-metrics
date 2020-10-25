@@ -15,7 +15,7 @@ print("For more information, enter 'python video-metrics.py -h'")
 separator()
 
 
-def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title, crf_or_preset):
+def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title, crf_or_preset=None):
 	# The first line of Table.txt:
 	with open(comparison_table, 'w') as f:
 		f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
@@ -135,10 +135,10 @@ parser.add_argument('-ovp', '--original-video-path', type=str, required=True, he
 parser.add_argument('-e', '--video-encoder', type=str, default='x264', choices=['x264', 'x265'],
 					help='Specify the encoder to use. Must enter x264 or x265. Default: x264\nExample: -e x265')
 # CRF value(s).
-parser.add_argument('-crf', '--crf-value', required=True, nargs='+', type=int, choices=range(0, 51),
+parser.add_argument('-crf', '--crf-value', nargs='+', type=int, choices=range(0, 51),
 				    help='Specify the CRF value(s) to use.', metavar='CRF_VALUE(s)')
 # Preset(s).
-parser.add_argument('-p', '--preset', required=True, nargs='+', choices=
+parser.add_argument('-p', '--preset', nargs='+', choices=
 	                ['veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'],
 				    help='Specify the preset(s) to use.', metavar='PRESET(s)')
 # How many seconds to transcode.
