@@ -178,7 +178,7 @@ original_video_size = os.path.getsize(original_video) / 1_000_000
 filename = original_video.split('/')[-1]
 output_ext = os.path.splitext(original_video)[-1][1:]
 
-print(f'File: {filename}')
+print(f'\nFile: {filename}')
 cap = cv2.VideoCapture(original_video)
 fps = str(cap.get(cv2.CAP_PROP_FPS))
 print(f'Framerate: {fps} FPS')
@@ -213,10 +213,11 @@ if args.no_transcoding_mode:
 # If len(args.crf_value) > 1 then more than one CRF value was specified so the user wants to compare CRF values.
 elif len(args.crf_value) > 1:
 
-	print('More than one CRF value specified. CRF comparison mode activated.')
+	print('\nMore than one CRF value specified. CRF comparison mode activated.')
 	crf_values = args.crf_value
 	chosen_preset = args.preset
-	print(f'CRF values {crf_values} will be compared and the {chosen_preset[0]} preset will be used.')
+	CRF_values_string = ','.join(map(str, crf_values))
+	print(f'CRF values {CRF_values_string} will be compared and the {chosen_preset[0]} preset will be used.')
 	video_encoder = args.video_encoder
 	
 	# Where the data will be saved.
@@ -281,11 +282,12 @@ elif len(args.crf_value) > 1:
 
 # The user wants to compare presets.
 else:
-	print('Presets comparison mode activated.')
+	print('\nPresets comparison mode activated.')
 	video_encoder = args.video_encoder
 	crf_value = args.crf_value
 	chosen_presets = args.preset
-	print(f'Presets {chosen_presets} will be compared at a CRF of {crf_value}.')
+	presets_string = ','.join(chosen_presets)	
+	print(f'Presets {presets_string} will be compared at a CRF of {crf_value[0]}.')
 	output_folder = f'({filename})/Presets comparison at CRF {crf_value}'
 	os.makedirs(output_folder, exist_ok=True)
 	comparison_table = os.path.join(output_folder, 'Table.txt')
@@ -308,18 +310,17 @@ else:
 		time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
 		with open(comparison_table, 'w') as f:
-			f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder} with a CRF of {args.crf_value}.\n'
+			f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder} with a CRF of {crf_value}.\n'
 					f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
 
 	# Transcode the video with each preset.
 	for preset in chosen_presets:
-		print(args.crf_value)
 		transcode_output_path = os.path.join(output_folder, f'{preset}.{output_ext}')
 		graph_title = f"Preset '{preset}'"
 		subprocess_args = [
 			"ffmpeg", "-loglevel", "warning", "-stats", "-y",
 			"-i", original_video, "-map", "0",
-			"-c:v", f'lib{video_encoder}', "-crf", str(args.crf_value), "-preset", preset,
+			"-c:v", f'lib{video_encoder}', "-crf", str(crf_value[0]), "-preset", preset,
 			"-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
 		]
 		separator()
