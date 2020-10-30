@@ -1,4 +1,4 @@
-import argparse, cv2, time, os, subprocess, json
+import argparse, cv2, time, os, subprocess, json, sys
 from argparse import RawTextHelpFormatter
 from prettytable import PrettyTable
 import numpy as np
@@ -48,6 +48,13 @@ args = parser.parse_args()
 
 def separator():
 	print('-----------------------------------------------------------------------------------------------------------') 
+
+# If more than one CRF value and more than one preset was specified then we don't have a suitable comparison mode. Exit.
+if len(args.crf_value) > 1 and len(args.preset) > 1:
+	separator()
+	print(f'More than one CRF value AND more than one preset specified. No suitable mode found. Exiting.')
+	separator()
+	sys.exit()
 
 separator()
 print('If the path contains a space, the path argument must be surrounded in double quotes. Example:')
