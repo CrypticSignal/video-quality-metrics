@@ -142,7 +142,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 
 		if not args.no_transcoding_mode:
 			# CRF comparison mode if a list of CRF values were provided.
-			if isinstance(args.crf_value, list):
+			if len(args.crf_value) > 1:
 				data_for_current_row.insert(0, crf)
 				data_for_current_row.insert(1, time_rounded)
 			# Presets comparison mode.
