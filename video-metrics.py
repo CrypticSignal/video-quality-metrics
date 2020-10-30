@@ -288,7 +288,7 @@ else:
 	chosen_presets = args.preset
 	presets_string = ','.join(chosen_presets)	
 	print(f'Presets {presets_string} will be compared at a CRF of {crf_value[0]}.')
-	output_folder = f'({filename})/Presets comparison at CRF {crf_value}'
+	output_folder = f'({filename})/Presets comparison at CRF {crf_value[0]}'
 	os.makedirs(output_folder, exist_ok=True)
 	comparison_table = os.path.join(output_folder, 'Table.txt')
 	table_column_names.insert(0, 'Preset')
