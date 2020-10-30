@@ -210,8 +210,8 @@ if args.no_transcoding_mode:
 	transcoded_video = args.transcoded_video_path
 	compute_metrics(transcoded_video, output_folder, json_file_path, graph_title)
 
-# If args.crf_value is a list, more than one CRF value was specified so the user wants to compare CRF values.
-elif isinstance(args.crf_value, list):
+# If len(args.crf_value) > 1 then more than one CRF value was specified so the user wants to compare CRF values.
+elif len(args.crf_value) > 1:
 
 	print('More than one CRF value specified. CRF comparison mode activated.')
 	crf_values = args.crf_value
