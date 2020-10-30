@@ -56,9 +56,11 @@ print("For more information, enter 'python video-metrics.py -h'")
 separator()
 
 def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title, crf_or_preset=None):
+	preset_string = ','.join(args.preset)
 	# The first line of Table.txt:
 	with open(comparison_table, 'w') as f:
 		f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+		f.write(f'Chosen preset(s): {preset_string}\n')
 
 	size_of_file = os.path.getsize(transcoded_video) / 1_000_000
 	size_compared_to_original = round(((size_of_file / original_video_size) * 100), 3) 
@@ -207,11 +209,11 @@ elif isinstance(args.crf_value, list):
 	print('More than one CRF value specified. CRF comparison mode activated.')
 	crf_values = args.crf_value
 	chosen_preset = args.preset
-	print(f'CRF values {crf_values} will be compared and the {chosen_preset} will be used.')
+	print(f'CRF values {crf_values} will be compared and the {chosen_preset[0]} preset will be used.')
 	video_encoder = args.video_encoder
 	
 	# Where the data will be saved.
-	output_folder = f'({filename})/CRF Comparison'
+	output_folder = f'({filename})/CRF Comparison ({chosen_preset[0]})'
 	os.makedirs(output_folder, exist_ok=True)
 	# The comparison table will be in the following path:
 	comparison_table = os.path.join(output_folder, 'Table.txt')
@@ -240,8 +242,8 @@ elif isinstance(args.crf_value, list):
 
 	# Transcode the video with each preset.
 	for crf in crf_values:
-		transcode_output_path = os.path.join(output_folder, f'CRF {crf}.{output_ext}')
-		graph_title = f'CRF {crf}, preset {chosen_preset}'
+		transcode_output_path = os.path.join(output_folder, f'CRF {crf} preset {chosen_preset[0]}.{output_ext}')
+		graph_title = f'CRF {crf} preset {chosen_preset[0]}'
 
 		subprocess_args = [
 			"ffmpeg", "-loglevel", "warning", "-stats", "-y",
@@ -264,7 +266,6 @@ elif isinstance(args.crf_value, list):
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
 			json_file_path = f'{output_folder}/Raw JSON Data/CRF {crf}.json'
 			# (os.path.join doesn't work with libvmaf's log_path option)
-			graph_title = f'CRF {crf}'
 			compute_metrics(transcode_output_path, output_folder, json_file_path, graph_title, crf)
 
 		# -dqs argument specified
