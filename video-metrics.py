@@ -4,15 +4,18 @@ from prettytable import PrettyTable
 import numpy as np
 import matplotlib.pyplot as plt
 
-parser = argparse.ArgumentParser()
+if '-h' not in sys.argv or '--help' not in sys.argv:
+	print("For more information, enter 'python video-metrics.py -h'")
+
+parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
 # Original video path.
-parser.add_argument('-ovp', '--original-video-path', type=str, required=True, help='Enter the path of the video. '
-				    'A relative or absolute path can be specified. '
+parser.add_argument('-ovp', '--original-video-path', type=str, required=True, help='Enter the path of the original '
+				    'video. A relative or absolute path can be specified. '
 					'If the path contains a space, it must be surrounded in double quotes.\n'
 					'Example: -ovp "C:/Users/H/Desktop/file 1.mp4"')
 # Encoder.
 parser.add_argument('-e', '--video-encoder', type=str, default='x264', choices=['x264', 'x265'],
-					help='Specify the encoder to use. The default encoder is x254. Example: -e x265')
+					help='Specify the encoder to use (default: x264).\nExample: -e x265')
 # CRF value(s).
 parser.add_argument('-crf', '--crf-value', nargs='+', type=int, choices=range(0, 51),
 				    default=23, help='Specify the CRF value(s) to use.', metavar='CRF_VALUE(s)')
@@ -22,13 +25,12 @@ parser.add_argument('-p', '--preset', nargs='+', choices=
 				    default='medium', help='Specify the preset(s) to use.', metavar='PRESET(s)')
 # How many seconds to transcode.
 parser.add_argument('-t', '--encoding-time', type=str, help='Encode this many seconds of the video. '
-	'If not specified, the whole video will get encoded.')
+	'If not specified, the whole video will get encoded.\nExample: -t 60')
 # Enable phone model?
-parser.add_argument('-pm', '--phone-model', action='store_true', 
-				    help='Enable VMAF phone model (default: False)')
+parser.add_argument('-pm', '--phone-model', action='store_true', help='Enable VMAF phone model.')
 # Number of decimal places to use for the data.
 parser.add_argument('-dp', '--decimal-places', default=2, help='The number of decimal places to use for the data '
-				    'in the table (default: 2).', metavar='<number of decimal places>')
+				    'in the table (default: 2).\nExample: -dp 3')
 # Calculate SSIM?
 parser.add_argument('-ssim', '--calculate-ssim', action='store_true', help='Calculate SSIM in addition to VMAF.')
 # Calculate psnr?
@@ -38,11 +40,13 @@ parser.add_argument('-dqs', '--disable-quality-stats', action='store_true', help
 					'PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).')
 # No transcoding mode.
 parser.add_argument('-ntm', '--no-transcoding-mode', action='store_true', 
-					help='Simply calculate the quality metrics of a transcoded video to the original.')
+					help='Use this mode if you\'ve already transcoded a video and would like its VMAF and (optionally) '
+						  'the SSIM and PSNR to be calculated.\n'
+					      'Example: -ntm -tvp transcoded.mp4 -ovp original.mp4 -ssim -psnr')
 # Transcoded video path (only applicable when using the -ntm mode).
 parser.add_argument('-tvp', '--transcoded-video-path', 
 					help='The path of the transcoded video (only applicable when using the -ntm mode).')
-				
+
 args = parser.parse_args()
 
 def separator():
