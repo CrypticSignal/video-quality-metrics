@@ -54,7 +54,7 @@ if isinstance(args.crf_value, int) and isinstance(args.preset, str):
 	print('No CRF value(s) or preset(s) specified. Exiting.')
 	separator()
 	sys.exit()
-elif isinstance(args.crf_value, list) and isinstance(args.preset, list):
+elif len(args.crf_value) > 1 and len(args.preset) > 1:
 	separator()
 	print(f'More than one CRF value AND more than one preset specified. No suitable mode found. Exiting.')
 	separator()
@@ -152,7 +152,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filen
 			data_for_current_row.append(psnr)
 
 		if not args.no_transcoding_mode:
-			if isinstance(args.crf_value, list):
+			if isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 				data_for_current_row.insert(0, crf)
 				data_for_current_row.insert(1, time_rounded)
 			# Presets comparison mode.
@@ -221,15 +221,15 @@ if args.no_transcoding_mode:
 	compute_metrics(transcoded_video, output_folder, json_file_path, graph_filename)
 
 # args.crf_value is a list when more than one CRF value is specified.
-elif isinstance(args.crf_value, list):
+elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 	print('CRF comparison mode activated.')
 	crf_values = args.crf_value
 	crf_values_string = ', '.join(str(crf) for crf in crf_values)
-	print(f'CRF values {crf_values_string} will be compared and the {args.preset} preset will be used.')
+	print(f'CRF values {crf_values_string} will be compared and the {args.preset[0]} preset will be used.')
 	video_encoder = args.video_encoder
 	# Cannot use os.path.join for output_folder as this gives an error like the following:
 	# No such file or directory: '(2.mkv)\\Presets comparison at CRF 23/Raw JSON Data/superfast.json'
-	output_folder = f'({filename})/CRF comparison at preset {args.preset}'
+	output_folder = f'({filename})/CRF comparison at preset {args.preset[0]}'
 	os.makedirs(output_folder, exist_ok=True)
 	# The comparison table will be in the following path:
 	comparison_table = os.path.join(output_folder, 'Table.txt')
@@ -259,13 +259,13 @@ elif isinstance(args.crf_value, list):
 
 	# Transcode the video with each preset.
 	for crf in crf_values:
-		transcode_output_path = os.path.join(output_folder, f'CRF {crf} at preset {args.preset}.{output_ext}')
-		graph_filename = f'CRF {crf} at preset {args.preset}'
+		transcode_output_path = os.path.join(output_folder, f'CRF {crf} at preset {args.preset[0]}.{output_ext}')
+		graph_filename = f'CRF {crf} at preset {args.preset[0]}'
 
 		subprocess_args = [
 			"ffmpeg", "-loglevel", "warning", "-stats", "-y",
 			"-i", original_video, "-map", "0",
-			"-c:v", f'lib{video_encoder}', "-crf", str(crf), "-preset", args.preset,
+			"-c:v", f'lib{video_encoder}', "-crf", str(crf), "-preset", args.preset[0],
 			"-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
 		]
 
@@ -293,10 +293,10 @@ elif isinstance(args.preset, list):
 	chosen_presets = args.preset
 	presets_string = ', '.join(chosen_presets)
 	video_encoder = args.video_encoder
-	print(f'Presets {presets_string} will be compared at a CRF of {args.crf_value}.')
+	print(f'Presets {presets_string} will be compared at a CRF of {args.crf_value[0]}.')
 	# Cannot use os.path.join for output_folder as this gives an error like the following:
 	# No such file or directory: '(2.mkv)\\Presets comparison at CRF 23/Raw JSON Data/superfast.json'
-	output_folder = f'({filename})/Presets comparison at CRF {args.crf_value}'
+	output_folder = f'({filename})/Presets comparison at CRF {args.crf_value[0]}'
 	os.makedirs(output_folder, exist_ok=True)
 	comparison_table = os.path.join(output_folder, 'Table.txt')
 	table_column_names.insert(0, 'Preset')
@@ -306,7 +306,6 @@ elif isinstance(args.preset, list):
 	if args.encoding_time:
 		cut_filename = f'{os.path.splitext(filename)[0]} [{args.encoding_time}s].{output_ext}'
 		# Output path for the cut video.
-		#output_file_path = f'{output_folder}/{cut_filename}'
 		output_file_path = os.path.join(output_folder, cut_filename)
 		# If an encoding time is specified, the reference file becomes the cut version of the video.
 		reference_file = output_file_path 
@@ -319,7 +318,7 @@ elif isinstance(args.preset, list):
 		time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
 		with open(comparison_table, 'w') as f:
-			f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder} with a CRF of {crf_value}.\n'
+			f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder} with a CRF of {args.crf_value[0]}.\n'
 					f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
 
 	# Transcode the video with each preset.
@@ -329,7 +328,7 @@ elif isinstance(args.preset, list):
 		subprocess_args = [
 			"ffmpeg", "-loglevel", "warning", "-stats", "-y",
 			"-i", original_video, "-map", "0",
-			"-c:v", f'lib{video_encoder}', "-crf", str(args.crf_value), "-preset", preset,
+			"-c:v", f'lib{video_encoder}', "-crf", str(args.crf_value[0]), "-preset", preset,
 			"-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
 		]
 		separator()
