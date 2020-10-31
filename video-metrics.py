@@ -4,8 +4,7 @@ from prettytable import PrettyTable
 import numpy as np
 import matplotlib.pyplot as plt
 
-parser = argparse.ArgumentParser(description='Calculate the quality of transcoded video(s). For more info, visit:\n'
-								 'https://github.com/BassThatHertz/video-quality-metrics')
+parser = argparse.ArgumentParser()
 # Original video path.
 parser.add_argument('-ovp', '--original-video-path', type=str, required=True, help='Enter the path of the video. '
 				    'A relative or absolute path can be specified. '
@@ -13,7 +12,7 @@ parser.add_argument('-ovp', '--original-video-path', type=str, required=True, he
 					'Example: -ovp "C:/Users/H/Desktop/file 1.mp4"')
 # Encoder.
 parser.add_argument('-e', '--video-encoder', type=str, default='x264', choices=['x264', 'x265'],
-					help='Specify the encoder to use. Must enter x264 or x265. Default: x264\nExample: -e x265')
+					help='Specify the encoder to use. The default encoder is x254. Example: -e x265')
 # CRF value(s).
 parser.add_argument('-crf', '--crf-value', nargs='+', type=int, choices=range(0, 51),
 				    default=23, help='Specify the CRF value(s) to use.', metavar='CRF_VALUE(s)')
@@ -28,8 +27,8 @@ parser.add_argument('-t', '--encoding-time', type=str, help='Encode this many se
 parser.add_argument('-pm', '--phone-model', action='store_true', 
 				    help='Enable VMAF phone model (default: False)')
 # Number of decimal places to use for the data.
-parser.add_argument('-dp', '--decimal-places', default=3, help='The number of decimal places to use for the data '
-				    'in the table (default: 3).', metavar='<number of decimal places>')
+parser.add_argument('-dp', '--decimal-places', default=2, help='The number of decimal places to use for the data '
+				    'in the table (default: 2).', metavar='<number of decimal places>')
 # Calculate SSIM?
 parser.add_argument('-ssim', '--calculate-ssim', action='store_true', help='Calculate SSIM in addition to VMAF.')
 # Calculate psnr?
@@ -43,26 +42,27 @@ parser.add_argument('-ntm', '--no-transcoding-mode', action='store_true',
 # Transcoded video path (only applicable when using the -ntm mode).
 parser.add_argument('-tvp', '--transcoded-video-path', 
 					help='The path of the transcoded video (only applicable when using the -ntm mode).')
-
+				
 args = parser.parse_args()
 
 def separator():
-	print('-----------------------------------------------------------------------------------------------------------') 
+	print('-----------------------------------------------------------------------------------------------------------')
 
-# If more than one CRF value and more than one preset was specified then we don't have a suitable comparison mode. Exit.
-if len(args.crf_value) > 1 and len(args.preset) > 1:
+# If no CRF or preset is specified, the default data types are as str and int, respectively.
+if isinstance(args.crf_value, int) and isinstance(args.preset, str):
+	separator()
+	print('No CRF value(s) or preset(s) specified. Exiting.')
+	separator()
+	sys.exit()
+elif isinstance(args.crf_value, list) and isinstance(args.preset, list):
 	separator()
 	print(f'More than one CRF value AND more than one preset specified. No suitable mode found. Exiting.')
 	separator()
 	sys.exit()
 
 separator()
-print('If the path contains a space, the path argument must be surrounded in double quotes. Example:')
-print('python video-metrics.py -ovp "C:/Users/H/Desktop/test file.mp4" -p fast veryfast')
-print("For more information, enter 'python video-metrics.py -h'")
-separator()
 
-def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title, crf_or_preset=None):
+def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filename, crf_or_preset=None):
 	preset_string = ','.join(args.preset)
 	# The first line of Table.txt:
 	with open(comparison_table, 'w') as f:
@@ -89,12 +89,23 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 		"ffmpeg", "-loglevel", "error", "-stats", "-r", fps, "-i", transcoded_video,
 		"-r", fps, "-i", original_video,
 		"-lavfi", "[0:v]setpts=PTS-STARTPTS[dist];[1:v]setpts=PTS-STARTPTS[ref];[dist][ref]"
-		f'libvmaf={vmaf_options}', "-f", "null", "-"
+		f'libvmaf={vmaf_options}', "-f"
+		, "null", "-"
 	]
 
-	print(f'Computing the quality metric(s)...')
+	if args.calculate_psnr and args.calculate_ssim:
+		end_of_computing_message = ', PSNR and SSIM'
+	elif args.calculate_psnr:
+		end_of_computing_message = ' and PSNR'
+	elif args.calculate_ssim:
+		end_of_computing_message = ' and SSIM'
+	else:
+		end_of_computing_message = ''
+
+	print(f'Computing the VMAF{end_of_computing_message}...')
 	subprocess.run(subprocess_args)
 	print('Done!')
+
 	# Make a list containing the frame numbers from the JSON file.
 	with open(json_file_path, 'r') as f:
 		file_contents = json.load(f)
@@ -141,8 +152,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 			data_for_current_row.append(psnr)
 
 		if not args.no_transcoding_mode:
-			# CRF comparison mode if a list of CRF values were provided.
-			if len(args.crf_value) > 1:
+			if isinstance(args.crf_value, list):
 				data_for_current_row.insert(0, crf)
 				data_for_current_row.insert(1, time_rounded)
 			# Presets comparison mode.
@@ -153,13 +163,13 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_title
 		table.add_row(data_for_current_row)
 
 		if args.no_transcoding_mode:
-			graph_title = 'VariationOfQuality.png'
+			graph_filename = 'VariationOfQuality.png'
 
-		plt.suptitle(graph_title)
+		plt.suptitle(graph_filename)
 		plt.xlabel('Frame Number')
 		plt.ylabel('Value of Quality Metric')
 		plt.legend(loc='lower right')
-		plt.savefig(os.path.join(output_folder, graph_title))
+		plt.savefig(os.path.join(output_folder, graph_filename))
 		plt.clf()
 
 	# -dqs (disable quality stats)
@@ -178,7 +188,7 @@ original_video_size = os.path.getsize(original_video) / 1_000_000
 filename = original_video.split('/')[-1]
 output_ext = os.path.splitext(original_video)[-1][1:]
 
-print(f'\nFile: {filename}')
+print(f'File: {filename}')
 cap = cv2.VideoCapture(original_video)
 fps = str(cap.get(cv2.CAP_PROP_FPS))
 print(f'Framerate: {fps} FPS')
@@ -204,24 +214,22 @@ if args.no_transcoding_mode:
 	os.makedirs(output_folder, exist_ok=True)
 	comparison_table = os.path.join(output_folder, 'Table.txt')
 	table.field_names = table_column_names
+	# os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
 	json_file_path = f'{output_folder}/QualityMetrics.json'
-	# (os.path.join doesn't work with libvmaf's log_path option)
-	graph_title = 'The variation of the quality of the transcoded video throughout the video'
+	graph_filename = 'The variation of the quality of the transcoded video throughout the video'
 	transcoded_video = args.transcoded_video_path
-	compute_metrics(transcoded_video, output_folder, json_file_path, graph_title)
+	compute_metrics(transcoded_video, output_folder, json_file_path, graph_filename)
 
-# If len(args.crf_value) > 1 then more than one CRF value was specified so the user wants to compare CRF values.
-elif len(args.crf_value) > 1:
-
-	print('\nMore than one CRF value specified. CRF comparison mode activated.')
+# args.crf_value is a list when more than one CRF value is specified.
+elif isinstance(args.crf_value, list):
+	print('CRF comparison mode activated.')
 	crf_values = args.crf_value
-	chosen_preset = args.preset
-	CRF_values_string = ','.join(map(str, crf_values))
-	print(f'CRF values {CRF_values_string} will be compared and the {chosen_preset[0]} preset will be used.')
+	crf_values_string = ', '.join(str(crf) for crf in crf_values)
+	print(f'CRF values {crf_values_string} will be compared and the {args.preset} preset will be used.')
 	video_encoder = args.video_encoder
-	
-	# Where the data will be saved.
-	output_folder = f'({filename})/CRF Comparison ({chosen_preset[0]})'
+	# Cannot use os.path.join for output_folder as this gives an error like the following:
+	# No such file or directory: '(2.mkv)\\Presets comparison at CRF 23/Raw JSON Data/superfast.json'
+	output_folder = f'({filename})/CRF comparison at preset {args.preset}'
 	os.makedirs(output_folder, exist_ok=True)
 	# The comparison table will be in the following path:
 	comparison_table = os.path.join(output_folder, 'Table.txt')
@@ -233,13 +241,14 @@ elif len(args.crf_value) > 1:
 	if args.encoding_time:
 		cut_filename = f'{os.path.splitext(filename)[0]} [{args.encoding_time}s].{output_ext}'
 		# Output path for the cut video.
-		output_file_path = f'{output_folder}/{cut_filename}'
+		output_file_path = os.path.join(output_folder, cut_filename)
+		#output_file_path = f'{output_folder}/{cut_filename}'
 		# If an encoding time is specified, the reference file becomes the cut version of the video.
 		reference_file = output_file_path 
 		original_video_size = os.path.getsize(original_video) / 1_000_000
 		# Create the cut version.
-		print(f'Cutting the video to {args.encoding_time} seconds...')
-		os.system(f'ffmpeg -loglevel warning -y -i {args.video_path} -t {args.encoding_time} '
+		print(f'Cutting the video to a length of {args.encoding_time} seconds...')
+		os.system(f'ffmpeg -loglevel warning -y -i {args.original_video_path} -t {args.encoding_time} '
 			      f'-map 0 -c copy "{output_file_path}"')
 		print('Done!')
 		time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
@@ -250,13 +259,13 @@ elif len(args.crf_value) > 1:
 
 	# Transcode the video with each preset.
 	for crf in crf_values:
-		transcode_output_path = os.path.join(output_folder, f'CRF {crf} preset {chosen_preset[0]}.{output_ext}')
-		graph_title = f'CRF {crf} preset {chosen_preset[0]}'
+		transcode_output_path = os.path.join(output_folder, f'CRF {crf} at preset {args.preset}.{output_ext}')
+		graph_filename = f'CRF {crf} at preset {args.preset}'
 
 		subprocess_args = [
 			"ffmpeg", "-loglevel", "warning", "-stats", "-y",
 			"-i", original_video, "-map", "0",
-			"-c:v", f'lib{video_encoder}', "-crf", str(crf), "-preset", chosen_preset,
+			"-c:v", f'lib{video_encoder}', "-crf", str(crf), "-preset", args.preset,
 			"-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
 		]
 
@@ -270,25 +279,24 @@ elif len(args.crf_value) > 1:
 		print('Done!')
 
 		if not args.disable_quality_stats:
-
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
+			# os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
 			json_file_path = f'{output_folder}/Raw JSON Data/CRF {crf}.json'
-			# (os.path.join doesn't work with libvmaf's log_path option)
-			compute_metrics(transcode_output_path, output_folder, json_file_path, graph_title, crf)
-
+			compute_metrics(transcode_output_path, output_folder, json_file_path, graph_filename, crf)
 		# -dqs argument specified
 		else: 
 			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
 
-# The user wants to compare presets.
-else:
-	print('\nPresets comparison mode activated.')
-	video_encoder = args.video_encoder
-	crf_value = args.crf_value
+# args.preset is a list when more than one preset is specified.
+elif isinstance(args.preset, list):
+	print('Presets comparison mode activated.')
 	chosen_presets = args.preset
-	presets_string = ','.join(chosen_presets)	
-	print(f'Presets {presets_string} will be compared at a CRF of {crf_value[0]}.')
-	output_folder = f'({filename})/Presets comparison at CRF {crf_value[0]}'
+	presets_string = ', '.join(chosen_presets)
+	video_encoder = args.video_encoder
+	print(f'Presets {presets_string} will be compared at a CRF of {args.crf_value}.')
+	# Cannot use os.path.join for output_folder as this gives an error like the following:
+	# No such file or directory: '(2.mkv)\\Presets comparison at CRF 23/Raw JSON Data/superfast.json'
+	output_folder = f'({filename})/Presets comparison at CRF {args.crf_value}'
 	os.makedirs(output_folder, exist_ok=True)
 	comparison_table = os.path.join(output_folder, 'Table.txt')
 	table_column_names.insert(0, 'Preset')
@@ -298,7 +306,8 @@ else:
 	if args.encoding_time:
 		cut_filename = f'{os.path.splitext(filename)[0]} [{args.encoding_time}s].{output_ext}'
 		# Output path for the cut video.
-		output_file_path = f'{output_folder}/{cut_filename}'
+		#output_file_path = f'{output_folder}/{cut_filename}'
+		output_file_path = os.path.join(output_folder, cut_filename)
 		# If an encoding time is specified, the reference file becomes the cut version of the video.
 		reference_file = output_file_path 
 		original_video_size = os.path.getsize(original_video) / 1_000_000
@@ -316,11 +325,11 @@ else:
 	# Transcode the video with each preset.
 	for preset in chosen_presets:
 		transcode_output_path = os.path.join(output_folder, f'{preset}.{output_ext}')
-		graph_title = f"Preset '{preset}'"
+		graph_filename = f"Preset '{preset}'"
 		subprocess_args = [
 			"ffmpeg", "-loglevel", "warning", "-stats", "-y",
 			"-i", original_video, "-map", "0",
-			"-c:v", f'lib{video_encoder}', "-crf", str(crf_value[0]), "-preset", preset,
+			"-c:v", f'lib{video_encoder}', "-crf", str(args.crf_value), "-preset", preset,
 			"-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
 		]
 		separator()
@@ -334,11 +343,9 @@ else:
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
-			# os.path.join doesn't work with libvmaf's log_path option
+			# os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
 			json_file_path = f'{output_folder}/Raw JSON Data/{preset}.json'
-			compute_metrics(transcode_output_path, output_folder, json_file_path, graph_title, preset)
-			#compute_metrics(transcode_output_path, output_folder, json_file_path, graph_title, crf_or_preset=preset)
-
+			compute_metrics(transcode_output_path, output_folder, json_file_path, graph_filename, preset)
 		# -dqs argument specified
 		else: 
 			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
