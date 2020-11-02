@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 if '-h' not in sys.argv or '--help' not in sys.argv:
-	print("For more information, enter 'python video-metrics.py -h'")
+	print("To see a list of the options available along with descriptions, enter 'python video-metrics.py -h'")
 
 parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 # Original video path.
@@ -75,9 +75,9 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filen
 		f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
 		f.write(f'Chosen preset(s): {preset_string}\n')
 
-	size_of_file = os.path.getsize(transcoded_video) / 1_000_000
-	size_compared_to_original = round(((size_of_file / original_video_size) * 100), 3) 
-	size_rounded = round(size_of_file, decimal_places)
+	transcode_size = os.path.getsize(transcoded_video) / 1_000_000
+	size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
+	size_rounded = round(transcode_size, decimal_places)
 
 	data_for_current_row = [f'{size_rounded} MB', f'{size_compared_to_original}%']
 
@@ -180,6 +180,9 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filen
 
 	# -dqs (disable quality stats)
 	else:
+		transcode_size = os.path.getsize(transcoded_video) / 1_000_000
+		size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
+		size_rounded = round(transcode_size, decimal_places)
 		if args.no_transcoding_mode:
 			table.add_row([time_rounded, f'{size_rounded} MB', f'{size_compared_to_original}%'])
 		else:
@@ -217,6 +220,7 @@ if args.no_transcoding_mode:
 
 # -ntm argument was specified.
 if args.no_transcoding_mode:
+	seperator()
 	output_folder = f'({filename})'
 	os.makedirs(output_folder, exist_ok=True)
 	comparison_table = os.path.join(output_folder, 'Table.txt')
@@ -229,6 +233,7 @@ if args.no_transcoding_mode:
 
 # args.crf_value is a list when more than one CRF value is specified.
 elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
+	separator()
 	print('CRF comparison mode activated.')
 	crf_values = args.crf_value
 	crf_values_string = ', '.join(str(crf) for crf in crf_values)
@@ -283,21 +288,27 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 		start_time = time.time()
 		subprocess.run(subprocess_args)
 		end_time = time.time()
+		print('Done!')
 		time_to_convert = end_time - start_time
 		time_rounded = round(time_to_convert, decimal_places)
-		print('Done!')
+		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
+		size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
+		size_rounded = round(transcode_size, decimal_places)
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
 			# os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
 			json_file_path = f'{output_folder}/Raw JSON Data/CRF {crf}.json'
+			# Run the compute_metrics function.
 			compute_metrics(transcode_output_path, output_folder, json_file_path, graph_filename, crf)
+
 		# -dqs argument specified
 		else: 
 			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
 
 # args.preset is a list when more than one preset is specified.
 elif isinstance(args.preset, list):
+	separator()
 	print('Presets comparison mode activated.')
 	chosen_presets = args.preset
 	presets_string = ', '.join(chosen_presets)
@@ -347,17 +358,22 @@ elif isinstance(args.preset, list):
 		start_time = time.time()
 		subprocess.run(subprocess_args)
 		end_time = time.time()
+		print('Done!')
 		time_to_convert = end_time - start_time
 		time_rounded = round(time_to_convert, decimal_places)
-		print('Done!')
+		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
+		size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
+		size_rounded = round(transcode_size, decimal_places)
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
 			# os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
 			json_file_path = f'{output_folder}/Raw JSON Data/{preset}.json'
+			# Run the compute_metrics function.
 			compute_metrics(transcode_output_path, output_folder, json_file_path, graph_filename, preset)
+			
 		# -dqs argument specified
-		else: 
+		else:
 			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
 
 # Write the table to the Table.txt file.
