@@ -1,5 +1,6 @@
-import argparse, cv2, time, os, subprocess, json, sys
-from argparse import RawTextHelpFormatter
+import time, os, subprocess, json, sys
+from argparse import ArgumentParser, RawTextHelpFormatter
+from moviepy.editor import VideoFileClip
 from prettytable import PrettyTable
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,7 +8,7 @@ import matplotlib.pyplot as plt
 if '-h' not in sys.argv or '--help' not in sys.argv:
 	print("For more information, enter 'python video-metrics.py -h'")
 
-parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
+parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 # Original video path.
 parser.add_argument('-ovp', '--original-video-path', type=str, required=True, help='Enter the path of the original '
 				    'video. A relative or absolute path can be specified. '
@@ -58,13 +59,14 @@ if isinstance(args.crf_value, int) and isinstance(args.preset, str):
 	print('No CRF value(s) or preset(s) specified. Exiting.')
 	separator()
 	sys.exit()
-elif len(args.crf_value) > 1 and len(args.preset) > 1:
+elif len(args.crf_value) > 1 and isinstance(args.preset, list) and len(args.preset) > 1:
 	separator()
 	print(f'More than one CRF value AND more than one preset specified. No suitable mode found. Exiting.')
 	separator()
 	sys.exit()
 
 separator()
+
 
 def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filename, crf_or_preset=None):
 	preset_string = ','.join(args.preset)
@@ -192,9 +194,10 @@ original_video_size = os.path.getsize(original_video) / 1_000_000
 filename = original_video.split('/')[-1]
 output_ext = os.path.splitext(original_video)[-1][1:]
 
+with VideoFileClip(original_video) as clip:
+    fps = str(clip.fps)
+
 print(f'File: {filename}')
-cap = cv2.VideoCapture(original_video)
-fps = str(cap.get(cv2.CAP_PROP_FPS))
 print(f'Framerate: {fps} FPS')
 
 # Create a PrettyTable object.
@@ -229,11 +232,12 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 	print('CRF comparison mode activated.')
 	crf_values = args.crf_value
 	crf_values_string = ', '.join(str(crf) for crf in crf_values)
-	print(f'CRF values {crf_values_string} will be compared and the {args.preset[0]} preset will be used.')
+	preset = args.preset[0] if isinstance(args.preset, list) else args.preset
+	print(f'CRF values {crf_values_string} will be compared and the {preset} preset will be used.')
 	video_encoder = args.video_encoder
 	# Cannot use os.path.join for output_folder as this gives an error like the following:
 	# No such file or directory: '(2.mkv)\\Presets comparison at CRF 23/Raw JSON Data/superfast.json'
-	output_folder = f'({filename})/CRF comparison at preset {args.preset[0]}'
+	output_folder = f'({filename})/CRF comparison at preset {preset}'
 	os.makedirs(output_folder, exist_ok=True)
 	# The comparison table will be in the following path:
 	comparison_table = os.path.join(output_folder, 'Table.txt')
@@ -242,19 +246,20 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 	# Set the names of the columns
 	table.field_names = table_column_names
 
+	# The user only wants to transcode the first x seconds of the video.
 	if args.encoding_time:
-		cut_filename = f'{os.path.splitext(filename)[0]} [{args.encoding_time}s].{output_ext}'
+		cut_version_filename = f'{os.path.splitext(filename)[0]} [{args.encoding_time}s].{output_ext}'
 		# Output path for the cut video.
-		output_file_path = os.path.join(output_folder, cut_filename)
-		#output_file_path = f'{output_folder}/{cut_filename}'
-		# If an encoding time is specified, the reference file becomes the cut version of the video.
-		reference_file = output_file_path 
-		original_video_size = os.path.getsize(original_video) / 1_000_000
+		output_file_path = os.path.join(output_folder, cut_version_filename)
+		# The reference file will be the cut version of the video.
+		original_video = output_file_path
 		# Create the cut version.
 		print(f'Cutting the video to a length of {args.encoding_time} seconds...')
 		os.system(f'ffmpeg -loglevel warning -y -i {args.original_video_path} -t {args.encoding_time} '
 			      f'-map 0 -c copy "{output_file_path}"')
 		print('Done!')
+
+		original_video_size = os.path.getsize(original_video) / 1_000_000
 		time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
 		with open(comparison_table, 'w') as f:
@@ -263,13 +268,13 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 
 	# Transcode the video with each preset.
 	for crf in crf_values:
-		transcode_output_path = os.path.join(output_folder, f'CRF {crf} at preset {args.preset[0]}.{output_ext}')
-		graph_filename = f'CRF {crf} at preset {args.preset[0]}'
+		transcode_output_path = os.path.join(output_folder, f'CRF {crf} at preset {preset}.{output_ext}')
+		graph_filename = f'CRF {crf} at preset {preset}'
 
 		subprocess_args = [
 			"ffmpeg", "-loglevel", "warning", "-stats", "-y",
 			"-i", original_video, "-map", "0",
-			"-c:v", f'lib{video_encoder}', "-crf", str(crf), "-preset", args.preset[0],
+			"-c:v", f'lib{video_encoder}', "-crf", str(crf), "-preset", preset,
 			"-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
 		]
 
@@ -307,18 +312,20 @@ elif isinstance(args.preset, list):
 	# Set the names of the columns
 	table.field_names = table_column_names
 
+	# The user only wants to transcode the first x seconds of the video.
 	if args.encoding_time:
-		cut_filename = f'{os.path.splitext(filename)[0]} [{args.encoding_time}s].{output_ext}'
+		cut_version_filename = f'{os.path.splitext(filename)[0]} [{args.encoding_time}s].{output_ext}'
 		# Output path for the cut video.
-		output_file_path = os.path.join(output_folder, cut_filename)
-		# If an encoding time is specified, the reference file becomes the cut version of the video.
-		reference_file = output_file_path 
-		original_video_size = os.path.getsize(original_video) / 1_000_000
+		output_file_path = os.path.join(output_folder, cut_version_filename)
+		# The reference file will be the cut version of the video.
+		original_video = output_file_path
 		# Create the cut version.
 		print(f'Cutting the video to {args.encoding_time} seconds...')
 		os.system(f'ffmpeg -loglevel warning -y -i {args.video_path} -t {args.encoding_time} '
 			      f'-map 0 -c copy "{output_file_path}"')
 		print('Done!')
+
+		original_video_size = os.path.getsize(original_video) / 1_000_000
 		time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
 		with open(comparison_table, 'w') as f:
