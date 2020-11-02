@@ -32,7 +32,9 @@ With both modes, the following data is presented in a table and saved in a file 
 5. [Optional] Peak Signal-to-Noise-Ratio (PSNR)
 6. [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) - a perceptual video quality assessment algorithm developed by Netflix.
 
-**In addition to the above, a graph is created for each preset/CRF value, showing the variation of the SSIM, PSNR and VMAF throughout the transcoded video. [Here's](CRF%2023.png) an example graph.**
+**In addition to the above, a graph is created for each preset/CRF value, showing the variation of the SSIM, PSNR and VMAF throughout the transcoded video. Here's an example graph:**
+
+![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/CRF%2023.png?raw=true)
 
 # Usage:
 ```
