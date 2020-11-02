@@ -8,9 +8,11 @@ Example: `python video-metrics.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ss
 
 **[2]:**
 
-Transcode a video using the x264 or x265 encoder and see the VMAF/SSIM/PSNR values that you get with different presets or CRF values. Therefore, there are two modes - CRF comparison mode and presets comparison mode. You must specify multiple CRF values OR presets and this program will automatically transcode the video with each preset/CRF value, and the quality of each transcode is calculated using the VMAF and (optionally) the SSIM and PSNR metrics. Other factors such as the time taken to transcode the video and the resulting filesize are also shown in a table (Table.txt). [Here's](https://github.com/BassThatHertz/video-quality-metrics#an-example-of-the-table-that-is-saved) an example of what kind of table is created.
+Transcode a video using the x264 or x265 encoder and see the VMAF/SSIM/PSNR values that you get with different presets or CRF values. Therefore, there are two modes - CRF comparison mode and presets comparison mode. You must specify multiple CRF values OR presets and this program will automatically transcode the video with each preset/CRF value, and the quality of each transcode is calculated using the VMAF and (optionally) the SSIM and PSNR metrics. Other factors such as the time taken to transcode the video and the resulting filesize are also shown in a table (Table.txt). [Here's](https://github.com/BassThatHertz/video-quality-metrics#an-example-of-the-table-that-is-saved) an example. In addition to this, a graph is created for each preset/CRF value, showing the variation of the SSIM, PSNR and VMAF throughout the transcoded video. Here's an example:
 
-With [2], there are two options:
+![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/CRF%2023.png?raw=true)
+
+With [2], there are two modes:
 
 **[2] (CRF comparison mode):**
 
@@ -31,10 +33,6 @@ With both modes, the following data is presented in a table and saved in a file 
 4. [Optional] Structural Similarity Index (SSIM) 
 5. [Optional] Peak Signal-to-Noise-Ratio (PSNR)
 6. [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) - a perceptual video quality assessment algorithm developed by Netflix.
-
-**In addition to the above, a graph is created for each preset/CRF value, showing the variation of the SSIM, PSNR and VMAF throughout the transcoded video. Here's an example graph:**
-
-![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/CRF%2023.png?raw=true)
 
 # Usage:
 ```
@@ -84,7 +82,7 @@ Available arguments:
 - The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as video-metrics.py. These files are not needed if you only want the encoding time and filesize to be shown (you must specify `-dqs` in this case).
 - `pip install -r requirements.txt`
 
-# An example of the table that is saved:
+# Example Table:
 The table is saved in a file named **Table.txt**. Here's an example of the table that is created when opting to compare presets:
 ```
 You chose to encode a30.mkv using x264 with a CRF of 23.
