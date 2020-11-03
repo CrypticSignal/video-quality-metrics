@@ -39,6 +39,12 @@ The following data is presented in a table and saved as a file named **Table.txt
 - [Optional] Structural Similarity Index (SSIM). *You must use the `-ssim` argument.*
 - [Optional] Peak Signal-to-Noise-Ratio (PSNR). *You must use the `-psnr` argument.*
 
+# Requirements:
+- Python **3.6+**
+- `pip install -r requirements.txt`
+- FFmpeg installed and in your PATH. Your build of FFmpeg must have `--enable-libvmaf` in the configuration (unless you don't care about the quality metrics and you specify `-dqs` when running this command line program). If you're on Windows, you can download an FFmpeg binary which has `--enable-libvmaf` in the configuration by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
+- The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as video-metrics.py. These files are not needed if you only want the encoding time and filesize to be shown (you must specify `-dqs` in this case).
+
 # Usage:
 ```
 usage: video-metrics.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}]
@@ -81,11 +87,6 @@ Available arguments:
   -tvp TRANSCODED_VIDEO_PATH, --transcoded-video-path TRANSCODED_VIDEO_PATH
                         The path of the transcoded video (only applicable when using the -ntm mode).
 ```
-# Requirements:
-- Python **3.6+**
-- `pip install -r requirements.txt`
-- FFmpeg installed and in your PATH. Your build of FFmpeg must have `--enable-libvmaf` in the configuration (unless you don't care about the quality metrics and you specify `-dqs` when running this command line program). If you're on Windows, you can download an FFmpeg binary which has `--enable-libvmaf` in the configuration by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
-- The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as video-metrics.py. These files are not needed if you only want the encoding time and filesize to be shown (you must specify `-dqs` in this case).
 
 # Example Table:
 The table is saved as a file named **Table.txt**. Here's an example of the table that is created when opting to compare presets:
