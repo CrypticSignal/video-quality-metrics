@@ -69,7 +69,7 @@ Available arguments:
   -p PRESET(s) [PRESET(s) ...], --preset PRESET(s) [PRESET(s) ...]
                         Specify the preset(s) to use.
   -t ENCODING_TIME, --encoding-time ENCODING_TIME
-                        Encode this many seconds of the video. If not specified, the whole video will get encoded.
+                        Only transcode this many seconds of the video. If not specified, the whole video will be transcoded.
                         Example: -t 60
   -pm, --phone-model    Enable VMAF phone model.
   -dp DECIMAL_PLACES, --decimal-places DECIMAL_PLACES
