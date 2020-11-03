@@ -23,7 +23,7 @@ You want to know the quality (VMAF/SSIM/PSNR) achieved with certain presets. The
 Example: `python video-metrics.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
 
 The following data is presented in a table and saved as a file named **Table.txt**:
-- Time taken to transcode the video (in seconds). *Applicable to [1] only.*
+- Time taken to transcode the video (in seconds). *Applicable to [2] only.*
 - Filesize (MB).
 - Filesize compared to the original video (as a percentage).
 - [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) - a perceptual video quality assessment algorithm developed by Netflix.
