@@ -8,31 +8,31 @@ Example: `python video-metrics.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ss
 
 **[2]:**
 
-Transcode a video using the x264 or x265 encoder and see the VMAF/SSIM/PSNR values that you get with different presets or CRF values. Therefore, there are two modes - CRF comparison mode and presets comparison mode. You must specify multiple CRF values OR presets and this program will automatically transcode the video with each preset/CRF value, and the quality of each transcode is calculated using the VMAF and (optionally) the SSIM and PSNR metrics. Other factors such as the time taken to transcode the video and the resulting filesize are also shown in a table (Table.txt). [Here's](https://github.com/BassThatHertz/video-quality-metrics#example-table) an example. In addition to this, a graph is created for each preset/CRF value, showing the variation of the SSIM, PSNR and VMAF throughout the transcoded video. Here's an example:
-
-![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/CRF%2023.png?raw=true)
-
-With [2], there are two modes:
+Transcode a video using the x264 or x265 encoder and see the VMAF/SSIM/PSNR values that you get with different presets or CRF values. There are two modes; CRF comparison mode and presets comparison mode. You must specify multiple CRF values OR presets and this program will automatically transcode the video with each preset/CRF value, and the quality of each transcode is calculated using the VMAF and (optionally) the SSIM and PSNR metrics. Other factors such as the time taken to transcode the video and the resulting filesize are also shown in a table (Table.txt). [Here's](https://github.com/BassThatHertz/video-quality-metrics#example-table) an example. In addition to this, a graph is created for each preset/CRF value, showing the variation of the SSIM, PSNR and VMAF throughout the transcoded video.
 
 **[2] (CRF comparison mode):**
 
-You want to calculate the quality achieved with certain CRF values. The program will automatically transcode the original video with every CRF value that you specify (using the `-crf` argument) without having to manually start a new transcode with a different CRF value. You must specify the CRF values that you want to compare and (optionally) **one** preset (if you don't want the default preset (medium) to be used). See the example below:
+You want to know the quality (VMAF/SSIM/PSNR) achieved with certain CRF values. The program will automatically transcode the original video with every CRF value that you specify (using the `-crf` argument) without having to manually start a new transcode with a different CRF value. You must specify the CRF values that you want to compare and (optionally) **one** preset (if you don't want the default preset (medium) to be used).
 
-`python video-metrics.py -ovp original.mp4 -crf 18 19 20 -p veryfast -ssim -psnr`
+Example: `python video-metrics.py -ovp original.mp4 -crf 18 19 20 -p veryfast -ssim -psnr`
 
 **[2] (presets comparison mode)**
 
-You want to calculate the quality achieved with certain presets. The program will automatically transcode the original video with every preset that you specify (using the `-p` argument) without having to manually start a new encode with each preset. You must specify the presets that you want to compare and (optionally) **one** CRF value (if you don't want the default CRF value of 23 to be used). See the example below:
+You want to know the quality (VMAF/SSIM/PSNR) achieved with certain presets. The program will automatically transcode the original video with every preset that you specify (using the `-p` argument) without having to manually start a new encode with each preset. You must specify the presets that you want to compare and (optionally) **one** CRF value (if you don't want the default CRF value of 23 to be used).
 
-`python video-metrics.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
+Example: `python video-metrics.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
 
-With both modes, the following data is presented in a table and saved in a file named **Table.txt**:
-1. Time taken to encode the video (in seconds)
-2. Resulting filesize (MB)
-3. Filesize compared to the original (as a percentage)
-4. [Optional] Structural Similarity Index (SSIM) 
-5. [Optional] Peak Signal-to-Noise-Ratio (PSNR)
-6. [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) - a perceptual video quality assessment algorithm developed by Netflix.
+The following data is presented in a table and saved as a file named **Table.txt**:
+- Time taken to transcode the video (in seconds). *Applicable to [1] only.*
+- Filesize (MB).
+- Filesize compared to the original video (as a percentage).
+- [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) - a perceptual video quality assessment algorithm developed by Netflix.
+- [Optional] Structural Similarity Index (SSIM). *You must use the `-ssim` argument.*
+- [Optional] Peak Signal-to-Noise-Ratio (PSNR). *You must use the `-psnr` argument.*
+
+In addition to this, graph(s) are created and saved as PNG files which show the variation of the VMAF/SSIM/PSNR values throughout the video. Here's an example:
+
+![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/CRF%2023.png?raw=true)
 
 # Usage:
 ```
@@ -78,9 +78,10 @@ Available arguments:
 ```
 # Requirements:
 - Python **3.6+**
+- `pip install -r requirements.txt`
 - FFmpeg installed and in your PATH. Your build of FFmpeg must have `--enable-libvmaf` in the configuration (unless you don't care about the quality metrics and you specify `-dqs` when running this command line program). If you're on Windows, you can download an FFmpeg binary which has `--enable-libvmaf` in the configuration by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
 - The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as video-metrics.py. These files are not needed if you only want the encoding time and filesize to be shown (you must specify `-dqs` in this case).
-- `pip install -r requirements.txt`
+
 
 # Example Table:
 The table is saved in a file named **Table.txt**. Here's an example of the table that is created when opting to compare presets:
