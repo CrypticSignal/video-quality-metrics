@@ -1,4 +1,12 @@
-This program has two main features, and they will be referred to as [1] and [2].
+# Video Quality Metrics
+
+**What kind of graph does this program produce?**
+
+Graph(s) are created and saved as PNG files which show the variation of the VMAF/SSIM/PSNR values throughout the video. Here's an example:
+
+![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/CRF%2023.png?raw=true)
+
+**This program has two main features, and they will be referred to as [1] and [2].**
 
 **[1]:**
 
@@ -22,6 +30,7 @@ You want to know the quality (VMAF/SSIM/PSNR) achieved with certain presets. The
 
 Example: `python video-metrics.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
 
+# What data is shown in the table?
 The following data is presented in a table and saved as a file named **Table.txt**:
 - Time taken to transcode the video (in seconds). *Applicable to [2] only.*
 - Filesize (MB).
@@ -29,10 +38,6 @@ The following data is presented in a table and saved as a file named **Table.txt
 - [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) - a perceptual video quality assessment algorithm developed by Netflix.
 - [Optional] Structural Similarity Index (SSIM). *You must use the `-ssim` argument.*
 - [Optional] Peak Signal-to-Noise-Ratio (PSNR). *You must use the `-psnr` argument.*
-
-In addition to this, graph(s) are created and saved as PNG files which show the variation of the VMAF/SSIM/PSNR values throughout the video. Here's an example:
-
-![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/CRF%2023.png?raw=true)
 
 # Usage:
 ```
@@ -82,9 +87,8 @@ Available arguments:
 - FFmpeg installed and in your PATH. Your build of FFmpeg must have `--enable-libvmaf` in the configuration (unless you don't care about the quality metrics and you specify `-dqs` when running this command line program). If you're on Windows, you can download an FFmpeg binary which has `--enable-libvmaf` in the configuration by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
 - The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as video-metrics.py. These files are not needed if you only want the encoding time and filesize to be shown (you must specify `-dqs` in this case).
 
-
 # Example Table:
-The table is saved in a file named **Table.txt**. Here's an example of the table that is created when opting to compare presets:
+The table is saved as a file named **Table.txt**. Here's an example of the table that is created when opting to compare presets:
 ```
 You chose to encode a30.mkv using x264 with a CRF of 23.
 +-----------+-------------------+----------+---------------------------+-------+------+-------+
