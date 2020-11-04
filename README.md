@@ -114,7 +114,7 @@ The phone model was created because the original model "did not accurately refle
 
 The 4K model "predicts the subjective quality of video displayed on a 4K TV and viewed from a distance of 1.5H. A viewing distance of 1.5H is the maximum distance for the average viewer to appreciate the sharpness of 4K content. The 4K model is similar to the default model in the sense that both models capture quality at the critical angular frequency of 1/60 degree/pixel. However, the 4K model assumes a wider viewing angle, which affects the foveal vs peripheral vision that the subject uses."
 
-[Here](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12) is the source of the quoted text.
+The source of the quoted text, plus more information about VMAF (such as the correct way to calculate VMAF), can be found [here](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12).
 
 - If you are transcoding for content that will be viewed on a mobile phone, you should add the `-pm` argument when using this command line program. 
 - If you are transcoding for content that will be viewed on a 4K display, replace `"model_path": "vmaf_v0.6.1.pkl",` in the `run_libvmaf` function in main.py to `"model_path": "vmaf_4k_v0.6.1.pkl"`.
