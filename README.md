@@ -43,7 +43,6 @@ The following data is presented in a table and saved as a file named **Table.txt
 - Python **3.6+**
 - `pip install -r requirements.txt`
 - FFmpeg installed and in your PATH. Your build of FFmpeg must have `--enable-libvmaf` in the configuration (unless you don't care about the quality metrics and you specify `-dqs` when running this command line program). If you're on Windows, you can download an FFmpeg binary which has `--enable-libvmaf` in the configuration by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
-- The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as main.py. These files are not needed if you only want the encoding time and filesize to be shown (you must specify `-dqs` in this case).
 
 # Usage:
 ```
@@ -105,3 +104,17 @@ You chose to encode a30.mkv using x264 with a CRF of 23.
 +-----------+-------------------+----------+---------------------------+-------+------+-------+
 ```
 *A 30 seconds long video was encoded. Command: `python main.py -ovp a30.mkv -p slow medium fast faster veryfast superfast ultrafast -ssim -psnr`*
+
+# About the model files:
+As you may have noticed, there are two types of model files; original and 4K versions. There is also the phone model that can be enabled by using the `-pm` argument.
+
+This program uses the original model by default, which is "based on the assumption that the viewers sit in front of a 1080p display in a living room-like environment with the viewing distance of 3x the screen height (3H)".
+
+The phone model was created because the original model "did not accurately reflect how a viewer perceives quality on a phone. In particular, due to smaller screen size and longer viewing distance relative to the screen height (>3H), viewers perceive high-quality videos with smaller noticeable differences. For example, on a mobile phone, there is less distinction between 720p and 1080p videos compared to other devices. With this in mind, we trained and released a VMAF phone model."
+
+The 4K model "predicts the subjective quality of video displayed on a 4K TV and viewed from a distance of 1.5H. A viewing distance of 1.5H is the maximum distance for the average viewer to appreciate the sharpness of 4K content. The 4K model is similar to the default model in the sense that both models capture quality at the critical angular frequency of 1/60 degree/pixel. However, the 4K model assumes a wider viewing angle, which affects the foveal vs peripheral vision that the subject uses."
+
+[Here](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12) is the source of the quoted text.
+
+- If you are transcoding for content that will be viewed on a mobile phone, you should add the `-pm` argument when using this command line program. 
+- If you are transcoding for content that will be viewed on a 4K display, replace `"model_path": "vmaf_v0.6.1.pkl",` in the `run_libvmaf` function in main.py to `"model_path": "vmaf_4k_v0.6.1.pkl"`.
