@@ -1,4 +1,4 @@
 prettytable==0.7.2
 moviepy==1.0.3
-numpy==1.19.4
+numpy>=1.18.2
 matplotlib==3.3.0
