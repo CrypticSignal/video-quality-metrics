@@ -363,7 +363,7 @@ elif isinstance(args.preset, list):
 		end_time = time.time()
 		print('Done!')
 		time_to_convert = end_time - start_time
-		time_rounded = round(time_to_convert, decimal_places)
+		time_rounded = force_decimal_places(round(time_to_convert, decimal_places))
 		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
 		size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
 		size_rounded = round(transcode_size, decimal_places)
