@@ -80,7 +80,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filen
 
 	transcode_size = os.path.getsize(transcoded_video) / 1_000_000
 	size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
-	size_rounded = round(transcode_size, decimal_places)
+	size_rounded = force_decimal_places(round(transcode_size, decimal_places))
 
 	data_for_current_row = [f'{size_rounded} MB', f'{size_compared_to_original}%']
 
@@ -293,10 +293,10 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 		end_time = time.time()
 		print('Done!')
 		time_to_convert = end_time - start_time
-		time_rounded = round(time_to_convert, decimal_places)
+		time_rounded = force_decimal_places(round(time_to_convert, decimal_places))
 		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
 		size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
-		size_rounded = round(transcode_size, decimal_places)
+		size_rounded = force_decimal_places(round(transcode_size, decimal_places))
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
@@ -366,7 +366,7 @@ elif isinstance(args.preset, list):
 		time_rounded = force_decimal_places(round(time_to_convert, decimal_places))
 		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
 		size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
-		size_rounded = round(transcode_size, decimal_places)
+		size_rounded = force_decimal_places(round(transcode_size, decimal_places))
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
