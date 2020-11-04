@@ -12,7 +12,7 @@ Graph(s) are created and saved as PNG files which show the variation of the VMAF
 
 You already have a transcoded video (and the original) and you want the quality of the transcoded version to be calculated using the VMAF and (optionally) the SSIM and PSNR metrics. The data is saved in a file named **Table.txt**, and a graph is also created which shows the variation of the VMAF/SSIM/PSNR throughout the video. The graph is saved as a PNG file.
 
-Example: `python video-metrics.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
+Example: `python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
 
 **[2]:**
 
@@ -22,13 +22,13 @@ Transcode a video using the x264 or x265 encoder and see the VMAF/SSIM/PSNR valu
 
 You want to know the quality (VMAF/SSIM/PSNR) achieved with certain CRF values. The program will automatically transcode the original video with every CRF value that you specify (using the `-crf` argument) without having to manually start a new transcode with a different CRF value. You must specify the CRF values that you want to compare and (optionally) **one** preset (if you don't want the default preset (medium) to be used).
 
-Example: `python video-metrics.py -ovp original.mp4 -crf 18 19 20 -p veryfast -ssim -psnr`
+Example: `python main.py -ovp original.mp4 -crf 18 19 20 -p veryfast -ssim -psnr`
 
 **[2] (presets comparison mode)**
 
 You want to know the quality (VMAF/SSIM/PSNR) achieved with certain presets. The program will automatically transcode the original video with every preset that you specify (using the `-p` argument) without having to manually start a new encode with each preset. You must specify the presets that you want to compare and (optionally) **one** CRF value (if you don't want the default CRF value of 23 to be used).
 
-Example: `python video-metrics.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
+Example: `python main.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
 
 # What data is shown in the table?
 The following data is presented in a table and saved as a file named **Table.txt**:
@@ -43,18 +43,18 @@ The following data is presented in a table and saved as a file named **Table.txt
 - Python **3.6+**
 - `pip install -r requirements.txt`
 - FFmpeg installed and in your PATH. Your build of FFmpeg must have `--enable-libvmaf` in the configuration (unless you don't care about the quality metrics and you specify `-dqs` when running this command line program). If you're on Windows, you can download an FFmpeg binary which has `--enable-libvmaf` in the configuration by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link.
-- The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as video-metrics.py. These files are not needed if you only want the encoding time and filesize to be shown (you must specify `-dqs` in this case).
+- The files **vmaf_v0.6.1.pkl** and **vmaf_v0.6.1.pkl.model** need to be in the same directory as main.py. These files are not needed if you only want the encoding time and filesize to be shown (you must specify `-dqs` in this case).
 
 # Usage:
 ```
-usage: video-metrics.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}]
+usage: main.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}]
                         [-crf CRF_VALUEs) [CRF_VALUE(s) ...]]
                         [-p PRESET(s) [PRESET(s ...]] [-t ENCODING_TIME] [-pm]
                         [-dp DECIMAL_PLACES] [-ssim] [-psnr] [-dqs] [-ntm]
                         [-tvp TRANSCODED_VIDEO_PATH]
                           
 If there is a space in the path, it must be surrounded with double quotes. Example:
-python video-metrics.py -ovp "C:/Users/H/Desktop/my file.mp4" -p veryfast superfast
+python main.py -ovp "C:/Users/H/Desktop/my file.mp4" -p veryfast superfast
 
 Available arguments:
   -h, --help            show this help message and exit
@@ -104,4 +104,4 @@ You chose to encode a30.mkv using x264 with a CRF of 23.
 | ultrafast |        4.24       | 31.89 MB |          197.95%          | 42.63 | 0.99 | 96.55 |
 +-----------+-------------------+----------+---------------------------+-------+------+-------+
 ```
-*A 30 seconds long video was encoded. Command: `python video-metrics.py -ovp a30.mkv -p slow medium fast faster veryfast superfast ultrafast -ssim -psnr`*
+*A 30 seconds long video was encoded. Command: `python main.py -ovp a30.mkv -p slow medium fast faster veryfast superfast ultrafast -ssim -psnr`*

@@ -1,0 +1,12 @@
+# Video Files
+*.3gp
+*.avi
+*.flv
+*.mkv
+*.mp4
+*.MTS
+*.wmv
+# Miscellaneous
+*.exe
+# Ignore all folders
+*/*
