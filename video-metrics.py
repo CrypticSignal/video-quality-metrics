@@ -183,9 +183,6 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filen
 
 	# -dqs (disable quality stats)
 	else:
-		transcode_size = os.path.getsize(transcoded_video) / 1_000_000
-		size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
-		size_rounded = round(transcode_size, decimal_places)
 		if args.no_transcoding_mode:
 			table.add_row([time_rounded, f'{size_rounded} MB', f'{size_compared_to_original}%'])
 		else:
