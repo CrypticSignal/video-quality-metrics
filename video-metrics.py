@@ -68,6 +68,9 @@ elif len(args.crf_value) > 1 and isinstance(args.preset, list) and len(args.pres
 separator()
 
 
+def force_decimal_places(value):
+	return '{:0.{dp}f}'.format(value, dp=decimal_places)
+
 def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filename, crf_or_preset=None):
 	preset_string = ','.join(args.preset)
 	# The first line of Table.txt:
@@ -77,7 +80,7 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filen
 
 	transcode_size = os.path.getsize(transcoded_video) / 1_000_000
 	size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
-	size_rounded = round(transcode_size, decimal_places)
+	size_rounded = force_decimal_places(round(transcode_size, decimal_places))
 
 	data_for_current_row = [f'{size_rounded} MB', f'{size_compared_to_original}%']
 
@@ -120,9 +123,9 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filen
 	if not args.disable_quality_stats:
 		# VMAF
 		vmaf_scores = [frame['metrics']['vmaf'] for frame in file_contents['frames']]
-		mean_vmaf = round(np.mean(vmaf_scores), decimal_places)
-		min_vmaf = round(min(vmaf_scores), decimal_places)
-		vmaf_std = round(np.std(vmaf_scores), decimal_places) # Standard deviation.
+		mean_vmaf = force_decimal_places(round(np.mean(vmaf_scores), decimal_places))
+		min_vmaf = force_decimal_places(round(min(vmaf_scores), decimal_places))
+		vmaf_std = force_decimal_places(round(np.std(vmaf_scores), decimal_places)) # Standard deviation.
 		vmaf = f'{min_vmaf} | {vmaf_std} | {mean_vmaf}'
 		# Plot a line showing the variation of the VMAF score throughout the video.
 		print(f'Plotting VMAF graph...')
@@ -133,9 +136,9 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filen
 
 		if args.calculate_ssim:
 			ssim_scores = [ssim['metrics']['ssim'] for ssim in file_contents['frames']]
-			mean_ssim = round(np.mean(ssim_scores), decimal_places)
-			min_ssim = round(min(ssim_scores), decimal_places)
-			ssim_std = round(np.std(ssim_scores), decimal_places) # Standard deviation.
+			mean_ssim = force_decimal_places(round(np.mean(ssim_scores), decimal_places))
+			min_ssim = force_decimal_places(round(min(ssim_scores), decimal_places))
+			ssim_std = force_decimal_places(round(np.std(ssim_scores), decimal_places)) # Standard deviation.
 			ssim = f'{min_ssim} | {ssim_std} | {mean_ssim}'
 			# Plot a line showing the variation of the SSIM throughout the video.
 			print(f'Plotting SSIM graph...')
@@ -146,9 +149,9 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filen
 
 		if args.calculate_psnr:
 			psnr_scores = [psnr['metrics']['psnr'] for psnr in file_contents['frames']]
-			mean_psnr = round(np.mean(psnr_scores), decimal_places)
-			min_psnr = round(min(psnr_scores), decimal_places)
-			psnr_std = round(np.std(psnr_scores), decimal_places) # Standard deviation.
+			mean_psnr = force_decimal_places(round(np.mean(psnr_scores), decimal_places))
+			min_psnr = force_decimal_places(round(min(psnr_scores), decimal_places))
+			psnr_std = force_decimal_places(round(np.std(psnr_scores), decimal_places)) # Standard deviation.
 			psnr = f'{min_psnr} | {psnr_std} | {mean_psnr}'
 			# Plot a line showing the variation of the PSNR throughout the video.
 			print(f'Plotting PSNR graph...')
@@ -180,9 +183,6 @@ def compute_metrics(transcoded_video, output_folder, json_file_path, graph_filen
 
 	# -dqs (disable quality stats)
 	else:
-		transcode_size = os.path.getsize(transcoded_video) / 1_000_000
-		size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
-		size_rounded = round(transcode_size, decimal_places)
 		if args.no_transcoding_mode:
 			table.add_row([time_rounded, f'{size_rounded} MB', f'{size_compared_to_original}%'])
 		else:
@@ -290,10 +290,10 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 		end_time = time.time()
 		print('Done!')
 		time_to_convert = end_time - start_time
-		time_rounded = round(time_to_convert, decimal_places)
+		time_rounded = force_decimal_places(round(time_to_convert, decimal_places))
 		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
 		size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
-		size_rounded = round(transcode_size, decimal_places)
+		size_rounded = force_decimal_places(round(transcode_size, decimal_places))
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
@@ -360,10 +360,10 @@ elif isinstance(args.preset, list):
 		end_time = time.time()
 		print('Done!')
 		time_to_convert = end_time - start_time
-		time_rounded = round(time_to_convert, decimal_places)
+		time_rounded = force_decimal_places(round(time_to_convert, decimal_places))
 		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
 		size_compared_to_original = round(((transcode_size / original_video_size) * 100), 3) 
-		size_rounded = round(transcode_size, decimal_places)
+		size_rounded = force_decimal_places(round(transcode_size, decimal_places))
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
