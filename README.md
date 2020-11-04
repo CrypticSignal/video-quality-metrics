@@ -117,4 +117,4 @@ The 4K model "predicts the subjective quality of video displayed on a 4K TV and 
 [Here](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12) is the source of the quoted text.
 
 - If you are transcoding for content that will be viewed on a mobile phone, you should add the `-pm` argument when using this command line program. 
-- If you are transcoding for content that will be viewed on a 4K display, replace `"model_path": "vmaf_v0.6.1.pkl",` in the `run_libvmaf` function in main.py to `"model_path": "vmaf_4k_v0.6.1.pkl"`.
+- If you are transcoding for content that will be viewed on a 4K display, replace `"model_path": "vmaf_v0.6.1.pkl",` in the `run_libvmaf` function in main.py with `"model_path": "vmaf_4k_v0.6.1.pkl"`.
