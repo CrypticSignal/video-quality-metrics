@@ -8,5 +8,6 @@
 *.wmv
 # Miscellaneous
 *.exe
+*.bat
 # Ignore all folders
 */*
