@@ -229,7 +229,7 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 			run_libvmaf(transcode_output_path)
 			# Run the compute_metrics function.
 			create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
-							          time_rounded, table, output_folder, crf)
+									  time_rounded, table, output_folder, crf)
 		# -dqs argument specified
 		else: 
 			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
