@@ -240,11 +240,12 @@ elif isinstance(args.preset, list):
 	print('Presets comparison mode activated.')
 	chosen_presets = args.preset
 	presets_string = ', '.join(chosen_presets)
+	crf = args.crf_value[0]
 	video_encoder = args.video_encoder
-	print(f'Presets {presets_string} will be compared at a CRF of {args.crf_value[0]}.')
+	print(f'Presets {presets_string} will be compared at a CRF of {crf}.')
 	# Cannot use os.path.join for output_folder as this gives an error like the following:
 	# No such file or directory: '(2.mkv)\\Presets comparison at CRF 23/Raw JSON Data/superfast.json'
-	output_folder = f'({filename})/Presets comparison at CRF {args.crf_value[0]}'
+	output_folder = f'({filename})/Presets comparison at CRF {crf}'
 	os.makedirs(output_folder, exist_ok=True)
 	comparison_table = os.path.join(output_folder, 'Table.txt')
 	table_column_names.insert(0, 'Preset')
@@ -262,7 +263,7 @@ elif isinstance(args.preset, list):
 		subprocess_args = [
 			"ffmpeg", "-loglevel", "warning", "-stats", "-y",
 			"-i", original_video, "-map", "0",
-			"-c:v", f'lib{video_encoder}', "-crf", str(args.crf_value[0]), "-preset", preset,
+			"-c:v", f'lib{video_encoder}', "-crf", str(crf), "-preset", preset,
 			"-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
 		]
 		separator()
