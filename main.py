@@ -287,7 +287,7 @@ elif isinstance(args.preset, list):
 			# The first line of Table.txt:
 			with open(comparison_table, 'w') as f:
 				f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
-				f.write(f'Chosen preset(s): {preset_string}\n')
+				f.write(f'Chosen CRF: {crf}\n')
 			# Run libvmaf.
 			run_libvmaf(transcode_output_path)
 			# Run the compute_metrics function.
