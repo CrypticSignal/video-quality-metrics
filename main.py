@@ -218,7 +218,7 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 		transcoded_bitrate = get_bitrate(transcode_output_path)
 		size_compared_to_original = round(((transcode_size / original_video_size) * 100), decimal_places) 
 		size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
-		data_for_current_row = [f'{transcoded_bitrate}', f'{size_rounded} MB', f'{size_compared_to_original}%']
+		data_for_current_row = [f'{size_rounded} MB', f'{size_compared_to_original}%', transcoded_bitrate]
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
@@ -282,7 +282,7 @@ elif isinstance(args.preset, list):
 		transcoded_bitrate = get_bitrate(transcode_output_path)
 		size_compared_to_original = round(((transcode_size / original_video_size) * 100), decimal_places) 
 		size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
-		data_for_current_row = [f'{transcoded_bitrate}', f'{size_rounded} MB', f'{size_compared_to_original}%']
+		data_for_current_row = [f'{size_rounded} MB', f'{size_compared_to_original}%', transcoded_bitrate]
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
