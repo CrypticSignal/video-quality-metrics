@@ -3,6 +3,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 from moviepy.editor import VideoFileClip
 from prettytable import PrettyTable
 from save_metrics import create_table_plot_metrics, force_decimal_places
+from utils import GetBitrate
 
 if len(sys.argv) == 1:
 	print("To see a list of the options available along with descriptions, enter 'python main.py -h'\n")
@@ -62,14 +63,16 @@ output_ext = os.path.splitext(original_video)[-1][1:]
 with VideoFileClip(original_video) as clip:
 	fps = str(clip.fps)
 
+original_bitrate = GetBitrate(original_video)
 print(f'File: {filename}')
 print(f'Framerate: {fps} FPS')
+print(f'Bitrate of original video: {original_bitrate}')
 
 # Create a PrettyTable object.
 table = PrettyTable()
 
 # Base template for the column names.
-table_column_names = ['Encoding Time (s)', 'Size', 'Size Compared to Original']
+table_column_names = ['Encoding Time (s)', 'Bitrate', 'Size', 'Size Compared to Original']
 
 if not args.disable_quality_stats:
 	table_column_names.append('VMAF')
@@ -212,9 +215,10 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 		time_to_convert = end_time - start_time
 		time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
 		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
+		transcoded_bitrate = GetBitrate(transcode_output_path)
 		size_compared_to_original = round(((transcode_size / original_video_size) * 100), decimal_places) 
 		size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
-		data_for_current_row = [f'{size_rounded} MB', f'{size_compared_to_original}%']
+		data_for_current_row = [f'{transcoded_bitrate}', f'{size_rounded} MB', f'{size_compared_to_original}%']
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
@@ -225,6 +229,7 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 			with open(comparison_table, 'w') as f:
 				f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
 				f.write(f'Chosen preset(s): {preset_string}\n')
+				f.write(f'Original video bitrate: {original_bitrate}\n')
 			# Run libvmaf.
 			run_libvmaf(transcode_output_path)
 			# Run the compute_metrics function.
@@ -275,9 +280,10 @@ elif isinstance(args.preset, list):
 		time_to_convert = end_time - start_time
 		time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
 		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
+		transcoded_bitrate = GetBitrate(transcode_output_path)
 		size_compared_to_original = round(((transcode_size / original_video_size) * 100), decimal_places) 
 		size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
-		data_for_current_row = [f'{size_rounded} MB', f'{size_compared_to_original}%']
+		data_for_current_row = [f'{transcoded_bitrate}', f'{size_rounded} MB', f'{size_compared_to_original}%']
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
@@ -288,6 +294,7 @@ elif isinstance(args.preset, list):
 			with open(comparison_table, 'w') as f:
 				f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
 				f.write(f'Chosen CRF: {crf}\n')
+				f.write(f'Original video bitrate: {original_bitrate}\n')
 			# Run libvmaf.
 			run_libvmaf(transcode_output_path)
 			# Run the compute_metrics function.
