@@ -1,9 +1,11 @@
 import time, os, subprocess, sys
 from argparse import ArgumentParser, RawTextHelpFormatter
-from moviepy.editor import VideoFileClip
 from prettytable import PrettyTable
 from save_metrics import create_table_plot_metrics, force_decimal_places
-from utils import GetBitrate
+from utils import get_framerate_fraction, get_framerate_float, get_bitrate
+
+def separator():
+	print('-----------------------------------------------------------------------------------------------------------')
 
 if len(sys.argv) == 1:
 	print("To see a list of the options available along with descriptions, enter 'python main.py -h'\n")
@@ -60,19 +62,22 @@ filename = original_video.split('/')[-1]
 # The file extension of the video.
 output_ext = os.path.splitext(original_video)[-1][1:]
 
-with VideoFileClip(original_video) as clip:
-	fps = str(clip.fps)
+# Use the functions in utils.py to get the framerate and bitrate.
+fps = get_framerate_fraction(original_video)
+fps_float = get_framerate_float(original_video)
+original_bitrate = get_bitrate(original_video)
 
-original_bitrate = GetBitrate(original_video)
-print(f'File: {filename}')
-print(f'Framerate: {fps} FPS')
-print(f'Bitrate of original video: {original_bitrate}')
+separator()
+print('Here\'s some information about the original video:')
+print(f'Filename: {filename}')
+print(f'Framerate: {fps} ({fps_float}) FPS')
+print(f'Bitrate: {original_bitrate}')
 
 # Create a PrettyTable object.
 table = PrettyTable()
 
 # Base template for the column names.
-table_column_names = ['Encoding Time (s)', 'Bitrate', 'Size', 'Size Compared to Original']
+table_column_names = ['Encoding Time (s)', 'Size', 'Size Compared to Original', 'Bitrate']
 
 if not args.disable_quality_stats:
 	table_column_names.append('VMAF')
@@ -82,10 +87,6 @@ if args.calculate_psnr:
 	table_column_names.append('PSNR')
 if args.no_transcoding_mode:
 	del table_column_names[0]
-
-
-def separator():
-	print('-----------------------------------------------------------------------------------------------------------')
 
 
 def cut_video():
@@ -148,7 +149,7 @@ if isinstance(args.crf_value, int) and isinstance(args.preset, str):
 	print('No CRF value(s) or preset(s) specified. Exiting.')
 	separator()
 	sys.exit()
-elif len(args.crf_value) > 1 and isinstance(args.preset, list) and len(args.preset) > 1:
+elif isinstance(args.crf_value, list) and len(args.crf_value) > 1 and isinstance(args.preset, list) and len(args.preset) > 1:
 	separator()
 	print(f'More than one CRF value AND more than one preset specified. No suitable mode found. Exiting.')
 	separator()
@@ -172,7 +173,6 @@ if args.no_transcoding_mode:
 
 # args.crf_value is a list when more than one CRF value is specified.
 elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
-	separator()
 	print('CRF comparison mode activated.')
 	crf_values = args.crf_value
 	crf_values_string = ', '.join(str(crf) for crf in crf_values)
@@ -215,7 +215,7 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 		time_to_convert = end_time - start_time
 		time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
 		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-		transcoded_bitrate = GetBitrate(transcode_output_path)
+		transcoded_bitrate = get_bitrate(transcode_output_path)
 		size_compared_to_original = round(((transcode_size / original_video_size) * 100), decimal_places) 
 		size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
 		data_for_current_row = [f'{transcoded_bitrate}', f'{size_rounded} MB', f'{size_compared_to_original}%']
@@ -241,11 +241,10 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 
 # args.preset is a list when more than one preset is specified.
 elif isinstance(args.preset, list):
-	separator()
 	print('Presets comparison mode activated.')
 	chosen_presets = args.preset
 	presets_string = ', '.join(chosen_presets)
-	crf = args.crf_value[0]
+	crf = args.crf_value[0] if isinstance(args.crf_value, list) else args.crf_value
 	video_encoder = args.video_encoder
 	print(f'Presets {presets_string} will be compared at a CRF of {crf}.')
 	# Cannot use os.path.join for output_folder as this gives an error like the following:
@@ -280,7 +279,7 @@ elif isinstance(args.preset, list):
 		time_to_convert = end_time - start_time
 		time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
 		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-		transcoded_bitrate = GetBitrate(transcode_output_path)
+		transcoded_bitrate = get_bitrate(transcode_output_path)
 		size_compared_to_original = round(((transcode_size / original_video_size) * 100), decimal_places) 
 		size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
 		data_for_current_row = [f'{transcoded_bitrate}', f'{size_rounded} MB', f'{size_compared_to_original}%']
