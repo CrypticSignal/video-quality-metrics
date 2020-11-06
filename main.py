@@ -29,15 +29,16 @@ def main():
                         default='medium', help='Specify the preset(s) to use.', metavar='PRESET(s)')
     # create a clip every <interval> seconds
     parser.add_argument('-i', '--interval', type=int, choices=range(0, 600), default=0,
-                        help='Creates a <cliplength> seconds long clip every <interval> seconds and concatenates to a '
-                             'single file')
+                        help='Creates a lossless <cliplength> seconds long clip every <interval> seconds and '
+                             'concatenates to a single file')
     # clip length for interval argument
     parser.add_argument('-cl', '--clip-length', type=int, choices=range(1, 60), default=1,
                         help='Only applies when used with -i > 0. Defines the length of the clips.')
     # How many seconds to transcode.
     parser.add_argument('-t', '--encoding-time', type=str,
                         help='Encode this many seconds of the video. '
-                        'If not specified, the whole video will get encoded.\nExample: -t 60')
+                        'If not specified, the whole video will get encoded. Only applies when -i is not set.'
+                        'Example: -t 60')
     # Enable phone model?
     parser.add_argument('-pm', '--phone-model', action='store_true', help='Enable VMAF phone model.')
     # Number of decimal places to use for the data.

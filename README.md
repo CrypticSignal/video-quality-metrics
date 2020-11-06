@@ -48,7 +48,8 @@ The following data is presented in a table and saved as a file named **Table.txt
 ```
 usage: main.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}]
                         [-crf CRF_VALUEs) [CRF_VALUE(s) ...]]
-                        [-p PRESET(s) [PRESET(s ...]] [-t ENCODING_TIME] [-pm]
+                        [-p PRESET(s) [PRESET(s ...]] [-i INTERVAL_SECONDS] 
+                        [-cl CLIP_LENGTH] [-t ENCODING_TIME] [-pm]
                         [-dp DECIMAL_PLACES] [-ssim] [-psnr] [-dqs] [-ntm]
                         [-tvp TRANSCODED_VIDEO_PATH]
                           
@@ -67,6 +68,13 @@ Available arguments:
                         Specify the CRF value(s) to use.
   -p PRESET(s) [PRESET(s) ...], --preset PRESET(s) [PRESET(s) ...]
                         Specify the preset(s) to use.
+  -i INTERVAL_SECONDS, --interval INTERVAL_SECONDS
+                        Creates a lossless CLIP_LENGTH seconds long clip every INTERVAL_SECONDS and concatenates to a
+                        single file
+                        Example: -i 60
+  -cl CLIP_LENGTH_SECONDS, --clip-length CLIP_LENGTH_SECONDS
+                        Only applies when INTERVAL_SECONDS > 0. Defines the length of the clips.
+                        Example: -cl 2
   -t ENCODING_TIME, --encoding-time ENCODING_TIME
                         Only transcode this many seconds of the video. If not specified, the whole video will be transcoded.
                         Example: -t 60
