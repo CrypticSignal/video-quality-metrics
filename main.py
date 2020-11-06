@@ -27,14 +27,17 @@ def main():
     parser.add_argument('-p', '--preset', nargs='+', choices=[
                         'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'],
                         default='medium', help='Specify the preset(s) to use.', metavar='PRESET(s)')
-    # create a clip every <interval> seconds
-    parser.add_argument('-i', '--interval', type=int, choices=range(0, 600), default=0,
-                        help='Creates a lossless <cliplength> seconds long clip every <interval> seconds and \n'
-                             'concatenates to a single file. (default: 0')
-    # clip length for interval argument
+    # The time interval to use when creating the overview video.
+    parser.add_argument('-i', '--interval', type=int, choices=range(1, 600), default=0,
+                        help='Create a lossless overview video by grabbing a <cliplength> seconds long segment '
+							  'every <interval> seconds from the original video and use this overview video '
+							  'as the "original" video that the transcodes are compared with.\nExample: -i 30',
+						metavar='<an integer between 1 and 600>')
+    # The length of each clip.
     parser.add_argument('-cl', '--clip-length', type=int, choices=range(1, 60), default=1,
-                        help='Defines the length of the clips. Only applies when used with -i > 0.'
-                             '(default: 1')
+                        help='Defines the length of the clips. Only applies when used with -i > 0. Default: 1.\n'
+							 'Example: -cl 10', 
+						metavar='<an integer between 1 and 60>')
     # How many seconds to transcode.
     parser.add_argument('-t', '--encoding-time', type=str,
                         help='Encode this many seconds of the video. '
@@ -71,20 +74,20 @@ def main():
     filename = original_video.split('/')[-1]
     # The file extension of the video.
     output_ext = os.path.splitext(original_video)[-1][1:]
+	# The value of the --interval argument.
     clip_interval = args.interval
-    clip_length = args.clip_length
 
     # Use the functions in utils.py to get the framerate, bitrate and duration
     fps = get_framerate_fraction(original_video)
     fps_float = get_framerate_float(original_video)
     original_bitrate = get_bitrate(original_video)
-    original_duration = round(float(get_duration(original_video)), 2)
+    original_duration = round(float(get_duration(original_video)), 1)
 
     separator()
     print('Here\'s some information about the original video:')
     print(f'Filename: {filename}')
     print(f'Framerate: {fps} ({fps_float}) FPS')
-    print(f'Duration: {original_duration}')
+    print(f'Duration: {original_duration} seconds')
     print(f'Bitrate: {original_bitrate}')
 
     # Create a PrettyTable object.
@@ -121,7 +124,8 @@ def main():
     separator()
 
     if clip_interval > 0:
-        output_folder = f'({filename})/clips'
+        clip_length = args.clip_length
+        output_folder = os.path.join(f'({filename})', 'clips')
         os.makedirs(output_folder, exist_ok=True)
 
         result, concatenated_video = create_movie_overview(original_video, output_folder, clip_interval, clip_length)
@@ -129,7 +133,7 @@ def main():
         if result:
             original_video = concatenated_video
         else:
-            print('Something went wrong while creating the overview video.')
+            print('Something went wrong when trying to create the overview video.')
             sys.exit()
 
     # -ntm argument was specified.
@@ -202,7 +206,7 @@ def main():
                 # The first line of Table.txt:
                 with open(comparison_table, 'w') as f:
                     f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
-                    f.write(f'Chosen preset(s): {preset_string}\n')
+                    f.write(f'Chosen preset: {preset_string}\n')
                     f.write(f'Original video bitrate: {original_bitrate}\n')
                 # Run libvmaf.
                 run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video)
