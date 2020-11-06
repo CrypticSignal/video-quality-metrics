@@ -91,20 +91,22 @@ Available arguments:
 # Example Table:
 The table is saved as a file named **Table.txt**. Here's an example of the table that is created when opting to compare presets:
 ```
-You chose to encode a30.mkv using x264 with a CRF of 23.
-+-----------+-------------------+----------+---------------------------+-------+------+-------+
-|   Preset  | Encoding Time (s) |   Size   | Size Compared to Original |  PSNR | SSIM |  VMAF |
-+-----------+-------------------+----------+---------------------------+-------+------+-------+
-|    slow   |       31.65       | 11.58 MB |           71.87%          | 43.81 | 1.0  | 95.55 |
-|   medium  |       22.57       | 12.07 MB |           74.93%          | 43.84 | 1.0  | 95.56 |
-|    fast   |       18.83       | 12.49 MB |           77.5%           | 43.77 | 1.0  | 95.22 |
-|   faster  |       14.58       | 11.79 MB |           73.17%          | 43.59 | 1.0  | 94.86 |
-|  veryfast |        9.06       | 9.95 MB  |           61.77%          | 42.28 | 0.99 | 91.99 |
-| superfast |        6.51       | 15.64 MB |           97.07%          | 43.46 | 1.0  | 94.43 |
-| ultrafast |        4.24       | 31.89 MB |          197.95%          | 42.63 | 0.99 | 96.55 |
-+-----------+-------------------+----------+---------------------------+-------+------+-------+
+PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean
+Chosen CRF: 23
+Original video bitrate: 12339 kbit/s
++-----------+-------------------+----------+-------------+----------------------+--------------------+----------------------+
+|   Preset  | Encoding Time (s) |   Size   |   Bitrate   |         VMAF         |        SSIM        |         PSNR         |
++-----------+-------------------+----------+-------------+----------------------+--------------------+----------------------+
+|    slow   |       20.64       | 25.44 MB | 3379 kbit/s | 88.79 | 2.56 | 97.58 | 0.99 | 0.00 | 0.99 | 38.10 | 1.66 | 42.89 |
+|   medium  |       12.96       | 26.04 MB | 3458 kbit/s | 88.77 | 2.55 | 97.58 | 0.99 | 0.00 | 0.99 | 38.11 | 1.70 | 42.98 |
+|    fast   |       11.50       | 27.65 MB | 3672 kbit/s | 88.66 | 2.71 | 97.38 | 0.99 | 0.00 | 0.99 | 38.14 | 1.72 | 43.07 |
+|   faster  |        9.09       | 25.93 MB | 3444 kbit/s | 88.78 | 2.84 | 97.18 | 0.99 | 0.00 | 0.99 | 38.02 | 1.72 | 43.02 |
+|  veryfast |        5.89       | 22.53 MB | 2993 kbit/s | 84.33 | 4.00 | 95.17 | 0.99 | 0.00 | 0.99 | 37.10 | 1.75 | 42.16 |
+| superfast |        3.96       | 39.77 MB | 5282 kbit/s | 88.55 | 3.19 | 96.72 | 0.99 | 0.00 | 0.99 | 36.54 | 2.05 | 43.03 |
+| ultrafast |        2.50       | 54.20 MB | 7198 kbit/s | 90.04 | 2.10 | 98.26 | 0.99 | 0.00 | 0.99 | 36.35 | 1.92 | 42.17 |
++-----------+-------------------+----------+-------------+----------------------+--------------------+----------------------+
 ```
-*A 30 seconds long video was encoded. Command: `python main.py -ovp a30.mkv -p slow medium fast faster veryfast superfast ultrafast -ssim -psnr`*
+*A 60 seconds long video was transcoded. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast ultrafast -ssim -psnr`*
 
 # About the model files:
 As you may have noticed, there are two types of model files; original and 4K versions. There is also the phone model that can be enabled by using the `-pm` argument.
