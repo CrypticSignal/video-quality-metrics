@@ -53,7 +53,7 @@ def main():
     # Calculate psnr?
     parser.add_argument('-psnr', '--calculate-psnr', action='store_true', help='Calculate PSNR in addition to VMAF.')
     # Disable quality calculation?
-    parser.add_argument('-dqs', '--disable-quality-stats', action='store_true',
+    parser.add_argument('-dqm', '--disable-quality-metrics', action='store_true',
                         help='Disable calculation of '
                              'PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).')
     # No transcoding mode.
@@ -208,12 +208,13 @@ def main():
                     f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
                     f.write(f'Chosen preset: {preset_string}\n')
                     f.write(f'Original video bitrate: {original_bitrate}\n')
-                # Run libvmaf.
+				
                 run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video)
-                # Run the compute_metrics function.
+            
                 create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
                                           time_rounded, table, output_folder, crf)
-            # -dqs argument specified
+
+            # --disable-quality-metrics argument specified
             else:
                 table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB'])
 
@@ -271,13 +272,13 @@ def main():
                     f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
                     f.write(f'Chosen CRF: {crf}\n')
                     f.write(f'Original video bitrate: {original_bitrate}\n')
-                # Run libvmaf.
+
                 run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video)
-                # Run the compute_metrics function.
+       
                 create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
                                           time_rounded, table, output_folder, preset)
-
-            # -dqs argument specified
+                                          
+            # --disable-quality-metrics argument specified.
             else:
                 table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB'])
 
