@@ -67,9 +67,14 @@ Available arguments:
                         Specify the CRF value(s) to use.
   -p PRESET(s) [PRESET(s) ...], --preset PRESET(s) [PRESET(s) ...]
                         Specify the preset(s) to use.
+  -i <an integer between 1 and 600>, --interval <an integer between 1 and 600>
+                        Create a lossless overview video by grabbing a <cliplength> seconds long segment every <interval> seconds from the original video and use this overview video as the "original" video that the transcodes are compared with.
+                        Example: -i 30
+  -cl <an integer between 1 and 60>, --clip-length <an integer between 1 and 60>
+                        Defines the length of the clips. Only applies when used with -i > 0. Default: 1.
+                        Example: -cl 10
   -t ENCODING_TIME, --encoding-time ENCODING_TIME
-                        Only transcode this many seconds of the video. If not specified, the whole video will be transcoded.
-                        Example: -t 60
+                        Encode this many seconds of the video. If not specified, the whole video will get encoded. Only applies when -i is not set.Example: -t 60
   -pm, --phone-model    Enable VMAF phone model.
   -dp DECIMAL_PLACES, --decimal-places DECIMAL_PLACES
                         The number of decimal places to use for the data in the table (default: 2).
