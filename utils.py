@@ -18,3 +18,7 @@ def get_bitrate(video_path):
 
 def get_duration(video_path):
     return probe(video_path)['format']['duration']
+
+
+def separator():
+    print('-----------------------------------------------------------------------------------------------------------')

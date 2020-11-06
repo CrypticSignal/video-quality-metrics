@@ -2,10 +2,8 @@ import time, os, subprocess, sys
 from argparse import ArgumentParser, RawTextHelpFormatter
 from prettytable import PrettyTable
 from save_metrics import create_table_plot_metrics, force_decimal_places
-from utils import get_framerate_fraction, get_framerate_float, get_bitrate
+from utils import get_framerate_fraction, get_framerate_float, get_bitrate, separator
 
-def separator():
-	print('-----------------------------------------------------------------------------------------------------------')
 
 if len(sys.argv) == 1:
 	print("To see a list of the options available along with descriptions, enter 'python main.py -h'\n")
