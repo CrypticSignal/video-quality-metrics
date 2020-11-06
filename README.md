@@ -42,19 +42,15 @@ The following data is presented in a table and saved as a file named **Table.txt
 # Requirements:
 - Python **3.6+**
 - `pip install -r requirements.txt`
-- FFmpeg and FFprobe installed and in your PATH. Your build of FFmpeg must have `--enable-libvmaf` in the configuration (unless you don't care about the quality metrics and you specify `-dqs` when running this command line program). If you're on Windows, you can download an FFmpeg binary which has `--enable-libvmaf` in the configuration by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link (FFprobe also included).
+- FFmpeg and FFprobe installed and in your PATH. Your build of FFmpeg must have `--enable-libvmaf` in the configuration (unless you don't care about the quality metrics and you specify `-dqm` when running this program). If you're on Windows, you can download an FFmpeg binary which has `--enable-libvmaf` in the configuration by clicking on [this](http://learnffmpeg.s3.amazonaws.com/ffmpeg-vmaf-static-bin.zip) link (FFprobe also included).
 
 # Usage:
 ```
-usage: main.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}]
-                        [-crf CRF_VALUEs) [CRF_VALUE(s) ...]]
-                        [-p PRESET(s) [PRESET(s ...]] [-t ENCODING_TIME] [-pm]
-                        [-dp DECIMAL_PLACES] [-ssim] [-psnr] [-dqs] [-ntm]
-                        [-tvp TRANSCODED_VIDEO_PATH]
+usage: main.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]]
+               [-p PRESET(s) [PRESET(s ...]] [-i <an integer between 1 and 600>] [-cl <an integer between 1 and 60>]
+               [-t ENCODING_TIME] [-pm] [-dp DECIMAL_PLACES] [-ssim] [-psnr] [-dqm] [-ntm]
+               [-tvp TRANSCODED_VIDEO_PATH]
                           
-If there is a space in the path, it must be surrounded with double quotes. Example:
-python main.py -ovp "C:/Users/H/Desktop/my file.mp4" -p veryfast superfast
-
 Available arguments:
   -h, --help            show this help message and exit
   -ovp ORIGINAL_VIDEO_PATH, --original-video-path ORIGINAL_VIDEO_PATH
@@ -83,7 +79,7 @@ Available arguments:
                         Calculate SSIM in addition to VMAF.
   -psnr, --calculate-psnr
                         Calculate PSNR in addition to VMAF.
-  -dqs, --disable-quality-stats
+  -dqm, --disable-quality-metrics
                         Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).
   -ntm, --no-transcoding-mode
                         Use this mode if you've already transcoded a video and would like its VMAF and (optionally) the SSIM and PSNR to be calculated.
