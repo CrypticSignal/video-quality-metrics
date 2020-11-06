@@ -14,3 +14,7 @@ def get_framerate_float(video_path):
 def get_bitrate(video_path):
     bitrate = probe(video_path)['format']['bit_rate']
     return f'{math.trunc(int(bitrate) / 1000)} kbit/s'
+
+
+def get_duration(video_path):
+    return probe(video_path)['format']['duration']
