@@ -29,7 +29,7 @@ def main():
                         default='medium', help='Specify the preset(s) to use.', metavar='PRESET(s)')
     # create a clip every <interval> seconds
     parser.add_argument('-i', '--interval', type=int, choices=range(0, 600), default=0,
-                        help='Creates a <cliplength> seconds long clip every <interval> seconds and concatenate to a '
+                        help='Creates a <cliplength> seconds long clip every <interval> seconds and concatenates to a '
                              'single file')
     # clip length for interval argument
     parser.add_argument('-cl', '--clip-length', type=int, choices=range(1, 60), default=1,
