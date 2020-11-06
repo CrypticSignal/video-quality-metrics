@@ -2,7 +2,7 @@ import time, os, subprocess, sys
 from argparse import ArgumentParser, RawTextHelpFormatter
 from prettytable import PrettyTable
 from save_metrics import create_table_plot_metrics, force_decimal_places
-from utils import get_framerate_fraction, get_framerate_float, get_bitrate, separator
+from utils import get_framerate_fraction, get_framerate_float, get_bitrate, get_duration, separator
 
 
 def main():
@@ -66,11 +66,13 @@ def main():
     fps = get_framerate_fraction(original_video)
     fps_float = get_framerate_float(original_video)
     original_bitrate = get_bitrate(original_video)
+    original_duration = round(float(get_duration(original_video)), 2)
 
     separator()
     print('Here\'s some information about the original video:')
     print(f'Filename: {filename}')
     print(f'Framerate: {fps} ({fps_float}) FPS')
+    print(f'Duration: {original_duration}')
     print(f'Bitrate: {original_bitrate}')
 
     # Create a PrettyTable object.
