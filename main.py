@@ -159,7 +159,7 @@ separator()
 
 # -ntm argument was specified.
 if args.no_transcoding_mode:
-	seperator()
+	separator()
 	output_folder = f'({filename})'
 	os.makedirs(output_folder, exist_ok=True)
 	comparison_table = os.path.join(output_folder, 'Table.txt')
