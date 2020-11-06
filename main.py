@@ -2,6 +2,7 @@ import time, os, subprocess, sys
 from argparse import ArgumentParser, RawTextHelpFormatter
 from prettytable import PrettyTable
 from save_metrics import create_table_plot_metrics, force_decimal_places
+from overview import create_movie_overview
 from utils import get_framerate_fraction, get_framerate_float, get_bitrate, get_duration, separator
 
 
@@ -26,6 +27,13 @@ def main():
     parser.add_argument('-p', '--preset', nargs='+', choices=[
                         'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'],
                         default='medium', help='Specify the preset(s) to use.', metavar='PRESET(s)')
+    # create a clip every <interval> seconds
+    parser.add_argument('-i', '--interval', type=int, choices=range(0, 600), default=0,
+                        help='Creates a <cliplength> seconds long clip every <interval> seconds and concatenate to a '
+                             'single file')
+    # clip length for interval argument
+    parser.add_argument('-cl', '--clip-length', type=int, choices=range(1, 60), default=1,
+                        help='Only applies when used with -i > 0. Defines the length of the clips.')
     # How many seconds to transcode.
     parser.add_argument('-t', '--encoding-time', type=str,
                         help='Encode this many seconds of the video. '
@@ -61,8 +69,10 @@ def main():
     filename = original_video.split('/')[-1]
     # The file extension of the video.
     output_ext = os.path.splitext(original_video)[-1][1:]
+    clip_interval = args.interval
+    clip_length = args.clip_length
 
-    # Use the functions in utils.py to get the framerate and bitrate.
+    # Use the functions in utils.py to get the framerate, bitrate and duration
     fps = get_framerate_fraction(original_video)
     fps_float = get_framerate_float(original_video)
     original_bitrate = get_bitrate(original_video)
@@ -108,6 +118,18 @@ def main():
 
     separator()
 
+    if clip_interval > 0:
+        output_folder = f'({filename})/clips'
+        os.makedirs(output_folder, exist_ok=True)
+
+        result, concatenated_video = create_movie_overview(original_video, output_folder, clip_interval, clip_length)
+
+        if result:
+            original_video = concatenated_video
+        else:
+            print('Something went wrong while creating the overview video.')
+            sys.exit()
+
     # -ntm argument was specified.
     if args.no_transcoding_mode:
         separator()
@@ -141,7 +163,7 @@ def main():
         table.field_names = table_column_names
 
         # The user only wants to transcode the first x seconds of the video.
-        if args.encoding_time:
+        if args.encoding_time and clip_interval == 0:
             original_video = cut_video(filename, args, output_ext, output_folder, comparison_table)
 
         # Transcode the video with each preset.
