@@ -99,7 +99,7 @@ def main():
     # Base template for the column names.
     table_column_names = ['Encoding Time (s)', 'Size', 'Bitrate']
 
-    if not args.disable_quality_stats:
+    if not args.disable_quality_metrics:
         table_column_names.append('VMAF')
     if args.calculate_ssim:
         table_column_names.append('SSIM')
@@ -197,7 +197,7 @@ def main():
             size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
             data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
 
-            if not args.disable_quality_stats:
+            if not args.disable_quality_metrics:
                 os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
                 # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with
                 # slashes.
@@ -262,7 +262,7 @@ def main():
             size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
             data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
 
-            if not args.disable_quality_stats:
+            if not args.disable_quality_metrics:
                 os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
                 # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with
                 # slashes.
@@ -277,7 +277,7 @@ def main():
        
                 create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
                                           time_rounded, table, output_folder, preset)
-                                          
+
             # --disable-quality-metrics argument specified.
             else:
                 table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB'])
