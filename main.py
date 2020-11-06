@@ -102,7 +102,6 @@ def cut_video():
 				f'-map 0 -c copy "{output_file_path}"')
 	print('Done!')
 
-	original_video_size = os.path.getsize(original_video) / 1_000_000
 	time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
 	with open(comparison_table, 'w') as f:
