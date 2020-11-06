@@ -78,7 +78,7 @@ table = PrettyTable()
 comparison_table = str()
 
 # Base template for the column names.
-table_column_names = ['Encoding Time (s)', 'Size', 'Size Compared to Original', 'Bitrate']
+table_column_names = ['Encoding Time (s)', 'Size', 'Bitrate']
 
 if not args.disable_quality_stats:
 	table_column_names.append('VMAF')
@@ -141,6 +141,7 @@ def run_libvmaf(transcode_output_path):
 	print(f'Computing the VMAF{end_of_computing_message}...')
 	subprocess.run(subprocess_args)
 	print('Done!')
+
 
 # If no CRF or preset is specified, the default data types are as str and int, respectively.
 if isinstance(args.crf_value, int) and isinstance(args.preset, str):
@@ -215,9 +216,8 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 		time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
 		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
 		transcoded_bitrate = get_bitrate(transcode_output_path)
-		size_compared_to_original = round(((transcode_size / original_video_size) * 100), decimal_places) 
 		size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
-		data_for_current_row = [f'{size_rounded} MB', f'{size_compared_to_original}%', transcoded_bitrate]
+		data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
@@ -235,8 +235,8 @@ elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 			create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
 									  time_rounded, table, output_folder, crf)
 		# -dqs argument specified
-		else: 
-			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
+		else:
+			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB'])
 
 # args.preset is a list when more than one preset is specified.
 elif isinstance(args.preset, list):
@@ -279,9 +279,8 @@ elif isinstance(args.preset, list):
 		time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
 		transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
 		transcoded_bitrate = get_bitrate(transcode_output_path)
-		size_compared_to_original = round(((transcode_size / original_video_size) * 100), decimal_places) 
 		size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
-		data_for_current_row = [f'{size_rounded} MB', f'{size_compared_to_original}%', transcoded_bitrate]
+		data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
 
 		if not args.disable_quality_stats:
 			os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
@@ -301,7 +300,7 @@ elif isinstance(args.preset, list):
 	
 		# -dqs argument specified
 		else:
-			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', f'{size_compared_to_original}%'])
+			table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB'])
 
 # Write the table to the Table.txt file.
 with open(comparison_table, 'a') as f:
