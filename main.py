@@ -57,8 +57,6 @@ def main():
     decimal_places = args.decimal_places
     # The path of the original video.
     original_video = args.original_video_path
-    # This will be used when comparing the size of the transcoded video to the original (or cut version).
-    original_video_size = os.path.getsize(original_video) / 1_000_000
     # Just the filename.
     filename = original_video.split('/')[-1]
     # The file extension of the video.
