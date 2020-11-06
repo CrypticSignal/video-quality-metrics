@@ -108,18 +108,19 @@ def main():
     if args.no_transcoding_mode:
         del table_column_names[0]
 
-    # If no CRF or preset is specified, the default data types are as str and int, respectively.
-    if isinstance(args.crf_value, int) and isinstance(args.preset, str):
-        separator()
-        print('No CRF value(s) or preset(s) specified. Exiting.')
-        separator()
-        sys.exit()
-    elif isinstance(args.crf_value, list) and len(args.crf_value) > 1 and isinstance(args.preset, list) \
-            and len(args.preset) > 1:
-        separator()
-        print(f'More than one CRF value AND more than one preset specified. No suitable mode found. Exiting.')
-        separator()
-        sys.exit()
+    if not args.no_transcoding_mode:
+        # If no CRF or preset is specified, the default data types are as str and int, respectively.
+        if isinstance(args.crf_value, int) and isinstance(args.preset, str):
+            separator()
+            print('No CRF value(s) or preset(s) specified. Exiting.')
+            separator()
+            sys.exit()
+        elif isinstance(args.crf_value, list) and len(args.crf_value) > 1 and isinstance(args.preset, list) \
+                and len(args.preset) > 1:
+            separator()
+            print(f'More than one CRF value AND more than one preset specified. No suitable mode found. Exiting.')
+            separator()
+            sys.exit()
 
     separator()
 
