@@ -95,7 +95,6 @@ def cut_video():
 	# Output path for the cut video.
 	output_file_path = os.path.join(output_folder, cut_version_filename)
 	# The reference file will be the cut version of the video.
-	original_video = output_file_path
 	# Create the cut version.
 	print(f'Cutting the video to a length of {args.encoding_time} seconds...')
 	os.system(f'ffmpeg -loglevel warning -y -i {args.original_video_path} -t {args.encoding_time} '
@@ -108,7 +107,7 @@ def cut_video():
 		f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.\n'
 				f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
 
-	return original_video
+	return output_file_path
 
 
 def run_libvmaf(transcode_output_path):
