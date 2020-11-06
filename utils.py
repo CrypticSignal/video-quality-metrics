@@ -1,8 +1,10 @@
 from ffmpeg import probe
 import math
 
+
 def get_framerate_fraction(video_path):
-    r_frame_rate = [stream for stream in probe(video_path)['streams'] if stream['codec_type'] == 'video'][0]['r_frame_rate']
+    r_frame_rate = [stream for stream in probe(video_path)['streams'] if stream['codec_type'] == 'video'][0][
+        'r_frame_rate']
     return r_frame_rate
 
 
