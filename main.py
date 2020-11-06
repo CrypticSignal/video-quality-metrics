@@ -1,4 +1,4 @@
-import time, os, subprocess, sys
+import constants, time, os, subprocess, sys
 from argparse import ArgumentParser, RawTextHelpFormatter
 from prettytable import PrettyTable
 from save_metrics import create_table_plot_metrics, force_decimal_places
@@ -205,7 +205,7 @@ def main():
                 preset_string = ','.join(args.preset)
                 # The first line of Table.txt:
                 with open(comparison_table, 'w') as f:
-                    f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+                    f.write(constants.METRICS_EXPLANATION)
                     f.write(f'Chosen preset: {preset_string}\n')
                     f.write(f'Original video bitrate: {original_bitrate}\n')
 				
@@ -269,7 +269,7 @@ def main():
                 json_file_path = f'{output_folder}/Raw JSON Data/{preset}.json'
                 # The first line of Table.txt:
                 with open(comparison_table, 'w') as f:
-                    f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+                    f.write(constants.METRICS_EXPLANATION)
                     f.write(f'Chosen CRF: {crf}\n')
                     f.write(f'Original video bitrate: {original_bitrate}\n')
 
@@ -304,8 +304,8 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
     with open(comparison_table, 'w') as f:
-        f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.\n'
-                f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+        f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.\n' +
+                constants.METRICS_EXPLANATION)
 
     return output_file_path
 
