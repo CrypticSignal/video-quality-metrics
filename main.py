@@ -74,6 +74,9 @@ print(f'Bitrate: {original_bitrate}')
 # Create a PrettyTable object.
 table = PrettyTable()
 
+# initialize str object comparison_table
+comparison_table = str()
+
 # Base template for the column names.
 table_column_names = ['Encoding Time (s)', 'Size', 'Size Compared to Original', 'Bitrate']
 
