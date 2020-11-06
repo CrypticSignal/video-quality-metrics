@@ -45,8 +45,8 @@ def main():
                              'PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).')
     # No transcoding mode.
     parser.add_argument('-ntm', '--no-transcoding-mode', action='store_true',
-                        help='Use this mode if you\'ve already transcoded a video and would like its VMAF and (optionally) '
-                             'the SSIM and PSNR to be calculated.\n'
+                        help='Use this mode if you\'ve already transcoded a video and would like its VMAF and '
+                             '(optionally) the SSIM and PSNR to be calculated.\n'
                              'Example: -ntm -tvp transcoded.mp4 -ovp original.mp4 -ssim -psnr')
     # Transcoded video path (only applicable when using the -ntm mode).
     parser.add_argument('-tvp', '--transcoded-video-path',
@@ -97,7 +97,8 @@ def main():
         print('No CRF value(s) or preset(s) specified. Exiting.')
         separator()
         sys.exit()
-    elif isinstance(args.crf_value, list) and len(args.crf_value) > 1 and isinstance(args.preset, list) and len(args.preset) > 1:
+    elif isinstance(args.crf_value, list) and len(args.crf_value) > 1 and isinstance(args.preset, list) \
+            and len(args.preset) > 1:
         separator()
         print(f'More than one CRF value AND more than one preset specified. No suitable mode found. Exiting.')
         separator()
@@ -168,7 +169,8 @@ def main():
 
             if not args.disable_quality_stats:
                 os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
-                # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
+                # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with
+                # slashes.
                 json_file_path = f'{output_folder}/Raw JSON Data/CRF {crf}.json'
                 preset_string = ','.join(args.preset)
                 # The first line of Table.txt:
@@ -231,7 +233,8 @@ def main():
 
             if not args.disable_quality_stats:
                 os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
-                # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
+                # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with
+                # slashes.
                 json_file_path = f'{output_folder}/Raw JSON Data/{preset}.json'
                 # The first line of Table.txt:
                 with open(comparison_table, 'w') as f:
@@ -264,7 +267,7 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     # Create the cut version.
     print(f'Cutting the video to a length of {args.encoding_time} seconds...')
     os.system(f'ffmpeg -loglevel warning -y -i {args.original_video_path} -t {args.encoding_time} '
-                f'-map 0 -c copy "{output_file_path}"')
+              f'-map 0 -c copy "{output_file_path}"')
     print('Done!')
 
     time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
@@ -291,8 +294,7 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
         "ffmpeg", "-loglevel", "error", "-stats", "-r", fps, "-i", transcode_output_path,
         "-r", fps, "-i", original_video,
         "-lavfi", "[0:v]setpts=PTS-STARTPTS[dist];[1:v]setpts=PTS-STARTPTS[ref];[dist][ref]"
-        f'libvmaf={vmaf_options}', "-f"
-        , "null", "-"
+        f'libvmaf={vmaf_options}', "-f", "null", "-"
     ]
 
     if args.calculate_psnr and args.calculate_ssim:
