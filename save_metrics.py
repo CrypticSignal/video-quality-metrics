@@ -14,7 +14,7 @@ def create_table_plot_metrics(json_file_path, args, decimal_places, data_for_cur
 		file_contents = json.load(f)
 	frame_numbers = [frame['frameNum'] for frame in file_contents['frames']]
 
-	if not args.disable_quality_stats:
+	if not args.disable_quality_metrics:
 		# VMAF
 		vmaf_scores = [frame['metrics']['vmaf'] for frame in file_contents['frames']]
 		mean_vmaf = force_decimal_places(round(np.mean(vmaf_scores), decimal_places), decimal_places)
