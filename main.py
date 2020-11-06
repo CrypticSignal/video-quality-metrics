@@ -29,11 +29,12 @@ def main():
                         default='medium', help='Specify the preset(s) to use.', metavar='PRESET(s)')
     # create a clip every <interval> seconds
     parser.add_argument('-i', '--interval', type=int, choices=range(0, 600), default=0,
-                        help='Creates a lossless <cliplength> seconds long clip every <interval> seconds and '
-                             'concatenates to a single file')
+                        help='Creates a lossless <cliplength> seconds long clip every <interval> seconds and \n'
+                             'concatenates to a single file. (default: 0')
     # clip length for interval argument
     parser.add_argument('-cl', '--clip-length', type=int, choices=range(1, 60), default=1,
-                        help='Only applies when used with -i > 0. Defines the length of the clips.')
+                        help='Defines the length of the clips. Only applies when used with -i > 0.'
+                             '(default: 1')
     # How many seconds to transcode.
     parser.add_argument('-t', '--encoding-time', type=str,
                         help='Encode this many seconds of the video. '
