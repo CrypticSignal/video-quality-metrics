@@ -70,10 +70,10 @@ Available arguments:
                         Specify the preset(s) to use.
   -i INTERVAL_SECONDS, --interval INTERVAL_SECONDS
                         Creates a lossless CLIP_LENGTH seconds long clip every INTERVAL_SECONDS and concatenates to a
-                        single file
+                        single file. (default: 0)
                         Example: -i 60
   -cl CLIP_LENGTH_SECONDS, --clip-length CLIP_LENGTH_SECONDS
-                        Only applies when INTERVAL_SECONDS > 0. Defines the length of the clips.
+                        Defines the length of the clips. Only applies when INTERVAL_SECONDS > 0. (default: 1) 
                         Example: -cl 2
   -t ENCODING_TIME, --encoding-time ENCODING_TIME
                         Only transcode this many seconds of the video. If not specified, the whole video will be transcoded.
