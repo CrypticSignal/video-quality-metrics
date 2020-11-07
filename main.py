@@ -1,9 +1,9 @@
-import time, os, subprocess, sys
+import constants, time, os, subprocess
 from argparse import ArgumentParser, RawTextHelpFormatter
 from prettytable import PrettyTable
 from save_metrics import create_table_plot_metrics, force_decimal_places
 from overview import create_movie_overview
-from utils import get_framerate_fraction, get_framerate_float, get_bitrate, get_duration, separator
+from utils import *
 
 
 def main():
@@ -108,18 +108,13 @@ def main():
     if args.no_transcoding_mode:
         del table_column_names[0]
 
-    # If no CRF or preset is specified, the default data types are as str and int, respectively.
-    if isinstance(args.crf_value, int) and isinstance(args.preset, str):
-        separator()
-        print('No CRF value(s) or preset(s) specified. Exiting.')
-        separator()
-        sys.exit()
-    elif isinstance(args.crf_value, list) and len(args.crf_value) > 1 and isinstance(args.preset, list) \
-            and len(args.preset) > 1:
-        separator()
-        print(f'More than one CRF value AND more than one preset specified. No suitable mode found. Exiting.')
-        separator()
-        sys.exit()
+    if not args.no_transcoding_mode:
+        # If no CRF or preset is specified, the default data types are as str and int, respectively.
+        if isinstance(args.crf_value, int) and isinstance(args.preset, str):
+            exit_program('No CRF value(s) or preset(s) specified. Exiting.')
+        elif is_list(args.crf_value) and len(args.crf_value) > 1 and is_list(args.preset) and len(args.preset) > 1:
+            exit_program(f'More than one CRF value AND more than one preset specified. No suitable mode found. '
+                         f'Exiting.')
 
     separator()
 
@@ -133,8 +128,7 @@ def main():
         if result:
             original_video = concatenated_video
         else:
-            print('Something went wrong when trying to create the overview video.')
-            sys.exit()
+            exit_program('Something went wrong when trying to create the overview video.')
 
     # -ntm argument was specified.
     if args.no_transcoding_mode:
@@ -150,11 +144,11 @@ def main():
         # compute_metrics(transcoded_video, output_folder, json_file_path, graph_filename)
 
     # args.crf_value is a list when more than one CRF value is specified.
-    elif isinstance(args.crf_value, list) and len(args.crf_value) > 1:
+    elif is_list(args.crf_value) and len(args.crf_value) > 1:
         print('CRF comparison mode activated.')
         crf_values = args.crf_value
         crf_values_string = ', '.join(str(crf) for crf in crf_values)
-        preset = args.preset[0] if isinstance(args.preset, list) else args.preset
+        preset = args.preset[0] if is_list(args.preset) else args.preset
         print(f'CRF values {crf_values_string} will be compared and the {preset} preset will be used.')
         video_encoder = args.video_encoder
         # Cannot use os.path.join for output_folder as this gives an error like the following:
@@ -205,7 +199,7 @@ def main():
                 preset_string = ','.join(args.preset)
                 # The first line of Table.txt:
                 with open(comparison_table, 'w') as f:
-                    f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+                    f.write(constants.METRICS_EXPLANATION)
                     f.write(f'Chosen preset: {preset_string}\n')
                     f.write(f'Original video bitrate: {original_bitrate}\n')
 				
@@ -219,11 +213,11 @@ def main():
                 table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB'])
 
     # args.preset is a list when more than one preset is specified.
-    elif isinstance(args.preset, list):
+    elif is_list(args.preset):
         print('Presets comparison mode activated.')
         chosen_presets = args.preset
         presets_string = ', '.join(chosen_presets)
-        crf = args.crf_value[0] if isinstance(args.crf_value, list) else args.crf_value
+        crf = args.crf_value[0] if is_list(args.crf_value) else args.crf_value
         video_encoder = args.video_encoder
         print(f'Presets {presets_string} will be compared at a CRF of {crf}.')
         # Cannot use os.path.join for output_folder as this gives an error like the following:
@@ -269,7 +263,7 @@ def main():
                 json_file_path = f'{output_folder}/Raw JSON Data/{preset}.json'
                 # The first line of Table.txt:
                 with open(comparison_table, 'w') as f:
-                    f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+                    f.write(constants.METRICS_EXPLANATION)
                     f.write(f'Chosen CRF: {crf}\n')
                     f.write(f'Original video bitrate: {original_bitrate}\n')
 
@@ -304,8 +298,8 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
     with open(comparison_table, 'w') as f:
-        f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.\n'
-                f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+        f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.\n' +
+                constants.METRICS_EXPLANATION)
 
     return output_file_path
 

@@ -1,5 +1,5 @@
 from ffmpeg import probe
-import math
+import math, sys
 
 
 def get_framerate_fraction(video_path):
@@ -24,3 +24,14 @@ def get_duration(video_path):
 
 def separator():
     print('-----------------------------------------------------------------------------------------------------------')
+
+
+def exit_program(message):
+    separator()
+    print(message)
+    separator()
+    sys.exit()
+
+
+def is_list(argument_object):
+    return isinstance(argument_object, list)
