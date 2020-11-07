@@ -7,8 +7,8 @@ def force_decimal_places(value, decimal_places):
 	return '{:0.{dp}f}'.format(value, dp=decimal_places)
 
 
-def create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename, time_rounded,
-						  table, output_folder, crf_or_preset=None):
+def create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
+						  table, output_folder, time_rounded, crf_or_preset=None):
 	# Make a list containing the frame numbers from the JSON file.
 	with open(json_file_path, 'r') as f:
 		file_contents = json.load(f)
@@ -63,10 +63,11 @@ def create_table_plot_metrics(json_file_path, args, decimal_places, data_for_cur
 				data_for_current_row.insert(0, crf_or_preset)
 				data_for_current_row.insert(1, time_rounded)
 			
-		table.add_row(data_for_current_row)
-
-		if args.no_transcoding_mode:
-			graph_filename = 'VariationOfQuality.png'
+			table.add_row(data_for_current_row)
+		
+		else:
+			print(data_for_current_row)
+			table.add_row(data_for_current_row)
 
 		plt.suptitle(graph_filename)
 		plt.xlabel('Frame Number')

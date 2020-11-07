@@ -1,10 +1,5 @@
-import os
-
-from utils import get_duration, separator
-import math
-import shutil
-import subprocess
-import time
+import time, os, math, subprocess, shutil
+from utils import get_duration, line
 
 
 class ClipError(Exception):
@@ -37,9 +32,9 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
     output_clip_names = 'clips.txt'
     output_file_path = f'{output_folder}/{output_clip_names}'
     clip_file = open(output_file_path, 'w')
-    separator()
+    line()
     print(f'Creating a {clip_length} second clip every {interval_seconds} seconds from {video_path}...')
-    separator()
+    line()
 
     try:
         for step in range(1, number_steps):
@@ -74,7 +69,7 @@ def concatenate_clips(clips_file_path, output_folder, extension, interval_second
         "-f", "concat", "-safe", "0", "-i", clips_file_path, "-c", "copy", concatenated_filepath
     ]
 
-    separator()
+    line()
     print('Concatenating the clips to create the overview video...')
     result = subprocess.run(subprocess_concatenate_args)
     print('Done!')
@@ -102,6 +97,6 @@ def create_movie_overview(video_path, output_folder, interval_seconds, clip_leng
 
     if result:
         print(f'Overview Video: {clip_length}-{interval_seconds} (ClipLength-IntervalSeconds).{extension}')
-        separator()
+        line()
 
     return result, output_file
