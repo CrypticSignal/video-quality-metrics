@@ -267,7 +267,7 @@ def main():
                     run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video)
         
                     create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
-                                            time_rounded, table, output_folder, preset)
+                                            table, output_folder, time_rounded, preset)
 
                 # --disable-quality-metrics argument specified.
                 else:
