@@ -1,10 +1,10 @@
-import time, os, subprocess
+import time, os, subprocess, sys
 from argparse import ArgumentParser, RawTextHelpFormatter
 from prettytable import PrettyTable
 from save_metrics import create_table_plot_metrics, force_decimal_places
 
 from overview import create_movie_overview
-from utils import *
+from utils import VideoInfoProvider, is_list, line, exit_program
 from ffmpeg_process_factory import Encoder, EncodingArguments, \
     FfmpegProcessFactory
 
@@ -82,11 +82,12 @@ def main():
 	# The value of the --interval argument.
     clip_interval = args.interval
 
-    # Use the functions in utils.py to get the framerate, bitrate and duration
-    fps = get_framerate_fraction(original_video)
-    fps_float = get_framerate_float(original_video)
-    original_bitrate = get_bitrate(original_video)
-    original_duration = round(float(get_duration(original_video)), 1)
+    # Use class VideoInfoProvider  to get the framerate, bitrate and duration
+    provider = VideoInfoProvider(original_video)
+    fps = provider.get_framerate_fraction()
+    fps_float = provider.get_framerate_float()
+    original_bitrate = provider.get_bitrate()
+    original_duration = round(float(provider.get_duration()), 1)
     
     line()
     print('Here\'s some information about the original video:')
@@ -176,7 +177,7 @@ def main():
                 time_to_convert = end_time - start_time
                 time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
                 transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-                transcoded_bitrate = get_bitrate(transcode_output_path)
+                transcoded_bitrate = provider.get_bitrate(transcode_output_path)
                 size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
                 data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
 
@@ -246,7 +247,7 @@ def main():
                 time_to_convert = end_time - start_time
                 time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
                 transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-                transcoded_bitrate = get_bitrate(transcode_output_path)
+                transcoded_bitrate = provider.get_bitrate(transcode_output_path)
                 size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
                 data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
 
@@ -287,7 +288,7 @@ def main():
         run_libvmaf(args.transcoded_video_path, args, json_file_path, fps, original_video)
         transcode_size = os.path.getsize(args.transcoded_video_path) / 1_000_000
         size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
-        transcoded_bitrate = get_bitrate(args.transcoded_video_path)
+        transcoded_bitrate = provider.get_bitrate(args.transcoded_video_path)
         data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
         print(data_for_current_row)
         graph_filename = 'The variation of the quality of the transcoded video throughout the video'
