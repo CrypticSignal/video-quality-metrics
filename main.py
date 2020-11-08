@@ -9,6 +9,8 @@ from ffmpeg_process_factory import Encoder, EncodingArguments, \
     FfmpegProcessFactory
 
 
+METRICS_EXPLANATION = 'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n'
+
 def main():
     if len(sys.argv) == 1:
         line()
@@ -189,7 +191,7 @@ def main():
                     preset_string = ','.join(args.preset)
                     # The first line of Table.txt:
                     with open(comparison_table, 'w') as f:
-                        f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+                        f.write(METRICS_EXPLANATION)
                         f.write(f'Chosen preset: {preset_string}\n')
                         f.write(f'Original video bitrate: {original_bitrate}\n')
                     
@@ -258,7 +260,7 @@ def main():
                     json_file_path = f'{output_folder}/Raw JSON Data/{preset}.json'
                     # The first line of Table.txt:
                     with open(comparison_table, 'w') as f:
-                        f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+                        f.write(METRICS_EXPLANATION)
                         f.write(f'Chosen CRF: {crf}\n')
                         f.write(f'Original video bitrate: {original_bitrate}\n')
 
@@ -279,7 +281,7 @@ def main():
         os.makedirs(output_folder, exist_ok=True)
         comparison_table = os.path.join(output_folder, 'Table.txt')
         with open(comparison_table, 'w') as f:
-            f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+            f.write(METRICS_EXPLANATION)
             f.write(f'Original video bitrate: {original_bitrate}\n')
         table.field_names = table_column_names
         # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
@@ -319,7 +321,7 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
 
     with open(comparison_table, 'w') as f:
         f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.\n' +
-                constants.METRICS_EXPLANATION)
+                {METRICS_EXPLANATION})
 
     return output_file_path
 
