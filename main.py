@@ -2,8 +2,11 @@ import time, os, subprocess
 from argparse import ArgumentParser, RawTextHelpFormatter
 from prettytable import PrettyTable
 from save_metrics import create_table_plot_metrics, force_decimal_places
+
 from overview import create_movie_overview
 from utils import *
+from ffmpeg_process_factory import Encoder, EncodingArguments, \
+    FfmpegProcessFactory
 
 
 def main():
@@ -154,17 +157,20 @@ def main():
                 transcode_output_path = os.path.join(output_folder, f'CRF {crf} at preset {preset}.{output_ext}')
                 graph_filename = f'CRF {crf} at preset {preset}'
 
-                subprocess_args = [
-                    "ffmpeg", "-loglevel", "warning", "-stats", "-y",
-                    "-i", original_video, "-map", "0",
-                    "-c:v", f'lib{video_encoder}', "-crf", str(crf), "-preset", preset,
-                    "-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
-                ]
+                factory = FfmpegProcessFactory()
+                arguments = EncodingArguments()
+                arguments.infile = original_video
+                arguments.encoder = Encoder[video_encoder]
+                arguments.crf = crf
+                arguments.preset = preset
+                arguments.outfile = transcode_output_path
+
+                process = factory.create_process(arguments)
 
                 line()
                 print(f'Transcoding the video with CRF {crf}...')
                 start_time = time.time()
-                subprocess.run(subprocess_args)
+                process.run()
                 end_time = time.time()
                 print('Done!')
                 time_to_convert = end_time - start_time
@@ -220,17 +226,21 @@ def main():
             for preset in chosen_presets:
                 transcode_output_path = os.path.join(output_folder, f'{preset}.{output_ext}')
                 graph_filename = f"Preset '{preset}'"
-                subprocess_args = [
-                    "ffmpeg", "-loglevel", "warning", "-stats", "-y",
-                    "-i", original_video, "-map", "0",
-                    "-c:v", f'lib{video_encoder}', "-crf", str(crf), "-preset", preset,
-                    "-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
-                ]
+                
+                factory = FfmpegProcessFactory()
+                arguments = EncodingArguments()
+                arguments.infile = original_video
+                arguments.encoder = Encoder[video_encoder]
+                arguments.crf = crf
+                arguments.preset = preset
+                arguments.outfile = transcode_output_path
+
+                process = factory.create_process(arguments)
                 
                 line()
                 print(f'Transcoding the video with preset {preset}...')
                 start_time = time.time()
-                subprocess.run(subprocess_args)
+                process.run()
                 end_time = time.time()
                 print('Done!')
                 time_to_convert = end_time - start_time
