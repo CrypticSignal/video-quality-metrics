@@ -37,5 +37,6 @@ def exit_program(message):
 def is_list(argument_object):
     return isinstance(argument_object, list)
 
+
 def line():
     print('-----------------------------------------------------------------------------------------------------------')
