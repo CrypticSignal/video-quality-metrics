@@ -8,8 +8,23 @@ class Encoder(Enum):
 
 
 class FfmpegArguments:
+    _fps = int(0)
+    _infile = str()
+
     def get_arguments(self):
-        return ["-i", self._infile, "-map", "0"]
+        result = []
+        if self._fps != 0:
+            result = result + ["-r", self._fps]
+
+        result = result + ["-i", self._infile]
+
+        return result
+
+    def get_fps(self):
+        return self._fps
+
+    def set_fps(self, value):
+        self._fps = value
 
     def get_infile(self):
         return self._infile
@@ -17,6 +32,7 @@ class FfmpegArguments:
     def set_infile(self, value):
         self._infile = value
 
+    fps = property(get_fps, set_fps)
     infile = property(get_infile, set_infile)
 
 
@@ -51,6 +67,7 @@ class EncodingArguments(FfmpegArguments):
     def get_arguments(self):
         return super().get_arguments() + \
             [
+                "-map", "0",
                 "-c:v", "lib" + self._encoder.name,
                 "-crf", str(self._crf),
                 "-preset", self._preset,
@@ -61,6 +78,36 @@ class EncodingArguments(FfmpegArguments):
     preset = property(get_preset, set_preset)
     encoder = property(get_encoder, set_encoder)
     outfile = property(get_outfile, set_outfile)
+
+
+class LibVmafArguments(FfmpegArguments):
+    _vmaf_options = str()
+    _second_infile = str()
+
+    def get_second_infile(self):
+        return self._second_infile
+
+    def set_second_infile(self, value):
+        self._second_infile = value
+
+    def get_vmaf_options(self):
+        return self._vmaf_options
+
+    def set_vmaf_options(self, value):
+        self._vmaf_options = value
+
+    def get_arguments(self):
+        return super().get_arguments() + \
+            [
+                "-r", str(self._fps),
+                "-i", self._second_infile,
+                "-lavfi", "[0:v]setpts=PTS-STARTPTS[dist];[1:v]setpts="
+                          "PTS-STARTPTS[ref];[dist][ref]"
+                          f'libvmaf={self._vmaf_options}', "-f", "null", "-"
+            ]
+
+    second_infile = property(get_second_infile, set_second_infile)
+    vmaf_options = property(get_vmaf_options, set_vmaf_options)
 
 
 class FfmpegProcessFactory:

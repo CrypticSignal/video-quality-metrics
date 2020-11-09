@@ -1,5 +1,4 @@
 import os
-import subprocess
 import sys
 import time
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -10,7 +9,7 @@ from save_metrics import create_table_plot_metrics, force_decimal_places
 from overview import create_movie_overview
 from utils import VideoInfoProvider, is_list, line, exit_program
 from ffmpeg_process_factory import Encoder, EncodingArguments, \
-                                   FfmpegProcessFactory
+                                   LibVmafArguments, FfmpegProcessFactory
 from arguments_validator import ArgumentsValidator
 
 
@@ -204,7 +203,7 @@ def main():
                         f.write(f'Chosen preset: {preset_string}\n')
                         f.write(f'Original video bitrate: {original_bitrate}\n')
                     
-                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video)
+                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video, factory)
                 
                     create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
                                             table, output_folder, time_rounded, crf)
@@ -272,7 +271,7 @@ def main():
                         f.write(f'Chosen CRF: {crf}\n')
                         f.write(f'Original video bitrate: {original_bitrate}\n')
 
-                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video)
+                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video, factory)
         
                     create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
                                             table, output_folder, time_rounded, preset)
@@ -295,7 +294,7 @@ def main():
         # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
         json_file_path = f'{output_folder}/QualityMetrics.json'
         # Run libvmaf to get the quality metric(s).
-        run_libvmaf(args.transcoded_video_path, args, json_file_path, fps, original_video)
+        run_libvmaf(args.transcoded_video_path, args, json_file_path, fps, original_video, factory)
         transcode_size = os.path.getsize(args.transcoded_video_path) / 1_000_000
         size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
         transcoded_bitrate = provider.get_bitrate(args.transcoded_video_path)
@@ -334,7 +333,7 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     return output_file_path
 
 
-def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video):
+def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video, factory):
     vmaf_options = {
         "model_path": "vmaf_v0.6.1.pkl",
         "phone_model": "1" if args.phone_model else "0",
@@ -345,12 +344,13 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
     }
     vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
 
-    subprocess_args = [
-        "ffmpeg", "-loglevel", "error", "-stats", "-r", fps, "-i", transcode_output_path,
-        "-r", fps, "-i", original_video,
-        "-lavfi", "[0:v]setpts=PTS-STARTPTS[dist];[1:v]setpts=PTS-STARTPTS[ref];[dist][ref]"
-        f'libvmaf={vmaf_options}', "-f", "null", "-"
-    ]
+    libvmaf_arguments = LibVmafArguments()
+    libvmaf_arguments.infile = transcode_output_path
+    libvmaf_arguments.fps = fps
+    libvmaf_arguments.second_infile = original_video
+    libvmaf_arguments.vmaf_options = vmaf_options
+
+    process = factory.create_process(libvmaf_arguments)
 
     if args.calculate_psnr and args.calculate_ssim:
         end_of_computing_message = ', PSNR and SSIM'
@@ -362,7 +362,7 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
         end_of_computing_message = ''
 
     print(f'Computing the VMAF{end_of_computing_message}...')
-    subprocess.run(subprocess_args)
+    process.run()
     print('Done!')
 
 
