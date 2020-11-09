@@ -10,7 +10,7 @@ from save_metrics import create_table_plot_metrics, force_decimal_places
 from overview import create_movie_overview
 from utils import VideoInfoProvider, is_list, line, exit_program
 from ffmpeg_process_factory import Encoder, EncodingArguments, \
-    FfmpegProcessFactory
+                                   FfmpegProcessFactory
 from arguments_validator import ArgumentsValidator
 
 
@@ -105,7 +105,9 @@ def main():
     fps_float = provider.get_framerate_float()
     original_bitrate = provider.get_bitrate()
     original_duration = round(float(provider.get_duration()), 1)
-    
+
+    factory = FfmpegProcessFactory()
+
     line()
     print('Here\'s some information about the original video:')
     print(f'Filename: {filename}')
@@ -168,7 +170,6 @@ def main():
                 transcode_output_path = os.path.join(output_folder, f'CRF {crf} at preset {preset}.{output_ext}')
                 graph_filename = f'CRF {crf} at preset {preset}'
 
-                factory = FfmpegProcessFactory()
                 arguments = EncodingArguments()
                 arguments.infile = original_video
                 arguments.encoder = Encoder[video_encoder]
@@ -238,7 +239,6 @@ def main():
                 transcode_output_path = os.path.join(output_folder, f'{preset}.{output_ext}')
                 graph_filename = f"Preset '{preset}'"
                 
-                factory = FfmpegProcessFactory()
                 arguments = EncodingArguments()
                 arguments.infile = original_video
                 arguments.encoder = Encoder[video_encoder]
