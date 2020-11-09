@@ -58,7 +58,7 @@ def main():
     # Enable phone model?
     parser.add_argument('-pm', '--phone-model', action='store_true', help='Enable VMAF phone model.')
     # Number of decimal places to use for the data.
-    parser.add_argument('-dp', '--decimal-places', default=2, help='The number of decimal places to use for the data '
+    parser.add_argument('-dp', '--decimal-places', type=int, default=2, help='The number of decimal places to use for the data '
                                                                    'in the table (default: 2).\nExample: -dp 3')
     # Calculate SSIM?
     parser.add_argument('-ssim', '--calculate-ssim', action='store_true', help='Calculate SSIM in addition to VMAF.')
