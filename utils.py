@@ -1,5 +1,6 @@
+import math
+import sys
 from ffmpeg import probe
-import math, sys, os
 
 
 class VideoInfoProvider:

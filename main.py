@@ -1,4 +1,7 @@
-import time, os, subprocess, sys
+import os
+import subprocess
+import sys
+import time
 from argparse import ArgumentParser, RawTextHelpFormatter
 from prettytable import PrettyTable
 from save_metrics import create_table_plot_metrics, force_decimal_places
