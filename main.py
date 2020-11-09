@@ -10,9 +10,11 @@ from overview import create_movie_overview
 from utils import VideoInfoProvider, is_list, line, exit_program
 from ffmpeg_process_factory import Encoder, EncodingArguments, \
     FfmpegProcessFactory
+from arguments_validator import ArgumentsValidator
 
 
 METRICS_EXPLANATION = 'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n'
+
 
 def main():
     if len(sys.argv) == 1:
@@ -77,6 +79,15 @@ def main():
 
     args = parser.parse_args()
 
+    args_validator = ArgumentsValidator()
+    validation_result, validation_errors = args_validator.validate(args)
+
+    if not validation_result:
+        for error in validation_errors:
+            print(f'Error: {error}')
+
+        exit_program('Argument validation failed')
+
     decimal_places = args.decimal_places
     # The path of the original video.
     original_video = args.original_video_path
@@ -128,15 +139,8 @@ def main():
             exit_program('Something went wrong when trying to create the overview video.')
 
     if not args.no_transcoding_mode:
-        # If no CRF or preset is specified, the default data types are as int and str, respectively.
-        if isinstance(args.crf_value, int) and isinstance(args.preset, str):
-            exit_program('No CRF value(s) or preset(s) specified. Exiting.')
-        elif is_list(args.crf_value) and len(args.crf_value) > 1 and is_list(args.preset) and len(args.preset) > 1:
-            exit_program(f'More than one CRF value AND more than one preset specified. No suitable mode found. '
-                         f'Exiting.')
-
         # args.crf_value is a list when more than one CRF value is specified.
-        elif is_list(args.crf_value) and len(args.crf_value) > 1:
+        if is_list(args.crf_value) and len(args.crf_value) > 1:
             print('CRF comparison mode activated.')
             crf_values = args.crf_value
             crf_values_string = ', '.join(str(crf) for crf in crf_values)
