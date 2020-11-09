@@ -3,9 +3,10 @@ import subprocess
 import sys
 import time
 from argparse import ArgumentParser, RawTextHelpFormatter
-from prettytable import PrettyTable
-from save_metrics import create_table_plot_metrics, force_decimal_places
 
+from prettytable import PrettyTable
+
+from save_metrics import create_table_plot_metrics, force_decimal_places
 from overview import create_movie_overview
 from utils import VideoInfoProvider, is_list, line, exit_program
 from ffmpeg_process_factory import Encoder, EncodingArguments, \
