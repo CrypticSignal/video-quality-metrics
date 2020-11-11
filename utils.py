@@ -1,6 +1,27 @@
-import math
 import sys
+import math
+from time import time
+
 from ffmpeg import probe
+
+
+def line():
+    print('-----------------------------------------------------------------------------------------------------------')
+
+
+def is_list(argument_object):
+    return isinstance(argument_object, list)
+
+
+def force_decimal_places(value, decimal_places):
+	return '{:0.{dp}f}'.format(value, dp=decimal_places)
+
+
+def exit_program(message):
+    line()
+    print(f'[Exiting Program] {message}')
+    line()
+    sys.exit()
 
 
 class VideoInfoProvider:
@@ -27,16 +48,11 @@ class VideoInfoProvider:
         return probe(self._video_path)['format']['duration']
 
 
-def exit_program(message):
-    line()
-    print(f'[Exiting Program] {message}')
-    line()
-    sys.exit()
-  
+class Timer:
+    def start(self):
+        self.__start_time = time()
 
-def is_list(argument_object):
-    return isinstance(argument_object, list)
-
-
-def line():
-    print('-----------------------------------------------------------------------------------------------------------')
+    def end(self, decimal_places):
+        time_to_convert = time() - self.__start_time
+        time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
+        return time_rounded
