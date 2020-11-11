@@ -74,7 +74,7 @@ class EncodingArguments(FfmpegArguments):
             [
                 "-map", "0:V",
                 "-c:v", "lib" + self.__encoder.name,
-                "-crf", str(self.__crf),
+                "-crf", self.__crf,
                 "-preset", self.__preset,
                 self.__outfile
             ]
@@ -100,7 +100,7 @@ class LibVmafArguments(FfmpegArguments):
     def get_arguments(self):
         return super().get_arguments() + \
             [
-                "-r", str(self._fps),
+                "-r", self._fps,
                 "-i", self.__second_infile,
                 "-lavfi", "[0:v]setpts=PTS-STARTPTS[dist];[1:v]setpts="
                           "PTS-STARTPTS[ref];[dist][ref]"

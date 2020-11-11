@@ -29,10 +29,10 @@ class VideoInfoProvider:
 
 def exit_program(message):
     line()
-    print(message)
+    print(f'[Exiting Program] {message}')
     line()
     sys.exit()
-
+  
 
 def is_list(argument_object):
     return isinstance(argument_object, list)

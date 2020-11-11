@@ -1,5 +1,5 @@
 import time, os, math, subprocess, shutil
-from utils import VideoInfoProvider, line
+from utils import VideoInfoProvider, line, exit_program
 
 
 class ClipError(Exception):
@@ -46,10 +46,10 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
             print(f'Creating clip {step} which starts at {clip_offset}...')
             subprocess_cut_args = [
                 "ffmpeg", "-loglevel", "warning", "-stats", "-y",
-                "-ss", str(clip_offset), "-i", video_path,
-                "-map", "0", "-t", str(clip_length),
+                "-ss", clip_offset, "-i", video_path,
+                "-map", "0:V", "-t", clip_length,
                 "-c:v", "libx264", "-crf", "0", "-preset", "ultrafast",
-                "-an", "-sn", output_filename
+                output_filename
             ]
             subprocess.run(subprocess_cut_args)
     finally:
@@ -60,7 +60,7 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
 
 def concatenate_clips(clips_file_path, output_folder, extension, interval_seconds, clip_length):
     if not os.path.exists(clips_file_path):
-        raise ConcatenateError(f'Clips file does not exist')
+        raise ConcatenateError(f'Clips file does not exist.')
 
     overview_filename = f'{clip_length}-{interval_seconds} (ClipLength-IntervalSeconds).{extension}'
     concatenated_filepath = f'{output_folder}/../{overview_filename}'
@@ -83,21 +83,18 @@ def concatenate_clips(clips_file_path, output_folder, extension, interval_second
 
 def create_movie_overview(video_path, output_folder, interval_seconds, clip_length):
     extension = os.path.splitext(video_path)[-1][1:]
-    output_file = str()
-
     try:
         clips_file = create_clips(video_path, output_folder, interval_seconds, clip_length)
         output_file = concatenate_clips(clips_file, output_folder, extension, interval_seconds, clip_length)
         result = True
     except ClipError as err:
         result = False
-        print(err.args[0])
+        exit_program(err.args[0])
     except ConcatenateError as err:
         result = False
-        print(err.args[0])
+        exit_program(err.args[0])
 
     if result:
         print(f'Overview Video: {clip_length}-{interval_seconds} (ClipLength-IntervalSeconds).{extension}')
         line()
-
-    return result, output_file
+        return result, output_file

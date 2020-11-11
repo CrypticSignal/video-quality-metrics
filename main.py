@@ -32,10 +32,10 @@ def main():
     parser.add_argument('-e', '--video-encoder', type=str, default='x264', choices=['x264', 'x265'],
                         help='Specify the encoder to use (default: x264).\nExample: -e x265')
     # CRF value(s).
-    parser.add_argument('-crf', '--crf-value', nargs='+', type=int, choices=range(0, 51),
+    parser.add_argument('-crf', '--crf-value', type=int, nargs='+', choices=range(0, 51),
                         default=23, help='Specify the CRF value(s) to use.', metavar='CRF_VALUE(s)')
     # Preset(s).
-    parser.add_argument('-p', '--preset', nargs='+', choices=[
+    parser.add_argument('-p', '--preset', type=str, nargs='+', choices=[
                         'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'],
                         default='medium', help='Specify the preset(s) to use.', metavar='PRESET(s)')
     # The time interval to use when creating the overview video.
@@ -85,7 +85,7 @@ def main():
     if not validation_result:
         for error in validation_errors:
             print(f'Error: {error}')
-        exit_program('Argument validation failed')
+        exit_program('Argument validation failed.')
 
     decimal_places = args.decimal_places
     # The path of the original video.
@@ -100,16 +100,15 @@ def main():
     # Use class VideoInfoProvider  to get the framerate, bitrate and duration
     provider = VideoInfoProvider(original_video)
     fps = provider.get_framerate_fraction()
+    print(type(fps))
     fps_float = provider.get_framerate_float()
     original_bitrate = provider.get_bitrate()
-    original_duration = round(float(provider.get_duration()), 1)
 
     line()
     print('Here\'s some information about the original video:')
     print(f'Filename: {filename}')
     print(f'Bitrate: {original_bitrate}')
     print(f'Framerate: {fps} ({fps_float}) FPS')
-    print(f'Duration: {original_duration} seconds')
     line()
 
     # Create a PrettyTable object.
@@ -127,7 +126,7 @@ def main():
             del table_column_names[0]
 
     if clip_interval > 0:
-        clip_length = args.clip_length
+        clip_length = str(args.clip_length)
         output_folder = os.path.join(f'({filename})', 'clips')
         os.makedirs(output_folder, exist_ok=True)
         
@@ -172,7 +171,7 @@ def main():
                 arguments = EncodingArguments()
                 arguments.infile = original_video
                 arguments.encoder = Encoder[video_encoder]
-                arguments.crf = crf
+                arguments.crf = str(crf)
                 arguments.preset = preset
                 arguments.outfile = transcode_output_path
 

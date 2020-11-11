@@ -4,16 +4,16 @@ from utils import is_list
 
 
 class ArgumentsValidator:
-    def validate(self, arguments):
+    def validate(self, args):
         validation_results = []
         validation_errors = []
         result = True
 
         validation_results.append(self.__validate_original_video_exists(
-                arguments.original_video_path))
+                args.original_video_path))
         validation_results.append(
             self.__validate_crf_and_preset_count(
-                arguments.crf_value, arguments.preset))
+                args.crf_value, args.preset))
 
         for validation_tuple in validation_results:
             if not validation_tuple[0]:
@@ -23,8 +23,7 @@ class ArgumentsValidator:
         return result, validation_errors
 
     def __validate_original_video_exists(self, video_path):
-        return (os.path.exists(video_path),
-                f'Original video {video_path} does not exist')
+        return (os.path.exists(video_path), f'Unable to find {video_path}')
 
     def __validate_crf_and_preset_count(self, crf_values, presets):
         result = True
