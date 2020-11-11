@@ -1,9 +1,19 @@
-import time, os, subprocess
+import os
+import sys
+import time
 from argparse import ArgumentParser, RawTextHelpFormatter
+
 from prettytable import PrettyTable
+
 from save_metrics import create_table_plot_metrics, force_decimal_places
 from overview import create_movie_overview
-from utils import *
+from utils import VideoInfoProvider, is_list, line, exit_program
+from ffmpeg_process_factory import Encoder, EncodingArguments, \
+                                   LibVmafArguments, FfmpegProcessFactory
+from arguments_validator import ArgumentsValidator
+
+
+METRICS_EXPLANATION = 'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n'
 
 
 def main():
@@ -48,7 +58,7 @@ def main():
     # Enable phone model?
     parser.add_argument('-pm', '--phone-model', action='store_true', help='Enable VMAF phone model.')
     # Number of decimal places to use for the data.
-    parser.add_argument('-dp', '--decimal-places', default=2, help='The number of decimal places to use for the data '
+    parser.add_argument('-dp', '--decimal-places', type=int, default=2, help='The number of decimal places to use for the data '
                                                                    'in the table (default: 2).\nExample: -dp 3')
     # Calculate SSIM?
     parser.add_argument('-ssim', '--calculate-ssim', action='store_true', help='Calculate SSIM in addition to VMAF.')
@@ -69,6 +79,14 @@ def main():
 
     args = parser.parse_args()
 
+    args_validator = ArgumentsValidator()
+    validation_result, validation_errors = args_validator.validate(args)
+
+    if not validation_result:
+        for error in validation_errors:
+            print(f'Error: {error}')
+        exit_program('Argument validation failed')
+
     decimal_places = args.decimal_places
     # The path of the original video.
     original_video = args.original_video_path
@@ -79,12 +97,13 @@ def main():
 	# The value of the --interval argument.
     clip_interval = args.interval
 
-    # Use the functions in utils.py to get the framerate, bitrate and duration
-    fps = get_framerate_fraction(original_video)
-    fps_float = get_framerate_float(original_video)
-    original_bitrate = get_bitrate(original_video)
-    original_duration = round(float(get_duration(original_video)), 1)
-    
+    # Use class VideoInfoProvider  to get the framerate, bitrate and duration
+    provider = VideoInfoProvider(original_video)
+    fps = provider.get_framerate_fraction()
+    fps_float = provider.get_framerate_float()
+    original_bitrate = provider.get_bitrate()
+    original_duration = round(float(provider.get_duration()), 1)
+
     line()
     print('Here\'s some information about the original video:')
     print(f'Filename: {filename}')
@@ -117,17 +136,13 @@ def main():
             original_video = concatenated_video
         else:
             exit_program('Something went wrong when trying to create the overview video.')
+            
+    # Create an instance of the FfmpegProcessFactory class.
+    factory = FfmpegProcessFactory()
 
     if not args.no_transcoding_mode:
-        # If no CRF or preset is specified, the default data types are as int and str, respectively.
-        if isinstance(args.crf_value, int) and isinstance(args.preset, str):
-            exit_program('No CRF value(s) or preset(s) specified. Exiting.')
-        elif is_list(args.crf_value) and len(args.crf_value) > 1 and is_list(args.preset) and len(args.preset) > 1:
-            exit_program(f'More than one CRF value AND more than one preset specified. No suitable mode found. '
-                         f'Exiting.')
-
         # args.crf_value is a list when more than one CRF value is specified.
-        elif is_list(args.crf_value) and len(args.crf_value) > 1:
+        if is_list(args.crf_value) and len(args.crf_value) > 1:
             print('CRF comparison mode activated.')
             crf_values = args.crf_value
             crf_values_string = ', '.join(str(crf) for crf in crf_values)
@@ -154,23 +169,25 @@ def main():
                 transcode_output_path = os.path.join(output_folder, f'CRF {crf} at preset {preset}.{output_ext}')
                 graph_filename = f'CRF {crf} at preset {preset}'
 
-                subprocess_args = [
-                    "ffmpeg", "-loglevel", "warning", "-stats", "-y",
-                    "-i", original_video, "-map", "0",
-                    "-c:v", f'lib{video_encoder}', "-crf", str(crf), "-preset", preset,
-                    "-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
-                ]
+                arguments = EncodingArguments()
+                arguments.infile = original_video
+                arguments.encoder = Encoder[video_encoder]
+                arguments.crf = crf
+                arguments.preset = preset
+                arguments.outfile = transcode_output_path
+
+                process = factory.create_process(arguments)
 
                 line()
                 print(f'Transcoding the video with CRF {crf}...')
                 start_time = time.time()
-                subprocess.run(subprocess_args)
+                process.run()
                 end_time = time.time()
                 print('Done!')
                 time_to_convert = end_time - start_time
                 time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
                 transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-                transcoded_bitrate = get_bitrate(transcode_output_path)
+                transcoded_bitrate = provider.get_bitrate(transcode_output_path)
                 size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
                 data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
 
@@ -182,18 +199,18 @@ def main():
                     preset_string = ','.join(args.preset)
                     # The first line of Table.txt:
                     with open(comparison_table, 'w') as f:
-                        f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+                        f.write(METRICS_EXPLANATION)
                         f.write(f'Chosen preset: {preset_string}\n')
                         f.write(f'Original video bitrate: {original_bitrate}\n')
                     
-                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video)
+                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video, factory)
                 
                     create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
                                             table, output_folder, time_rounded, crf)
 
                 # --disable-quality-metrics argument specified
                 else:
-                    table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB'])
+                    table.add_row([crf, f'{time_rounded}', f'{size_rounded} MB', transcoded_bitrate])
 
         # args.preset is a list when more than one preset is specified.
         elif is_list(args.preset):
@@ -220,23 +237,26 @@ def main():
             for preset in chosen_presets:
                 transcode_output_path = os.path.join(output_folder, f'{preset}.{output_ext}')
                 graph_filename = f"Preset '{preset}'"
-                subprocess_args = [
-                    "ffmpeg", "-loglevel", "warning", "-stats", "-y",
-                    "-i", original_video, "-map", "0",
-                    "-c:v", f'lib{video_encoder}', "-crf", str(crf), "-preset", preset,
-                    "-c:a", "copy", "-c:s", "copy", "-movflags", "+faststart", transcode_output_path
-                ]
+                
+                arguments = EncodingArguments()
+                arguments.infile = original_video
+                arguments.encoder = Encoder[video_encoder]
+                arguments.crf = crf
+                arguments.preset = preset
+                arguments.outfile = transcode_output_path
+
+                process = factory.create_process(arguments)
                 
                 line()
                 print(f'Transcoding the video with preset {preset}...')
                 start_time = time.time()
-                subprocess.run(subprocess_args)
+                process.run()
                 end_time = time.time()
                 print('Done!')
                 time_to_convert = end_time - start_time
                 time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
                 transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-                transcoded_bitrate = get_bitrate(transcode_output_path)
+                transcoded_bitrate = provider.get_bitrate(transcode_output_path)
                 size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
                 data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
 
@@ -247,18 +267,18 @@ def main():
                     json_file_path = f'{output_folder}/Raw JSON Data/{preset}.json'
                     # The first line of Table.txt:
                     with open(comparison_table, 'w') as f:
-                        f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+                        f.write(METRICS_EXPLANATION)
                         f.write(f'Chosen CRF: {crf}\n')
                         f.write(f'Original video bitrate: {original_bitrate}\n')
 
-                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video)
+                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video, factory)
         
                     create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
-                                            time_rounded, table, output_folder, preset)
+                                            table, output_folder, time_rounded, preset)
 
                 # --disable-quality-metrics argument specified.
                 else:
-                    table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB'])
+                    table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', transcoded_bitrate])
 
     # -ntm argument was specified.
     else:
@@ -268,16 +288,16 @@ def main():
         os.makedirs(output_folder, exist_ok=True)
         comparison_table = os.path.join(output_folder, 'Table.txt')
         with open(comparison_table, 'w') as f:
-            f.write(f'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n')
+            f.write(METRICS_EXPLANATION)
             f.write(f'Original video bitrate: {original_bitrate}\n')
         table.field_names = table_column_names
         # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
         json_file_path = f'{output_folder}/QualityMetrics.json'
         # Run libvmaf to get the quality metric(s).
-        run_libvmaf(args.transcoded_video_path, args, json_file_path, fps, original_video)
+        run_libvmaf(args.transcoded_video_path, args, json_file_path, fps, original_video, factory)
         transcode_size = os.path.getsize(args.transcoded_video_path) / 1_000_000
         size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
-        transcoded_bitrate = get_bitrate(args.transcoded_video_path)
+        transcoded_bitrate = provider.get_bitrate(args.transcoded_video_path)
         data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
         print(data_for_current_row)
         graph_filename = 'The variation of the quality of the transcoded video throughout the video'
@@ -307,13 +327,12 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
     with open(comparison_table, 'w') as f:
-        f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.\n' +
-                constants.METRICS_EXPLANATION)
+        f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.\n{METRICS_EXPLANATION}')
 
     return output_file_path
 
 
-def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video):
+def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video, factory):
     vmaf_options = {
         "model_path": "vmaf_v0.6.1.pkl",
         "phone_model": "1" if args.phone_model else "0",
@@ -324,12 +343,13 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
     }
     vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
 
-    subprocess_args = [
-        "ffmpeg", "-loglevel", "error", "-stats", "-r", fps, "-i", transcode_output_path,
-        "-r", fps, "-i", original_video,
-        "-lavfi", "[0:v]setpts=PTS-STARTPTS[dist];[1:v]setpts=PTS-STARTPTS[ref];[dist][ref]"
-        f'libvmaf={vmaf_options}', "-f", "null", "-"
-    ]
+    libvmaf_arguments = LibVmafArguments()
+    libvmaf_arguments.infile = transcode_output_path
+    libvmaf_arguments.fps = fps
+    libvmaf_arguments.second_infile = original_video
+    libvmaf_arguments.vmaf_options = vmaf_options
+
+    process = factory.create_process(libvmaf_arguments)
 
     if args.calculate_psnr and args.calculate_ssim:
         end_of_computing_message = ', PSNR and SSIM'
@@ -341,7 +361,7 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
         end_of_computing_message = ''
 
     print(f'Computing the VMAF{end_of_computing_message}...')
-    subprocess.run(subprocess_args)
+    process.run()
     print('Done!')
 
 

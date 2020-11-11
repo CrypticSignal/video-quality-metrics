@@ -1,5 +1,5 @@
 import time, os, math, subprocess, shutil
-from utils import get_duration, line
+from utils import VideoInfoProvider, line
 
 
 class ClipError(Exception):
@@ -23,7 +23,8 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
 
-    duration = int(float(get_duration(video_path)))
+    provider = VideoInfoProvider(video_path)
+    duration = int(float(provider.get_duration()))
 
     if interval_seconds > duration:
         raise ClipError(f'The interval ({interval_seconds}s) may not be longer than the video ({duration}s).')

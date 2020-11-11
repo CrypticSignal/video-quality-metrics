@@ -9,5 +9,6 @@
 # Miscellaneous
 *.exe
 *.bat
+*.code-workspace
 # Ignore all folders
 */*
