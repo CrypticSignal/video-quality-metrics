@@ -31,11 +31,13 @@ You want to know the quality (VMAF/SSIM/PSNR) achieved with certain presets. The
 Example: `python main.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
 
 # [2] Overview Mode:
-A recent addition to this program is "overview mode", which can be used by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video because instead of grabbing one particular segment, the program goes through the whole video and grabs, say, a 2 seconds long segment every 60 seconds.
+A recent addition to this program is "overview mode", which can be used by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a 2 seconds long segment every 60 seconds. 
   
 Example: `python main.py -ovp original.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
 
 In the example above, we're grabbing 2 seconds (`--clip-length 2`) every minute (`--interval 60`) in the video. These 2-second long clips are concatenated to make the overview video. A 1-hour long video is turned into an overview video that is 1 minute and 58 seconds long. The benefit of overview mode should now be clear - transcoding and computing the quality metrics of a <2 minutes long video is **much** quicker than doing so with an hour long video.
+
+*An alternative method of reducing the execution time of this program is by only using the first x seconds of the original video (you can do this with the `-t` argument), but **Overview Mode** provides a better representation of the whole video.*
 
 # What data is shown in the table?
 The following data is presented in a table and saved as a file named **Table.txt**:
