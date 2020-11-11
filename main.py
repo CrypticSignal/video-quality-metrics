@@ -180,6 +180,7 @@ def main():
                 process.run()
                 time_rounded = timer.end(decimal_places)
                 print('Done!')
+                
                 transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
                 transcoded_bitrate = provider.get_bitrate(transcode_output_path)
                 size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
@@ -247,8 +248,7 @@ def main():
                 process.run()
                 time_rounded = timer.end(decimal_places)
                 print('Done!')
-                time_to_convert = end_time - start_time
-                time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
+    
                 transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
                 transcoded_bitrate = provider.get_bitrate(transcode_output_path)
                 size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
