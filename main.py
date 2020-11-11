@@ -1,17 +1,15 @@
 import os
 import sys
-import time
 from argparse import ArgumentParser, RawTextHelpFormatter
 
 from prettytable import PrettyTable
 
 from save_metrics import create_table_plot_metrics, force_decimal_places
 from overview import create_movie_overview
-from utils import VideoInfoProvider, is_list, line, exit_program
+from utils import line, exit_program, is_list, VideoInfoProvider, Timer
 from ffmpeg_process_factory import Encoder, EncodingArguments, \
                                    LibVmafArguments, FfmpegProcessFactory
 from arguments_validator import ArgumentsValidator
-
 
 METRICS_EXPLANATION = 'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n'
 
@@ -100,7 +98,6 @@ def main():
     # Use class VideoInfoProvider  to get the framerate, bitrate and duration
     provider = VideoInfoProvider(original_video)
     fps = provider.get_framerate_fraction()
-    print(type(fps))
     fps_float = provider.get_framerate_float()
     original_bitrate = provider.get_bitrate()
 
@@ -135,9 +132,9 @@ def main():
             original_video = concatenated_video
         else:
             exit_program('Something went wrong when trying to create the overview video.')
-            
-    # Create an instance of the FfmpegProcessFactory class.
+        
     factory = FfmpegProcessFactory()
+    timer = Timer()
 
     if not args.no_transcoding_mode:
         # args.crf_value is a list when more than one CRF value is specified.
@@ -179,12 +176,10 @@ def main():
 
                 line()
                 print(f'Transcoding the video with CRF {crf}...')
-                start_time = time.time()
+                timer.start()
                 process.run()
-                end_time = time.time()
+                time_rounded = timer.end(decimal_places)
                 print('Done!')
-                time_to_convert = end_time - start_time
-                time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
                 transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
                 transcoded_bitrate = provider.get_bitrate(transcode_output_path)
                 size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
@@ -248,9 +243,9 @@ def main():
                 
                 line()
                 print(f'Transcoding the video with preset {preset}...')
-                start_time = time.time()
+                timer.start()
                 process.run()
-                end_time = time.time()
+                time_rounded = timer.end(decimal_places)
                 print('Done!')
                 time_to_convert = end_time - start_time
                 time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)

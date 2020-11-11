@@ -1,10 +1,9 @@
-import os, json
+import json
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-def force_decimal_places(value, decimal_places):
-	return '{:0.{dp}f}'.format(value, dp=decimal_places)
+from utils import force_decimal_places
 
 
 def create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
