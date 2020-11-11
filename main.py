@@ -85,7 +85,6 @@ def main():
     if not validation_result:
         for error in validation_errors:
             print(f'Error: {error}')
-
         exit_program('Argument validation failed')
 
     decimal_places = args.decimal_places
@@ -104,8 +103,6 @@ def main():
     fps_float = provider.get_framerate_float()
     original_bitrate = provider.get_bitrate()
     original_duration = round(float(provider.get_duration()), 1)
-
-    factory = FfmpegProcessFactory()
 
     line()
     print('Here\'s some information about the original video:')
@@ -139,6 +136,9 @@ def main():
             original_video = concatenated_video
         else:
             exit_program('Something went wrong when trying to create the overview video.')
+            
+    # Create an instance of the FfmpegProcessFactory class.
+    factory = FfmpegProcessFactory()
 
     if not args.no_transcoding_mode:
         # args.crf_value is a list when more than one CRF value is specified.
@@ -210,7 +210,7 @@ def main():
 
                 # --disable-quality-metrics argument specified
                 else:
-                    table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB'])
+                    table.add_row([crf, f'{time_rounded}', f'{size_rounded} MB', transcoded_bitrate])
 
         # args.preset is a list when more than one preset is specified.
         elif is_list(args.preset):
@@ -278,7 +278,7 @@ def main():
 
                 # --disable-quality-metrics argument specified.
                 else:
-                    table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB'])
+                    table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', transcoded_bitrate])
 
     # -ntm argument was specified.
     else:
@@ -327,8 +327,7 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
     with open(comparison_table, 'w') as f:
-        f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.\n' +
-                {METRICS_EXPLANATION})
+        f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.\n{METRICS_EXPLANATION}')
 
     return output_file_path
 

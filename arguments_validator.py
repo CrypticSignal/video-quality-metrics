@@ -9,10 +9,10 @@ class ArgumentsValidator:
         validation_errors = []
         result = True
 
-        validation_results.append(self._validate_original_video_exists(
+        validation_results.append(self.__validate_original_video_exists(
                 arguments.original_video_path))
         validation_results.append(
-            self._validate_crf_and_preset_count(
+            self.__validate_crf_and_preset_count(
                 arguments.crf_value, arguments.preset))
 
         for validation_tuple in validation_results:
@@ -22,11 +22,11 @@ class ArgumentsValidator:
 
         return result, validation_errors
 
-    def _validate_original_video_exists(self, video_path):
+    def __validate_original_video_exists(self, video_path):
         return (os.path.exists(video_path),
                 f'Original video {video_path} does not exist')
 
-    def _validate_crf_and_preset_count(self, crf_values, presets):
+    def __validate_crf_and_preset_count(self, crf_values, presets):
         result = True
         if is_list(crf_values) and len(crf_values) > 1 and is_list(presets) \
                 and len(presets) > 1:

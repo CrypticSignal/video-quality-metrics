@@ -8,123 +8,121 @@ class Encoder(Enum):
 
 
 class FfmpegArguments:
-    _fps = int(0)
-    _infile = str()
+    _fps = 0
 
     def get_arguments(self):
-        result = []
+        base_ffmpeg_arguments = ["-i", self.__infile]
         if self._fps != 0:
-            result = result + ["-r", self._fps]
+            base_ffmpeg_arguments = ["-r", self._fps, "-i", self.__infile]
+        return base_ffmpeg_arguments
 
-        result = result + ["-i", self._infile]
+    @property
+    def infile(self):
+        return self.__infile
 
-        return result
+    @infile.setter
+    def infile(self, value):
+        self.__infile = value
 
-    def get_fps(self):
+    @property
+    def fps(self):
         return self._fps
 
-    def set_fps(self, value):
+    @fps.setter
+    def fps(self, value):
         self._fps = value
-
-    def get_infile(self):
-        return self._infile
-
-    def set_infile(self, value):
-        self._infile = value
-
-    fps = property(get_fps, set_fps)
-    infile = property(get_infile, set_infile)
 
 
 class EncodingArguments(FfmpegArguments):
     def __init__(self):
-        self._encoder = Encoder.x264
+        self.__encoder = Encoder.x264
 
-    def get_crf(self):
-        return self._crf
+    @property
+    def encoder(self):
+        return self.__encoder
 
-    def set_crf(self, value):
-        self._crf = value
+    @encoder.setter
+    def encoder(self, value):
+        self.__encoder = value
 
-    def get_encoder(self):
-        return(self._encoder)
+    @property
+    def preset(self):
+        return self.__preset
 
-    def set_encoder(self, value):
-        self._encoder = value
+    @preset.setter
+    def preset(self, value):
+        self.__preset = value
 
-    def get_outfile(self):
-        return(self._outfile)
+    @property
+    def crf(self):
+        return self.__crf
 
-    def set_outfile(self, value):
-        self._outfile = value
+    @crf.setter
+    def crf(self, value):
+        self.__crf = value
 
-    def get_preset(self):
-        return self._preset
+    @property
+    def outfile(self):
+        return(self.__outfile)
 
-    def set_preset(self, value):
-        self._preset = value
+    @outfile.setter
+    def outfile(self, value):
+        self.__outfile = value
 
     def get_arguments(self):
         return super().get_arguments() + \
             [
-                "-map", "0",
-                "-c:v", "lib" + self._encoder.name,
-                "-crf", str(self._crf),
-                "-preset", self._preset,
-                "-an", "-sn", self._outfile
+                "-map", "0:V",
+                "-c:v", "lib" + self.__encoder.name,
+                "-crf", str(self.__crf),
+                "-preset", self.__preset,
+                self.__outfile
             ]
-
-    crf = property(get_crf, set_crf)
-    preset = property(get_preset, set_preset)
-    encoder = property(get_encoder, set_encoder)
-    outfile = property(get_outfile, set_outfile)
 
 
 class LibVmafArguments(FfmpegArguments):
-    _vmaf_options = str()
-    _second_infile = str()
+    @property
+    def second_infile(self):
+        return self.__second_infile
 
-    def get_second_infile(self):
-        return self._second_infile
+    @second_infile.setter
+    def second_infile(self, value):
+        self.__second_infile = value
 
-    def set_second_infile(self, value):
-        self._second_infile = value
+    @property
+    def vmaf_options(self):
+        return self.__vmaf_options
 
-    def get_vmaf_options(self):
-        return self._vmaf_options
-
-    def set_vmaf_options(self, value):
-        self._vmaf_options = value
+    @vmaf_options.setter
+    def vmaf_options(self, value):
+        self.__vmaf_options = value
 
     def get_arguments(self):
         return super().get_arguments() + \
             [
                 "-r", str(self._fps),
-                "-i", self._second_infile,
+                "-i", self.__second_infile,
                 "-lavfi", "[0:v]setpts=PTS-STARTPTS[dist];[1:v]setpts="
                           "PTS-STARTPTS[ref];[dist][ref]"
-                          f'libvmaf={self._vmaf_options}', "-f", "null", "-"
+                          f'libvmaf={self.__vmaf_options}', "-f", "null", "-"
             ]
-
-    second_infile = property(get_second_infile, set_second_infile)
-    vmaf_options = property(get_vmaf_options, set_vmaf_options)
 
 
 class FfmpegProcessFactory:
     def create_process(self, arguments):
-        _process_base_arguments = [
+        __process_base_arguments = [
             "ffmpeg", "-loglevel", "warning", "-stats", "-y",
         ]
 
         process = FfmpegProcess(
-            _process_base_arguments + arguments.get_arguments())
+            __process_base_arguments + arguments.get_arguments())
 
         return process
 
 
 class FfmpegProcess:
     def __init__(self, arguments):
-        self._arguments = arguments
+        self.__arguments = arguments
 
     def run(self):
-        subprocess.run(self._arguments)
+        subprocess.run(self.__arguments)
