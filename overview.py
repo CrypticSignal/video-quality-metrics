@@ -64,16 +64,16 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
         return txt_file_path
 
 
-def concatenate_clips(clips_file_path, output_folder, extension, interval_seconds, clip_length):
-    if not os.path.exists(clips_file_path):
-        raise ConcatenateError(f'Clips file does not exist.')
+def concatenate_clips(txt_file_path, output_folder, extension, interval_seconds, clip_length):
+    if not os.path.exists(txt_file_path):
+        raise ConcatenateError(f'{txt_file_path} does not exist.')
 
     overview_filename = f'{clip_length}-{interval_seconds} (ClipLength-IntervalSeconds).{extension}'
     concatenated_filepath = os.path.join(output_folder, overview_filename)
 
     subprocess_concatenate_args = [
         "ffmpeg", "-loglevel", "warning", "-stats", "-y",
-        "-f", "concat", "-safe", "0", "-i", clips_file_path, "-c", "copy", concatenated_filepath
+        "-f", "concat", "-safe", "0", "-i", txt_file_path, "-c", "copy", concatenated_filepath
     ]
 
     line()
@@ -90,8 +90,8 @@ def concatenate_clips(clips_file_path, output_folder, extension, interval_second
 def create_movie_overview(video_path, output_folder, interval_seconds, clip_length):
     extension = os.path.splitext(video_path)[-1][1:]
     try:
-        clips_file = create_clips(video_path, output_folder, interval_seconds, clip_length)
-        output_file = concatenate_clips(clips_file, output_folder, extension, interval_seconds, clip_length)
+        txt_file_path = create_clips(video_path, output_folder, interval_seconds, clip_length)
+        output_file = concatenate_clips(txt_file_path, output_folder, extension, interval_seconds, clip_length)
         result = True
     except ClipError as err:
         result = False
