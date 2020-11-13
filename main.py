@@ -124,7 +124,7 @@ def main():
 
     if clip_interval > 0:
         clip_length = str(args.clip_length)
-        output_folder = os.path.join(f'({filename})', 'clips')
+        output_folder = f'({filename})'
         os.makedirs(output_folder, exist_ok=True)
         
         result, concatenated_video = create_movie_overview(original_video, output_folder, clip_interval, clip_length)
@@ -162,7 +162,7 @@ def main():
 
             # Transcode the video with each CRF value.
             for crf in crf_values:
-                transcode_output_path = os.path.join(output_folder, f'CRF {crf} at preset {preset}.{output_ext}')
+                transcode_output_path = os.path.join(output_folder, f'CRF {crf}.{output_ext}')
                 graph_filename = f'CRF {crf} at preset {preset}'
 
                 arguments = EncodingArguments()

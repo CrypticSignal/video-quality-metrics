@@ -17,6 +17,9 @@ def step_to_movie_timestamp(step_seconds):
 
 
 def create_clips(video_path, output_folder, interval_seconds, clip_length):
+    # The output folder for the clips.
+    output_folder = os.path.join(output_folder, 'clips')
+
     if not os.path.exists(video_path):
         raise ClipError(f'The specified video file does not exist.')
 
@@ -30,9 +33,10 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
         raise ClipError(f'The interval ({interval_seconds}s) may not be longer than the video ({duration}s).')
 
     number_steps = math.trunc(duration / interval_seconds)
-    output_clip_names = 'clips.txt'
-    output_file_path = f'{output_folder}/{output_clip_names}'
-    clip_file = open(output_file_path, 'w')
+    txt_file_path = f'{output_folder}/clips.txt'
+    # Create the file.
+    open(txt_file_path, 'w').close()
+
     line()
     print(f'Creating a {clip_length} second clip every {interval_seconds} seconds from {video_path}...')
     line()
@@ -40,8 +44,9 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
     try:
         for step in range(1, number_steps):
             clip_name = f'clip{step}.mkv'
-            clip_file.write(f'file \'{clip_name}\'\n')
-            output_filename = os.path.join(output_folder, clip_name)
+            with open(txt_file_path, 'a') as f:
+                f.write(f"file '{clip_name}'\n")
+            clip_output_path = os.path.join(output_folder, clip_name)
             clip_offset = step_to_movie_timestamp(step * interval_seconds)
             print(f'Creating clip {step} which starts at {clip_offset}...')
             subprocess_cut_args = [
@@ -49,13 +54,14 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
                 "-ss", clip_offset, "-i", video_path,
                 "-map", "0:V", "-t", clip_length,
                 "-c:v", "libx264", "-crf", "0", "-preset", "ultrafast",
-                output_filename
+                clip_output_path
             ]
             subprocess.run(subprocess_cut_args)
-    finally:
-        clip_file.close()
-
-    return output_file_path
+    except Exception as error:
+        print('An error occurred while trying to create the clips.')
+        exit_program(error)
+    else:
+        return txt_file_path
 
 
 def concatenate_clips(clips_file_path, output_folder, extension, interval_seconds, clip_length):
@@ -63,7 +69,7 @@ def concatenate_clips(clips_file_path, output_folder, extension, interval_second
         raise ConcatenateError(f'Clips file does not exist.')
 
     overview_filename = f'{clip_length}-{interval_seconds} (ClipLength-IntervalSeconds).{extension}'
-    concatenated_filepath = f'{output_folder}/../{overview_filename}'
+    concatenated_filepath = os.path.join(output_folder, overview_filename)
 
     subprocess_concatenate_args = [
         "ffmpeg", "-loglevel", "warning", "-stats", "-y",
@@ -74,7 +80,7 @@ def concatenate_clips(clips_file_path, output_folder, extension, interval_second
     print('Concatenating the clips to create the overview video...')
     result = subprocess.run(subprocess_concatenate_args)
     print('Done!')
-    shutil.rmtree(f'{output_folder}')
+    shutil.rmtree(os.path.join(output_folder, 'clips'))
     print('The clips have been deleted as they are no longer needed.')
 
     if result.returncode == 0:
