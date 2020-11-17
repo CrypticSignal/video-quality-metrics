@@ -76,24 +76,8 @@ def main():
                         help='The path of the transcoded video (only applicable when using the -ntm mode).')
 
     args = parser.parse_args()
-
-    original_video_path = args.original_video_path
-    decimal_places = args.decimal_places
-    clip_interval = args.interval
-
-    if ',' in original_video_path:
-        new_filename = original_video_path.replace(',', '-')
-        os.rename(original_video_path, new_filename)
-        args.original_video_path = new_filename
-        original_video_path = args.original_video_path
-
-    filename = original_video_path.split('/')[-1]
-    output_ext = os.path.splitext(original_video_path)[-1][1:]
-
-    # The M4V container does not support the H.265 codec.
-    if output_ext == 'm4v' and args.video_encoder == 'x265':
-        output_ext = 'mp4' 
-
+    # nothing needs to happen unless the arguments are validated and have no
+    # errors
     args_validator = ArgumentsValidator()
     validation_result, validation_errors = args_validator.validate(args)
 
@@ -101,6 +85,17 @@ def main():
         for error in validation_errors:
             print(f'Error: {error}')
         exit_program('Argument validation failed.')
+
+    # set vars
+    decimal_places = args.decimal_places
+    clip_interval = args.interval
+    original_video_path = args.original_video_path
+    filename = original_video_path.split('/')[-1]
+    output_ext = os.path.splitext(original_video_path)[-1][1:]
+
+    # The M4V container does not support the H.265 codec.
+    if output_ext == 'm4v' and args.video_encoder == 'x265':
+        output_ext = 'mp4'
 
     # Use class VideoInfoProvider  to get the framerate, bitrate and duration
     provider = VideoInfoProvider(original_video_path)
