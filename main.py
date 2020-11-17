@@ -77,6 +77,23 @@ def main():
 
     args = parser.parse_args()
 
+    original_video_path = args.original_video_path
+    decimal_places = args.decimal_places
+    clip_interval = args.interval
+
+    if ',' in original_video_path:
+        new_filename = original_video_path.replace(',', '-')
+        os.rename(original_video_path, new_filename)
+        args.original_video_path = new_filename
+        original_video_path = args.original_video_path
+
+    filename = original_video_path.split('/')[-1]
+    output_ext = os.path.splitext(original_video_path)[-1][1:]
+
+    # The M4V container does not support the H.265 codec.
+    if output_ext == 'm4v' and args.video_encoder == 'x265':
+        output_ext = 'mp4' 
+
     args_validator = ArgumentsValidator()
     validation_result, validation_errors = args_validator.validate(args)
 
@@ -85,17 +102,8 @@ def main():
             print(f'Error: {error}')
         exit_program('Argument validation failed.')
 
-    decimal_places = args.decimal_places
-    # The path and filename of the original video.
-    original_video = args.original_video_path
-    filename = original_video.split('/')[-1]
-    # The file extension of the original video.
-    output_ext = os.path.splitext(original_video)[-1][1:]
-	# The value of the --interval argument.
-    clip_interval = args.interval
-
     # Use class VideoInfoProvider  to get the framerate, bitrate and duration
-    provider = VideoInfoProvider(original_video)
+    provider = VideoInfoProvider(original_video_path)
     fps = provider.get_framerate_fraction()
     fps_float = provider.get_framerate_float()
     original_bitrate = provider.get_bitrate()
@@ -126,9 +134,9 @@ def main():
         output_folder = f'({filename})'
         os.makedirs(output_folder, exist_ok=True)
         
-        result, concatenated_video = create_movie_overview(original_video, output_folder, clip_interval, clip_length)
+        result, concatenated_video = create_movie_overview(original_video_path, output_folder, clip_interval, clip_length)
         if result:
-            original_video = concatenated_video
+            original_video_path = concatenated_video
         else:
             exit_program('Something went wrong when trying to create the overview video.')
         
@@ -136,9 +144,6 @@ def main():
     timer = Timer()
 
     if not args.no_transcoding_mode:
-        # The M4V container does not support the H.265 codec.
-        if output_ext == 'm4v' and args.video_encoder == 'x265':
-            output_ext = 'mp4' 
         # args.crf_value is a list when more than one CRF value is specified.
         if is_list(args.crf_value) and len(args.crf_value) > 1:
             print('CRF comparison mode activated.')
@@ -160,7 +165,7 @@ def main():
 
             # The user only wants to transcode the first x seconds of the video.
             if args.encoding_time and clip_interval == 0:
-                original_video = cut_video(filename, args, output_ext, output_folder, comparison_table)
+                original_video_path = cut_video(filename, args, output_ext, output_folder, comparison_table)
 
             # Transcode the video with each CRF value.
             for crf in crf_values:
@@ -168,7 +173,7 @@ def main():
                 graph_filename = f'CRF {crf} at preset {preset}'
 
                 arguments = EncodingArguments()
-                arguments.infile = original_video
+                arguments.infile = str(original_video_path)
                 arguments.encoder = Encoder[video_encoder]
                 arguments.crf = str(crf)
                 arguments.preset = preset
@@ -200,7 +205,7 @@ def main():
                         f.write(f'Chosen preset: {preset_string}\n')
                         f.write(f'Original video bitrate: {original_bitrate}\n')
                     
-                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video, factory)
+                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory)
                 
                     create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
                                             table, output_folder, time_rounded, crf)
@@ -228,7 +233,7 @@ def main():
 
             # The user only wants to transcode the first x seconds of the video.
             if args.encoding_time:
-                original_video = cut_video(filename, args, output_ext, output_folder, comparison_table)
+                original_video_path = cut_video(filename, args, output_ext, output_folder, comparison_table)
 
             # Transcode the video with each preset.
             for preset in chosen_presets:
@@ -236,7 +241,7 @@ def main():
                 graph_filename = f"Preset '{preset}'"
                 
                 arguments = EncodingArguments()
-                arguments.infile = original_video
+                arguments.infile = original_video_path
                 arguments.encoder = Encoder[video_encoder]
                 arguments.crf = crf
                 arguments.preset = preset
@@ -267,7 +272,7 @@ def main():
                         f.write(f'Chosen CRF: {crf}\n')
                         f.write(f'Original video bitrate: {original_bitrate}\n')
 
-                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video, factory)
+                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory)
         
                     create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
                                             table, output_folder, time_rounded, preset)
@@ -289,7 +294,7 @@ def main():
         # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
         json_file_path = f'{output_folder}/QualityMetrics.json'
         # Run libvmaf to get the quality metric(s).
-        run_libvmaf(args.transcoded_video_path, args, json_file_path, fps, original_video, factory)
+        run_libvmaf(args.transcoded_video_path, args, json_file_path, fps, original_video_path, factory)
         transcode_size = os.path.getsize(args.transcoded_video_path) / 1_000_000
         size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
         transcoded_bitrate = provider.get_bitrate(args.transcoded_video_path)
@@ -315,7 +320,7 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     # The reference file will be the cut version of the video.
     # Create the cut version.
     print(f'Cutting the video to a length of {args.encoding_time} seconds...')
-    os.system(f'ffmpeg -loglevel warning -y -i {args.original_video_path} -t {args.encoding_time} '
+    os.system(f'ffmpeg -loglevel warning -y -i {args.original_video_path_path} -t {args.encoding_time} '
               f'-map 0 -c copy "{output_file_path}"')
     print('Done!')
 
@@ -327,7 +332,7 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     return output_file_path
 
 
-def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video, factory):
+def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory):
     vmaf_options = {
         "model_path": "vmaf_v0.6.1.pkl",
         "phone_model": "1" if args.phone_model else "0",
@@ -341,7 +346,7 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
     libvmaf_arguments = LibVmafArguments()
     libvmaf_arguments.infile = transcode_output_path
     libvmaf_arguments.fps = fps
-    libvmaf_arguments.second_infile = original_video
+    libvmaf_arguments.second_infile = original_video_path
     libvmaf_arguments.vmaf_options = vmaf_options
 
     process = factory.create_process(libvmaf_arguments)
