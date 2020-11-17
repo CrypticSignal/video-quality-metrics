@@ -86,11 +86,10 @@ def main():
         exit_program('Argument validation failed.')
 
     decimal_places = args.decimal_places
-    # The path of the original video.
+    # The path and filename of the original video.
     original_video = args.original_video_path
-    # Just the filename.
     filename = original_video.split('/')[-1]
-    # The file extension of the video.
+    # The file extension of the original video.
     output_ext = os.path.splitext(original_video)[-1][1:]
 	# The value of the --interval argument.
     clip_interval = args.interval
@@ -137,6 +136,9 @@ def main():
     timer = Timer()
 
     if not args.no_transcoding_mode:
+        # The M4V container does not support the H.265 codec.
+        if output_ext == 'm4v' and args.video_encoder == 'x265':
+            output_ext = 'mp4' 
         # args.crf_value is a list when more than one CRF value is specified.
         if is_list(args.crf_value) and len(args.crf_value) > 1:
             print('CRF comparison mode activated.')
@@ -276,7 +278,6 @@ def main():
 
     # -ntm argument was specified.
     else:
-        
         line()
         output_folder = f'({filename})'
         os.makedirs(output_folder, exist_ok=True)
