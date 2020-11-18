@@ -104,12 +104,6 @@ def main():
     print(f'Framerate: {fps} ({fps_float}) FPS')
     line()
 
-    if ',' in filename:
-        print('At least one comma was detected in the filename. All commas will be removed '
-              'when naming the output folder.')
-        line()
-        filename = filename.replace(',', '')
-
     # The M4V container does not support the H.265 codec.
     if output_ext == 'm4v' and args.video_encoder == 'x265':
         output_ext = 'mp4' 
@@ -332,6 +326,11 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
 
 
 def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory):
+    characters_to_escape = ["'", ":", ","]
+    for character in characters_to_escape:
+        if character in json_file_path:
+            json_file_path = json_file_path.replace(character, f'\{character}')    
+            
     vmaf_options = {
         "model_path": "vmaf_v0.6.1.pkl",
         "phone_model": "1" if args.phone_model else "0",
