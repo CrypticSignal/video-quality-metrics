@@ -39,8 +39,8 @@ def main():
     # The time interval to use when creating the overview video.
     parser.add_argument('-i', '--interval', type=int, choices=range(1, 600), default=0,
                         help='Create a lossless overview video by grabbing a <cliplength> seconds long segment '
-							  'every <interval> seconds from the original video and use this overview video '
-							  'as the "original" video that the transcodes are compared with.\nExample: -i 30',
+							 'every <interval> seconds from the original video and use this overview video '
+							 'as the "original" video that the transcodes are compared with.\nExample: -i 30',
 						metavar='<an integer between 1 and 600>')
     # The length of each clip.
     parser.add_argument('-cl', '--clip-length', type=int, choices=range(1, 60), default=1,
@@ -50,9 +50,9 @@ def main():
     # Use only the first x seconds of the original video.
     parser.add_argument('-t', '--encoding-time', type=str,
                         help='Create a lossless version of the original video that is just the first x seconds of the '
-                        'video, use the cut version as the reference and for all encodes. '
-                        'You cannot use this option in conjunction with the -i or -cl arguments.'
-                        'Example: -t 60')
+                             'video, use the cut version as the reference and for all encodes. '
+                             'You cannot use this option in conjunction with the -i or -cl arguments.'
+                             'Example: -t 60')
     # Enable phone model?
     parser.add_argument('-pm', '--phone-model', action='store_true', help='Enable VMAF phone model.')
     # Number of decimal places to use for the data.
@@ -77,23 +77,6 @@ def main():
 
     args = parser.parse_args()
 
-    original_video_path = args.original_video_path
-    decimal_places = args.decimal_places
-    clip_interval = args.interval
-
-    if ',' in original_video_path:
-        new_filename = original_video_path.replace(',', '-')
-        os.rename(original_video_path, new_filename)
-        args.original_video_path = new_filename
-        original_video_path = args.original_video_path
-
-    filename = original_video_path.split('/')[-1]
-    output_ext = os.path.splitext(original_video_path)[-1][1:]
-
-    # The M4V container does not support the H.265 codec.
-    if output_ext == 'm4v' and args.video_encoder == 'x265':
-        output_ext = 'mp4' 
-
     args_validator = ArgumentsValidator()
     validation_result, validation_errors = args_validator.validate(args)
 
@@ -101,6 +84,12 @@ def main():
         for error in validation_errors:
             print(f'Error: {error}')
         exit_program('Argument validation failed.')
+
+    original_video_path = args.original_video_path
+    filename = original_video_path.split('/')[-1]
+    output_ext = os.path.splitext(original_video_path)[-1][1:]
+    clips_interval = args.interval
+    decimal_places = args.decimal_places
 
     # Use class VideoInfoProvider  to get the framerate, bitrate and duration
     provider = VideoInfoProvider(original_video_path)
@@ -114,6 +103,16 @@ def main():
     print(f'Bitrate: {original_bitrate}')
     print(f'Framerate: {fps} ({fps_float}) FPS')
     line()
+
+    if ',' in filename:
+        print('At least one comma was detected in the filename. All commas will be removed '
+              'when naming the output folder.')
+        line()
+        filename = filename.replace(',', '')
+
+    # The M4V container does not support the H.265 codec.
+    if output_ext == 'm4v' and args.video_encoder == 'x265':
+        output_ext = 'mp4' 
 
     # Create a PrettyTable object.
     table = PrettyTable()
@@ -129,12 +128,12 @@ def main():
         if args.no_transcoding_mode:
             del table_column_names[0]
 
-    if clip_interval > 0:
+    if clips_interval > 0:
         clip_length = str(args.clip_length)
         output_folder = f'({filename})'
         os.makedirs(output_folder, exist_ok=True)
         
-        result, concatenated_video = create_movie_overview(original_video_path, output_folder, clip_interval, clip_length)
+        result, concatenated_video = create_movie_overview(original_video_path, output_folder, clips_interval, clip_length)
         if result:
             original_video_path = concatenated_video
         else:
@@ -164,7 +163,7 @@ def main():
             table.field_names = table_column_names
 
             # The user only wants to transcode the first x seconds of the video.
-            if args.encoding_time and clip_interval == 0:
+            if args.encoding_time and clips_interval == 0:
                 original_video_path = cut_video(filename, args, output_ext, output_folder, comparison_table)
 
             # Transcode the video with each CRF value.
