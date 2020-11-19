@@ -236,7 +236,7 @@ def main():
                 arguments = EncodingArguments()
                 arguments.infile = original_video_path
                 arguments.encoder = Encoder[video_encoder]
-                arguments.crf = crf
+                arguments.crf = str(crf)
                 arguments.preset = preset
                 arguments.outfile = transcode_output_path
 
