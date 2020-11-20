@@ -1,7 +1,7 @@
 import os
 import sys
 from argparse import ArgumentParser, RawTextHelpFormatter
-
+from pathlib import Path
 from prettytable import PrettyTable
 
 from save_metrics import create_table_plot_metrics, force_decimal_places
@@ -86,8 +86,9 @@ def main():
         exit_program('Argument validation failed.')
 
     original_video_path = args.original_video_path
-    filename = original_video_path.split('/')[-1]
-    output_ext = os.path.splitext(original_video_path)[-1][1:]
+    filename = Path(original_video_path).name
+    # this includes the dot eg '.mp4'
+    output_ext = Path(original_video_path).suffix
     clips_interval = args.interval
     decimal_places = args.decimal_places
 
@@ -105,8 +106,8 @@ def main():
     line()
 
     # The M4V container does not support the H.265 codec.
-    if output_ext == 'm4v' and args.video_encoder == 'x265':
-        output_ext = 'mp4' 
+    if output_ext == '.m4v' and args.video_encoder == 'x265':
+        output_ext = '.mp4'
 
     # Create a PrettyTable object.
     table = PrettyTable()
@@ -162,7 +163,7 @@ def main():
 
             # Transcode the video with each CRF value.
             for crf in crf_values:
-                transcode_output_path = os.path.join(output_folder, f'CRF {crf}.{output_ext}')
+                transcode_output_path = os.path.join(output_folder, f'CRF {crf}{output_ext}')
                 graph_filename = f'CRF {crf} at preset {preset}'
 
                 arguments = EncodingArguments()
@@ -230,7 +231,7 @@ def main():
 
             # Transcode the video with each preset.
             for preset in chosen_presets:
-                transcode_output_path = os.path.join(output_folder, f'{preset}.{output_ext}')
+                transcode_output_path = os.path.join(output_folder, f'{preset}{output_ext}')
                 graph_filename = f"Preset '{preset}'"
                 
                 arguments = EncodingArguments()
@@ -307,7 +308,7 @@ def main():
 
 
 def cut_video(filename, args, output_ext, output_folder, comparison_table):
-    cut_version_filename = f'{os.path.splitext(filename)[0]} [{args.encoding_time}s].{output_ext}'
+    cut_version_filename = f'{Path(filename).stem} [{args.encoding_time}s]{output_ext}'
     # Output path for the cut video.
     output_file_path = os.path.join(output_folder, cut_version_filename)
     # The reference file will be the cut version of the video.

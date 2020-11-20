@@ -1,4 +1,11 @@
-import time, os, math, subprocess, shutil
+import os
+import math
+import subprocess
+import shutil
+import time
+
+from pathlib import Path
+
 from utils import VideoInfoProvider, line, exit_program
 
 
@@ -21,7 +28,7 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
     output_folder = os.path.join(output_folder, 'clips')
 
     if not os.path.exists(video_path):
-        raise ClipError(f'The specified video file does not exist.')
+        raise ClipError('The specified video file does not exist.')
 
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
@@ -68,7 +75,7 @@ def concatenate_clips(txt_file_path, output_folder, extension, interval_seconds,
     if not os.path.exists(txt_file_path):
         raise ConcatenateError(f'{txt_file_path} does not exist.')
 
-    overview_filename = f'{clip_length}-{interval_seconds} (ClipLength-IntervalSeconds).{extension}'
+    overview_filename = f'{clip_length}-{interval_seconds} (ClipLength-IntervalSeconds){extension}'
     concatenated_filepath = os.path.join(output_folder, overview_filename)
 
     subprocess_concatenate_args = [
@@ -88,7 +95,7 @@ def concatenate_clips(txt_file_path, output_folder, extension, interval_seconds,
 
 
 def create_movie_overview(video_path, output_folder, interval_seconds, clip_length):
-    extension = os.path.splitext(video_path)[-1][1:]
+    extension = Path(video_path).suffix
     try:
         txt_file_path = create_clips(video_path, output_folder, interval_seconds, clip_length)
         output_file = concatenate_clips(txt_file_path, output_folder, extension, interval_seconds, clip_length)
@@ -101,6 +108,6 @@ def create_movie_overview(video_path, output_folder, interval_seconds, clip_leng
         exit_program(err.args[0])
 
     if result:
-        print(f'Overview Video: {clip_length}-{interval_seconds} (ClipLength-IntervalSeconds).{extension}')
+        print(f'Overview Video: {clip_length}-{interval_seconds} (ClipLength-IntervalSeconds){extension}')
         line()
         return result, output_file
