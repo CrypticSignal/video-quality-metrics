@@ -327,11 +327,11 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
 
 
 def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory):
-    characters_to_escape = ["'", ":", ","]
+    characters_to_escape = ["'", ":", ",", "[", "]"]
     for character in characters_to_escape:
         if character in json_file_path:
             json_file_path = json_file_path.replace(character, f'\{character}')    
-            
+
     vmaf_options = {
         "model_path": "vmaf_v0.6.1.pkl",
         "phone_model": "1" if args.phone_model else "0",
