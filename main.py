@@ -13,6 +13,9 @@ from arguments_validator import ArgumentsValidator
 
 METRICS_EXPLANATION = 'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n'
 
+# Change this if you want to use a different VMAF model file.
+vmaf_model_file_path = 'vmaf_models/vmaf_v0.6.1.json'
+
 
 def main():
     if len(sys.argv) == 1:
@@ -335,7 +338,7 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
     vmaf_options = {
         "log_fmt": "json",
         "log_path": json_file_path,
-        "model_path": "vmaf_v0.6.1.pkl",
+        "model_path": vmaf_model_file_path,
         "phone_model": "1" if args.phone_model else "0",
         "psnr": "1" if args.calculate_psnr else "0",
         "ssim": "1" if args.calculate_ssim else "0" 
