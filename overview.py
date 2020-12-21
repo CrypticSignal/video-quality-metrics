@@ -40,11 +40,12 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
         raise ClipError(f'The interval ({interval_seconds}s) may not be longer than the video ({duration}s).')
 
     number_steps = math.trunc(duration / interval_seconds)
+
     txt_file_path = f'{output_folder}/clips.txt'
     # Create the file.
     open(txt_file_path, 'w').close()
 
-    line()
+    print('Overview mode activated.')
     print(f'Creating a {clip_length} second clip every {interval_seconds} seconds from {video_path}...')
     line()
 

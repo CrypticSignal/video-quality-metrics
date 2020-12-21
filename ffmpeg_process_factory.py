@@ -102,8 +102,8 @@ class LibVmafArguments(FfmpegArguments):
             [
                 "-r", self._fps,
                 "-i", self.__second_infile,
-                "-lavfi", "[0:v]setpts=PTS-STARTPTS[dist];[1:v]setpts="
-                          "PTS-STARTPTS[ref];[dist][ref]"
+                "-lavfi", "[0:v]setpts=PTS-STARTPTS[dist];"
+                          "[1:v]setpts=PTS-STARTPTS[ref];[dist][ref]"
                           f'libvmaf={self.__vmaf_options}', "-f", "null", "-"
             ]
 
@@ -111,7 +111,7 @@ class LibVmafArguments(FfmpegArguments):
 class FfmpegProcessFactory:
     def create_process(self, arguments):
         __process_base_arguments = [
-            "ffmpeg", "-loglevel", "warning", "-stats", "-y",
+            "ffmpeg", "-loglevel", "warning", "-stats", "-y"
         ]
 
         process = FfmpegProcess(
@@ -123,6 +123,9 @@ class FfmpegProcessFactory:
 class FfmpegProcess:
     def __init__(self, arguments):
         self.__arguments = arguments
+        # For debugging (optional)
+        #from utils import subprocess_printer
+        #subprocess_printer('The following command will be run', self.__arguments)
 
     def run(self):
         subprocess.run(self.__arguments)

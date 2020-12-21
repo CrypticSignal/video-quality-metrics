@@ -1,5 +1,4 @@
 import sys
-import math
 from time import time
 
 from ffmpeg import probe
@@ -7,6 +6,12 @@ from ffmpeg import probe
 
 def line():
     print('-----------------------------------------------------------------------------------------------------------')
+
+
+def subprocess_printer(message, arguments_list):
+    line()
+    print(f'[DEBUG] {message}:\n{" ".join(arguments_list)}')
+    line()
 
 
 def is_list(argument_object):
@@ -30,10 +35,10 @@ class VideoInfoProvider:
 
     def get_bitrate(self, video_path=None):
         if video_path:
-            bitrate = probe(video_path)['format']['bit_rate']
+            bitrate = probe(video_path)['format']['bit_rate'] 
         else:
             bitrate = probe(self._video_path)['format']['bit_rate']
-        return f'{math.trunc(int(bitrate) / 1000)} kbit/s'
+        return f'{round(int(bitrate) / 1_000_000, 3)} Mbps'
 
     def get_framerate_fraction(self):
         r_frame_rate = [stream for stream in probe(self._video_path)['streams']

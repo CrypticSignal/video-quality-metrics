@@ -175,12 +175,12 @@ def main():
 
                 process = factory.create_process(arguments)
 
-                line()
                 print(f'Transcoding the video with CRF {crf}...')
                 timer.start()
                 process.run()
                 time_rounded = timer.end(decimal_places)
                 print('Done!')
+                line()
                 
                 transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
                 transcoded_bitrate = provider.get_bitrate(transcode_output_path)
@@ -333,12 +333,12 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
             json_file_path = json_file_path.replace(character, f'\{character}')    
 
     vmaf_options = {
+        "log_fmt": "json",
+        "log_path": json_file_path,
         "model_path": "vmaf_v0.6.1.pkl",
         "phone_model": "1" if args.phone_model else "0",
         "psnr": "1" if args.calculate_psnr else "0",
-        "ssim": "1" if args.calculate_ssim else "0",
-        "log_path": json_file_path,
-        "log_fmt": "json"
+        "ssim": "1" if args.calculate_ssim else "0" 
     }
     vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
 
@@ -362,7 +362,6 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
     print(f'Computing the VMAF{end_of_computing_message}...')
     process.run()
     print('Done!')
-
 
 if __name__ == "__main__":
     main()
