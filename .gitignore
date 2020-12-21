@@ -8,6 +8,7 @@
 *.MTS
 *.wmv
 # Miscellaneous
+__pycache__/
 *.bat
 *.code-workspace
 *.exe
