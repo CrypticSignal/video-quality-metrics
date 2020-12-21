@@ -118,15 +118,15 @@ Original video bitrate: 12339 kbit/s
 *A 60 seconds long video was transcoded. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast ultrafast -ssim -psnr`*
 
 # About the model files:
-As you may have noticed, there are two types of model files; original and 4K versions. There is also the phone model that can be enabled by using the `-pm` argument.
+As you may have noticed, two model files have been provided. `vmaf_v0.6.1.json` and `vmaf_4k_v0.6.1.json`. There is also the phone model that can be enabled by using the `-pm` argument.
 
-This program uses the original model by default, which is "based on the assumption that the viewers sit in front of a 1080p display in a living room-like environment with the viewing distance of 3x the screen height (3H)".
+This program uses the `vmaf_v0.6.1.json` model by default, which is "based on the assumption that the viewers sit in front of a 1080p display in a living room-like environment. All the subjective data were collected in such a way that the distorted videos (with native resolutions of 1080p, 720p, 480p etc.) get rescaled to 1080 resolution and shown on the 1080p display with a viewing distance of three times the screen height (3H)."
 
 The phone model was created because the original model "did not accurately reflect how a viewer perceives quality on a phone. In particular, due to smaller screen size and longer viewing distance relative to the screen height (>3H), viewers perceive high-quality videos with smaller noticeable differences. For example, on a mobile phone, there is less distinction between 720p and 1080p videos compared to other devices. With this in mind, we trained and released a VMAF phone model."
 
-The 4K model "predicts the subjective quality of video displayed on a 4K TV and viewed from a distance of 1.5H. A viewing distance of 1.5H is the maximum distance for the average viewer to appreciate the sharpness of 4K content. The 4K model is similar to the default model in the sense that both models capture quality at the critical angular frequency of 1/60 degree/pixel. However, the 4K model assumes a wider viewing angle, which affects the foveal vs peripheral vision that the subject uses."
+The 4K model (`vmaf_4k_v0.6.1.json`) "predicts the subjective quality of video displayed on a 4K TV and viewed from a distance of 1.5H. A viewing distance of 1.5H is the maximum distance for the average viewer to appreciate the sharpness of 4K content. The 4K model is similar to the default model in the sense that both models capture quality at the critical angular frequency of 1/60 degree/pixel. However, the 4K model assumes a wider viewing angle, which affects the foveal vs peripheral vision that the subject uses."
 
 The source of the quoted text, plus more information about VMAF (such as the correct way to calculate VMAF), can be found [here](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12).
 
 - If you are transcoding for content that will be viewed on a mobile phone, you should add the `-pm` argument when using this command line program.
-- If you are transcoding for content that will be viewed on a 4K display, replace `"model_path": "vmaf_v0.6.1.pkl",` in the `run_libvmaf` function in main.py with `"model_path": "vmaf_4k_v0.6.1.pkl"`.
+- If you are transcoding for content that will be viewed on a 4K display, replace the value of the `vmaf_model_file_path` variable in main.py with `vmaf_models/vmaf_4k_v0.6.1.json`.
