@@ -11,7 +11,4 @@
 *.bat
 *.code-workspace
 *.exe
-*.json
 *.txt
-# Ignore all folders
-*/*
