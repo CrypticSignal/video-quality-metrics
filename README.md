@@ -51,7 +51,7 @@ The following data is presented in a table and saved as a file named **Table.txt
 # Requirements:
 - Python **3.6+**
 - `pip install -r requirements.txt`
-- FFmpeg and FFprobe installed and in your PATH. Your build of FFmpeg must have the libvmaf library (unless you don't care about the quality metrics and you specify `-dqm` when running this program). You can check whether your build of FFmpeg has the libvmaf library by entering `ffmpeg -buildconf` in the terminal and checking if `--enable-libvmaf` is in the configuration list. If you're on Windows, you can download a build of FFmpeg which has the libvmaf library [here](https://www.gyan.dev/ffmpeg/builds/) link (FFprobe is included).
+- FFmpeg and FFprobe installed and in your PATH. Your build of FFmpeg must have the libvmaf library (unless you don't care about the quality metrics and you specify `-dqm` when running this program). You can check whether your build of FFmpeg has the libvmaf library by entering `ffmpeg -buildconf` in the terminal and checking if `--enable-libvmaf` is in the configuration list. If you're on Windows, you can download a build of FFmpeg which has the libvmaf library [here](https://www.gyan.dev/ffmpeg/builds/) (FFprobe is included).
 
 # Usage:
 ```
