@@ -177,7 +177,7 @@ def main():
                 arguments.outfile = transcode_output_path
 
                 process = factory.create_process(arguments)
-
+                    
                 print(f'Transcoding the video with CRF {crf}...')
                 timer.start()
                 process.run()
