@@ -8,8 +8,11 @@
 *.MTS
 *.wmv
 # Miscellaneous
-__pycache__/
 *.bat
 *.code-workspace
 *.exe
 *.txt
+# Folders
+__pycache__/
+venv/
+.vscode/
