@@ -16,3 +16,5 @@
 __pycache__/
 venv/
 .vscode/
+# Ignore any output folders (e.g. "(video.mp4)") produced by VQM
+*)
