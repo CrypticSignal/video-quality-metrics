@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from utils import force_decimal_places
 
 
-def create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
+def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, graph_filename,
 						  table, output_folder, time_rounded, crf_or_preset=None):
 	# Make a list containing the frame numbers from the JSON file.
 	with open(json_file_path, 'r') as f:
@@ -58,6 +58,13 @@ def create_table_plot_metrics(json_file_path, args, decimal_places, data_for_cur
 		# Add the PSNR values to the table.
 		data_for_current_row.append(psnr)
 
+	plt.suptitle(graph_filename)
+	plt.xlabel('Frame Number')
+	plt.ylabel('Value of Quality Metric')
+	plt.legend(loc='lower right')
+	plt.savefig(os.path.join(output_folder, graph_filename))
+	plt.clf()
+
 	if not args.no_transcoding_mode:
 		if isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 			data_for_current_row.insert(0, crf_or_preset)
@@ -66,16 +73,11 @@ def create_table_plot_metrics(json_file_path, args, decimal_places, data_for_cur
 		else:
 			data_for_current_row.insert(0, crf_or_preset)
 			data_for_current_row.insert(1, time_rounded)
-		
-		table.add_row(data_for_current_row)
 	
-	else:
-		print(data_for_current_row)
-		table.add_row(data_for_current_row)
+	table.add_row(data_for_current_row)
 
-	plt.suptitle(graph_filename)
-	plt.xlabel('Frame Number')
-	plt.ylabel('Value of Quality Metric')
-	plt.legend(loc='lower right')
-	plt.savefig(os.path.join(output_folder, graph_filename))
-	plt.clf()
+	# Write the table to the Table.txt file.
+	with open(comparison_table, 'w') as f:
+		f.write(table.get_string(title='PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean'))
+
+	print(f'The following data has been added to the table:\n{data_for_current_row}')
