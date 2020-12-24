@@ -20,7 +20,7 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 	min_vmaf = force_decimal_places(min(vmaf_scores), decimal_places)
 	vmaf_std = force_decimal_places(np.std(vmaf_scores), decimal_places) # Standard deviation.
 
-	print(f'VMAF score: {mean_vmaf}\nStandard Deviation: {vmaf_std}')
+	print(f'VMAF score: {mean_vmaf}, Standard Deviation: {vmaf_std}')
 
 	# Data for the table.
 	vmaf = f'{min_vmaf} | {vmaf_std} | {mean_vmaf}'

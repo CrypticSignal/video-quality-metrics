@@ -11,7 +11,6 @@ from ffmpeg_process_factory import Encoder, EncodingArguments, \
                                    LibVmafArguments, FfmpegProcessFactory
 from arguments_validator import ArgumentsValidator
 
-METRICS_EXPLANATION = 'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean\n'
 
 # Change this if you want to use a different VMAF model file.
 vmaf_model_file_path = 'vmaf_models/vmaf_v0.6.1.json'
@@ -88,12 +87,17 @@ def main():
             print(f'Error: {error}')
         exit_program('Argument validation failed.')
 
+    decimal_places = args.decimal_places
     original_video_path = args.original_video_path
     filename = Path(original_video_path).name
+    output_folder = f'({filename})'
+    os.makedirs(output_folder, exist_ok=True)
+    
     # this includes the dot eg '.mp4'
     output_ext = Path(original_video_path).suffix
-    clips_interval = args.interval
-    decimal_places = args.decimal_places
+    # The M4V container does not support the H.265 codec.
+    if output_ext == '.m4v' and args.video_encoder == 'x265':
+        output_ext = '.mp4'
 
     # Use class VideoInfoProvider  to get the framerate, bitrate and duration
     provider = VideoInfoProvider(original_video_path)
@@ -108,12 +112,8 @@ def main():
     print(f'Framerate: {fps} ({fps_float}) FPS')
     line()
 
-    # The M4V container does not support the H.265 codec.
-    if output_ext == '.m4v' and args.video_encoder == 'x265':
-        output_ext = '.mp4'
-
-    # Create a PrettyTable object.
     table = PrettyTable()
+    table.title = 'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean'
     # Base template for the column names.
     table_column_names = ['Encoding Time (s)', 'Size', 'Bitrate']
 
@@ -126,12 +126,9 @@ def main():
         if args.no_transcoding_mode:
             del table_column_names[0]
 
-    if clips_interval > 0:
+    if args.interval > 0:
         clip_length = str(args.clip_length)
-        output_folder = f'({filename})'
-        os.makedirs(output_folder, exist_ok=True)
-        
-        result, concatenated_video = create_movie_overview(original_video_path, output_folder, clips_interval, clip_length)
+        result, concatenated_video = create_movie_overview(original_video_path, output_folder, args.interval, clip_length)
         if result:
             original_video_path = concatenated_video
         else:
@@ -161,7 +158,7 @@ def main():
             table.field_names = table_column_names
 
             # The user only wants to transcode the first x seconds of the video.
-            if args.encoding_time and clips_interval == 0:
+            if args.encoding_time and args.interval == 0:
                 original_video_path = cut_video(filename, args, output_ext, output_folder, comparison_table)
 
             # Transcode the video with each CRF value.
@@ -183,7 +180,6 @@ def main():
                 process.run()
                 time_rounded = timer.end(decimal_places)
                 print('Done!')
-                line()
                 
                 transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
                 transcoded_bitrate = provider.get_bitrate(transcode_output_path)
@@ -195,16 +191,10 @@ def main():
                     # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with
                     # slashes.
                     json_file_path = f'{output_folder}/Raw JSON Data/CRF {crf}.json'
-                    preset_string = ','.join(args.preset)
-                    # The first line of Table.txt:
-                    with open(comparison_table, 'w') as f:
-                        f.write(METRICS_EXPLANATION)
-                        f.write(f'Chosen preset: {preset_string}\n')
-                        f.write(f'Original video bitrate: {original_bitrate}\n')
-                    
+
                     run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory)
                 
-                    create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
+                    create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, graph_filename,
                                             table, output_folder, time_rounded, crf)
 
                 # --disable-quality-metrics argument specified
@@ -227,6 +217,7 @@ def main():
             table_column_names.insert(0, 'Preset')
             # Set the names of the columns
             table.field_names = table_column_names
+            
 
             # The user only wants to transcode the first x seconds of the video.
             if args.encoding_time:
@@ -263,15 +254,10 @@ def main():
                     # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with
                     # slashes.
                     json_file_path = f'{output_folder}/Raw JSON Data/{preset}.json'
-                    # The first line of Table.txt:
-                    with open(comparison_table, 'w') as f:
-                        f.write(METRICS_EXPLANATION)
-                        f.write(f'Chosen CRF: {crf}\n')
-                        f.write(f'Original video bitrate: {original_bitrate}\n')
-
+   
                     run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory)
         
-                    create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
+                    create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, graph_filename,
                                             table, output_folder, time_rounded, preset)
 
                 # --disable-quality-metrics argument specified.
@@ -284,28 +270,22 @@ def main():
         output_folder = f'({filename})'
         os.makedirs(output_folder, exist_ok=True)
         comparison_table = os.path.join(output_folder, 'Table.txt')
-        with open(comparison_table, 'w') as f:
-            f.write(METRICS_EXPLANATION)
-            f.write(f'Original video bitrate: {original_bitrate}\n')
         table.field_names = table_column_names
         # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
         json_file_path = f'{output_folder}/QualityMetrics.json'
         # Run libvmaf to get the quality metric(s).
         run_libvmaf(args.transcoded_video_path, args, json_file_path, fps, original_video_path, factory)
+
         transcode_size = os.path.getsize(args.transcoded_video_path) / 1_000_000
         size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
         transcoded_bitrate = provider.get_bitrate(args.transcoded_video_path)
         data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
-        print(data_for_current_row)
+     
         graph_filename = 'The variation of the quality of the transcoded video throughout the video'
         # Create the table and plot the metrics if -dqm was not specified.
         create_table_plot_metrics(json_file_path, args, decimal_places, data_for_current_row, graph_filename,
                                             table, output_folder, time_rounded=None, crf_or_preset=None)
 
-    # Write the table to the Table.txt file.
-    with open(comparison_table, 'a') as f:
-        f.write(table.get_string())
-    
     line()
     print(f'All done! Check out the ({filename}) folder.')
 
@@ -364,7 +344,7 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
 
     print(f'Computing the VMAF{end_of_computing_message}...')
     process.run()
-    print('Done!')
+
 
 if __name__ == "__main__":
     main()
