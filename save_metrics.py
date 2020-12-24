@@ -16,8 +16,8 @@ def create_table_plot_metrics(json_file_path, args, decimal_places, data_for_cur
 	
 	# Grab the VMAF data from the JSON file.
 	vmaf_scores = [frame['metrics']['vmaf'] for frame in file_contents['frames']]
-	mean_vmaf = force_decimal_places(file_contents['pooled_metrics']['vmaf']['mean'], decimal_places)
-	min_vmaf = force_decimal_places(file_contents['pooled_metrics']['vmaf']['min'], decimal_places)
+	mean_vmaf = force_decimal_places(np.mean(vmaf_scores), decimal_places)
+	min_vmaf = force_decimal_places(min(vmaf_scores), decimal_places)
 	vmaf_std = force_decimal_places(np.std(vmaf_scores), decimal_places) # Standard deviation.
 
 	print(f'VMAF score: {mean_vmaf}\nStandard Deviation: {vmaf_std}')
