@@ -51,13 +51,13 @@ The following data is presented in a table and saved as a file named **Table.txt
 # Requirements:
 - Python **3.6+**
 - `pip install -r requirements.txt`
-- FFmpeg and FFprobe installed and in your PATH. Your build of FFmpeg must have the libvmaf library (unless you don't care about the quality metrics and you specify `-dqm` when running this program). You can check whether your build of FFmpeg has the libvmaf library by entering `ffmpeg -buildconf` in the terminal and checking if `--enable-libvmaf` is in the configuration list. If you're on Windows, you can download a build of FFmpeg which has the libvmaf library [here](https://www.gyan.dev/ffmpeg/builds/) (FFprobe is included).
+- FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have the libvmaf library. You can check whether your build of FFmpeg has the libvmaf library by entering `ffmpeg -buildconf` in the terminal and checking if `--enable-libvmaf` is in the configuration list. If you're on Windows, you can download a build of FFmpeg which has the libvmaf library [here](https://www.gyan.dev/ffmpeg/builds/) (FFprobe is included).
 
 # Usage:
 ```
 usage: main.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]]
                [-p PRESET(s) [PRESET(s ...]] [-i <an integer between 1 and 600>] [-cl <an integer between 1 and 60>]
-               [-t ENCODING_TIME] [-pm] [-dp DECIMAL_PLACES] [-ssim] [-psnr] [-dqm] [-ntm]
+               [-t ENCODING_TIME] [-pm] [-dp DECIMAL_PLACES] [-ssim] [-psnr] [-ntm]
                [-tvp TRANSCODED_VIDEO_PATH]
                           
 Available arguments:
@@ -88,8 +88,6 @@ Available arguments:
                         Calculate SSIM in addition to VMAF.
   -psnr, --calculate-psnr
                         Calculate PSNR in addition to VMAF.
-  -dqm, --disable-quality-metrics
-                        Disable calculation of PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).
   -ntm, --no-transcoding-mode
                         Use this mode if you've already transcoded a video and would like its VMAF and (optionally) the SSIM and PSNR to be calculated.
                         Example: -ntm -tvp transcoded.mp4 -ovp original.mp4 -ssim -psnr

@@ -62,12 +62,8 @@ def main():
                                                                    'in the table (default: 2).\nExample: -dp 3')
     # Calculate SSIM?
     parser.add_argument('-ssim', '--calculate-ssim', action='store_true', help='Calculate SSIM in addition to VMAF.')
-    # Calculate psnr?
+    # Calculate PSNR?
     parser.add_argument('-psnr', '--calculate-psnr', action='store_true', help='Calculate PSNR in addition to VMAF.')
-    # Disable quality calculation?
-    parser.add_argument('-dqm', '--disable-quality-metrics', action='store_true',
-                        help='Disable calculation of '
-                             'PSNR, SSIM and VMAF; only show encoding time and filesize (improves completion time).')
     # No transcoding mode.
     parser.add_argument('-ntm', '--no-transcoding-mode', action='store_true',
                         help='Use this mode if you\'ve already transcoded a video and would like its VMAF and '
@@ -106,6 +102,8 @@ def main():
     original_bitrate = provider.get_bitrate()
 
     line()
+    print('Video Quality Metrics\nGitHub.com/BassThatHertz/video-quality-metrics')
+    line()
     print('Here\'s some information about the original video:')
     print(f'Filename: {filename}')
     print(f'Bitrate: {original_bitrate}')
@@ -113,18 +111,14 @@ def main():
     line()
 
     table = PrettyTable()
-    table.title = 'PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean'
-    # Base template for the column names.
-    table_column_names = ['Encoding Time (s)', 'Size', 'Bitrate']
+    table_column_names = ['Encoding Time (s)', 'Size', 'Bitrate', 'VMAF']
 
-    if not args.disable_quality_metrics:
-        table_column_names.append('VMAF')
-        if args.calculate_ssim:
-            table_column_names.append('SSIM')
-        if args.calculate_psnr:
-            table_column_names.append('PSNR')
-        if args.no_transcoding_mode:
-            del table_column_names[0]
+    if args.calculate_ssim:
+        table_column_names.append('SSIM')
+    if args.calculate_psnr:
+        table_column_names.append('PSNR')
+    if args.no_transcoding_mode:
+        del table_column_names[0]
 
     if args.interval > 0:
         clip_length = str(args.clip_length)
@@ -185,21 +179,16 @@ def main():
                 transcoded_bitrate = provider.get_bitrate(transcode_output_path)
                 size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
                 data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
+              
+                os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
+                # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with
+                # slashes.
+                json_file_path = f'{output_folder}/Raw JSON Data/CRF {crf}.json'
 
-                if not args.disable_quality_metrics:
-                    os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
-                    # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with
-                    # slashes.
-                    json_file_path = f'{output_folder}/Raw JSON Data/CRF {crf}.json'
-
-                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory)
-                
-                    create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, graph_filename,
-                                            table, output_folder, time_rounded, crf)
-
-                # --disable-quality-metrics argument specified
-                else:
-                    table.add_row([crf, f'{time_rounded}', f'{size_rounded} MB', transcoded_bitrate])
+                run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory)
+            
+                create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, graph_filename,
+                                        table, output_folder, time_rounded, crf)
 
         # args.preset is a list when more than one preset is specified.
         elif is_list(args.preset):
@@ -217,7 +206,6 @@ def main():
             table_column_names.insert(0, 'Preset')
             # Set the names of the columns
             table.field_names = table_column_names
-            
 
             # The user only wants to transcode the first x seconds of the video.
             if args.encoding_time:
@@ -248,21 +236,17 @@ def main():
                 transcoded_bitrate = provider.get_bitrate(transcode_output_path)
                 size_rounded = force_decimal_places(round(transcode_size, decimal_places), decimal_places)
                 data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
+           
+                os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
+                # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with
+                # slashes.
+                json_file_path = f'{output_folder}/Raw JSON Data/{preset}.json'
 
-                if not args.disable_quality_metrics:
-                    os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
-                    # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with
-                    # slashes.
-                    json_file_path = f'{output_folder}/Raw JSON Data/{preset}.json'
-   
-                    run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory)
-        
-                    create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, graph_filename,
-                                            table, output_folder, time_rounded, preset)
+                run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory)
 
-                # --disable-quality-metrics argument specified.
-                else:
-                    table.add_row([preset, f'{time_rounded}', f'{size_rounded} MB', transcoded_bitrate])
+                create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, graph_filename,
+                                        table, output_folder, time_rounded, preset)
+
 
     # -ntm argument was specified.
     else:
@@ -304,7 +288,7 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
 
     with open(comparison_table, 'w') as f:
-        f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.\n{METRICS_EXPLANATION}')
+        f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.')
 
     return output_file_path
 
