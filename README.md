@@ -98,7 +98,7 @@ Available arguments:
 ```
 
 # Example Table:
-The table is saved as a file named **Table.txt**. Here's an example of the table that is created when opting to compare presets:
+This program creates a file named `Table.txt`. Here's an example of what that file will contain when opting to compare presets:
 ```
 +-------------------------------------------------------------------------------+
 |   PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean    |
@@ -112,6 +112,9 @@ The table is saved as a file named **Table.txt**. Here's an example of the table
 |  veryfast |        5.89       | 22.53 MB | 2.993 Mbps  | 84.33 | 4.00 | 95.17 |
 | superfast |        3.96       | 39.77 MB | 5.282 Mbps  | 88.55 | 3.19 | 96.72 |
 +-----------+-------------------+----------+-------------+----------------------+
+File Transcoded: aqp60.mkv
+Bitrate: 12.339 Mbps
+CRF value used for the transcode(s): 23
 ```
 *A 60 seconds long video was transcoded. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast ultrafast -ssim -psnr`*
 
