@@ -6,8 +6,9 @@ import matplotlib.pyplot as plt
 from utils import force_decimal_places
 
 
-def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, graph_filename,
-						  table, output_folder, time_rounded, crf_or_preset=None):
+def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places,
+                              data_for_current_row, graph_filename, table, output_folder, time_rounded,
+							  crf_or_preset=None):
 	# Make a list containing the frame numbers from the JSON file.
 	with open(json_file_path, 'r') as f:
 		file_contents = json.load(f)

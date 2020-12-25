@@ -52,9 +52,9 @@ The following data is presented in a table and saved as a file named **Table.txt
 1. Python **3.6+**
 2. `pip install -r requirements.txt`
 3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.0.0 of the libvmaf filter.
-- If you're on Windows, get the latest build of FFmpeg [here](https://www.gyan.dev/ffmpeg/builds/) (FFprobe is included) as it has for the libvmaf filter (the `git essentials` build will suffice).
+- If you're on Windows, get the latest build of FFmpeg [here](https://www.gyan.dev/ffmpeg/builds/) (FFprobe is included) as it has support for the libvmaf filter (the `git essentials` build will suffice).
 - If you're on macOS 64-bit, simply download the FFmpeg and FFprobe **snapshot** builds from [here](https://evermeet.cx/ffmpeg/) and you're good to go. Be sure to download the snapshot builds rather than the release builds.
-- If you want to compile FFmpeg yourself, [here](https://ottverse.com/vmaf-ffmpeg-ubuntu-compilation-installation-usage-guide/) are instructions on how to compile FFmpeg with support for the libvmaf filter (make sure you download v2.0.0 rather than v1.5.2). 
+- If you want to compile FFmpeg yourself, [here](https://github.com/yash1994/Build-FFmpeg-with-libvmaf) are instructions on how to compile FFmpeg (on Ubuntu 20.04) with support for the libvmaf filter (make sure you download v2.0.0 rather than v1.5.2). 
 # Usage:
 ```
 usage: main.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]]
@@ -100,20 +100,18 @@ Available arguments:
 # Example Table:
 The table is saved as a file named **Table.txt**. Here's an example of the table that is created when opting to compare presets:
 ```
-PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean
-Chosen CRF: 23
-Original video bitrate: 12339 kbit/s
-+-----------+-------------------+----------+-------------+----------------------+--------------------+----------------------+
-|   Preset  | Encoding Time (s) |   Size   |   Bitrate   |         VMAF         |        SSIM        |         PSNR         |
-+-----------+-------------------+----------+-------------+----------------------+--------------------+----------------------+
-|    slow   |       20.64       | 25.44 MB | 3379 kbit/s | 88.79 | 2.56 | 97.58 | 0.99 | 0.00 | 0.99 | 38.10 | 1.66 | 42.89 |
-|   medium  |       12.96       | 26.04 MB | 3458 kbit/s | 88.77 | 2.55 | 97.58 | 0.99 | 0.00 | 0.99 | 38.11 | 1.70 | 42.98 |
-|    fast   |       11.50       | 27.65 MB | 3672 kbit/s | 88.66 | 2.71 | 97.38 | 0.99 | 0.00 | 0.99 | 38.14 | 1.72 | 43.07 |
-|   faster  |        9.09       | 25.93 MB | 3444 kbit/s | 88.78 | 2.84 | 97.18 | 0.99 | 0.00 | 0.99 | 38.02 | 1.72 | 43.02 |
-|  veryfast |        5.89       | 22.53 MB | 2993 kbit/s | 84.33 | 4.00 | 95.17 | 0.99 | 0.00 | 0.99 | 37.10 | 1.75 | 42.16 |
-| superfast |        3.96       | 39.77 MB | 5282 kbit/s | 88.55 | 3.19 | 96.72 | 0.99 | 0.00 | 0.99 | 36.54 | 2.05 | 43.03 |
-| ultrafast |        2.50       | 54.20 MB | 7198 kbit/s | 90.04 | 2.10 | 98.26 | 0.99 | 0.00 | 0.99 | 36.35 | 1.92 | 42.17 |
-+-----------+-------------------+----------+-------------+----------------------+--------------------+----------------------+
++-------------------------------------------------------------------------------+
+|   PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean    |
++-----------+-------------------+----------+-------------+----------------------+
+|   Preset  | Encoding Time (s) |   Size   |   Bitrate   |         VMAF         |
++-----------+-------------------+----------+-------------+----------------------+
+|    slow   |       20.64       | 25.44 MB | 3.379 Mbps  | 88.79 | 2.56 | 97.58 |
+|   medium  |       12.96       | 26.04 MB | 3.458 Mbps  | 88.77 | 2.55 | 97.58 |
+|    fast   |       11.50       | 27.65 MB | 3.672 Mbps  | 88.66 | 2.71 | 97.38 |
+|   faster  |        9.09       | 25.93 MB | 3.444 Mbps  | 88.78 | 2.84 | 97.18 |
+|  veryfast |        5.89       | 22.53 MB | 2.993 Mbps  | 84.33 | 4.00 | 95.17 |
+| superfast |        3.96       | 39.77 MB | 5.282 Mbps  | 88.55 | 3.19 | 96.72 |
++-----------+-------------------+----------+-------------+----------------------+
 ```
 *A 60 seconds long video was transcoded. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast ultrafast -ssim -psnr`*
 

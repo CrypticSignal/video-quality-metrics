@@ -187,8 +187,14 @@ def main():
 
                 run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory)
             
-                create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, graph_filename,
-                                        table, output_folder, time_rounded, crf)
+                create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row,
+                                          graph_filename, table, output_folder, time_rounded, crf)
+
+            with open(comparison_table, 'a') as f:
+                f.write(f'\nFile Transcoded: {filename}')
+                f.write(f'\nBitrate: {original_bitrate}')
+                f.write(f'\nPreset used for the transcode(s): {preset}')
+                
 
         # args.preset is a list when more than one preset is specified.
         elif is_list(args.preset):
@@ -244,9 +250,13 @@ def main():
 
                 run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory)
 
-                create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, graph_filename,
-                                        table, output_folder, time_rounded, preset)
+                create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, 
+                                          graph_filename, table, output_folder, time_rounded, preset)
 
+            with open(comparison_table, 'a') as f:
+                f.write(f'\nFile Transcoded: {filename}')
+                f.write(f'\nBitrate: {original_bitrate}')
+                f.write(f'\nCRF value used for the transcode(s): {crf}')
 
     # -ntm argument was specified.
     else:
