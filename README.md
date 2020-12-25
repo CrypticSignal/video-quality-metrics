@@ -49,10 +49,12 @@ The following data is presented in a table and saved as a file named **Table.txt
 - [Optional] Peak Signal-to-Noise-Ratio (PSNR). *You must use the `-psnr` argument.*
 
 # Requirements:
-- Python **3.6+**
-- `pip install -r requirements.txt`
-- FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have the libvmaf library. You can check whether your build of FFmpeg has the libvmaf library by entering `ffmpeg -buildconf` in the terminal and checking if `--enable-libvmaf` is in the configuration list. If you're on Windows, you can download a build of FFmpeg which has the libvmaf library [here](https://www.gyan.dev/ffmpeg/builds/) (FFprobe is included).
-
+1. Python **3.6+**
+2. `pip install -r requirements.txt`
+3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.0.0 of the libvmaf filter.
+- If you're on Windows, get the latest build of FFmpeg [here](https://www.gyan.dev/ffmpeg/builds/) (FFprobe is included) as it has for the libvmaf filter (the `git essentials` build will suffice).
+- If you're on macOS 64-bit, simply download the FFmpeg and FFprobe **snapshot** builds from [here](https://evermeet.cx/ffmpeg/) and you're good to go. Be sure to download the snapshot builds rather than the release builds.
+- If you want to compile FFmpeg yourself, [here](https://ottverse.com/vmaf-ffmpeg-ubuntu-compilation-installation-usage-guide/) are instructions on how to compile FFmpeg with support for the libvmaf filter (make sure you download v2.0.0 rather than v1.5.2). 
 # Usage:
 ```
 usage: main.py [-h] -ovp ORIGINAL_VIDEO_PATH [-e {x264,x265}] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]]
