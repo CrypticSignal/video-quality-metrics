@@ -75,6 +75,11 @@ def main():
 
     args = parser.parse_args()
 
+    if args.calculate_psnr:
+        exit_program('PSNR calculation is currently unavailable due to a change that was made in libvmaf v2.0.0.\n'
+                     'Visit https://github.com/Netflix/vmaf/issues/787 for more information.\n'
+                     'You can re-run your command without the psnr argument, but PSNR values will not be calculated.')
+
     args_validator = ArgumentsValidator()
     validation_result, validation_errors = args_validator.validate(args)
 
@@ -193,7 +198,7 @@ def main():
             with open(comparison_table, 'a') as f:
                 f.write(f'\nFile Transcoded: {filename}')
                 f.write(f'\nBitrate: {original_bitrate}')
-                f.write(f'\nPreset used for the transcode(s): {preset}')
+                f.write(f'\nPreset used for the transcodes: {preset}')
                 
 
         # args.preset is a list when more than one preset is specified.
@@ -256,7 +261,7 @@ def main():
             with open(comparison_table, 'a') as f:
                 f.write(f'\nFile Transcoded: {filename}')
                 f.write(f'\nBitrate: {original_bitrate}')
-                f.write(f'\nCRF value used for the transcode(s): {crf}')
+                f.write(f'\nCRF value used for the transcodes: {crf}')
 
     # -ntm argument was specified.
     else:
