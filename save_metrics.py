@@ -32,7 +32,11 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 	# Add the VMAF values to the table.
 	data_for_current_row.append(vmaf)
 
+	ssim_string = ''
+	psnr_string = ''
+	
 	if args.calculate_ssim:
+		ssim_string = '/SSIM'
 		ssim_scores = [ssim['metrics']['ssim'] for ssim in file_contents['frames']]
 		mean_ssim = force_decimal_places(round(np.mean(ssim_scores), decimal_places), decimal_places)
 		min_ssim = force_decimal_places(round(min(ssim_scores), decimal_places), decimal_places)
@@ -46,6 +50,7 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 		data_for_current_row.append(ssim)
 
 	if args.calculate_psnr:
+		psnr_string = '/PSNR'
 		psnr_scores = [psnr['metrics']['psnr'] for psnr in file_contents['frames']]
 		mean_psnr = force_decimal_places(round(np.mean(psnr_scores), decimal_places), decimal_places)
 		min_psnr = force_decimal_places(round(min(psnr_scores), decimal_places), decimal_places)
@@ -76,8 +81,10 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 	
 	table.add_row(data_for_current_row)
 
+	table_title = f'VMAF{ssim_string}{psnr_string} values are in the format: Min | Standard Deviation | Mean'
+
 	# Write the table to the Table.txt file.
 	with open(comparison_table, 'w') as f:
-		f.write(table.get_string(title='PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean'))
+		f.write(table.get_string(title=table_title))
 
 	print(f'The following data has been added to the table:\n{data_for_current_row}')
