@@ -24,7 +24,7 @@ def force_decimal_places(value, decimal_places):
 
 def exit_program(message):
     line()
-    print(f'[Exiting Program] {message}')
+    print(f'{message}\nThis program will now exit.')
     line()
     sys.exit()
 
