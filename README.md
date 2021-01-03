@@ -104,7 +104,7 @@ Available arguments:
 This program creates a file named `Table.txt`. Here's an example of what that file will contain when opting to compare presets:
 ```
 +-------------------------------------------------------------------------------+
-|   PSNR/SSIM/VMAF values are in the format: Min | Standard Deviation | Mean    |
+|        VMAF values are in the format: Min | Standard Deviation | Mean         |
 +-----------+-------------------+----------+-------------+----------------------+
 |   Preset  | Encoding Time (s) |   Size   |   Bitrate   |         VMAF         |
 +-----------+-------------------+----------+-------------+----------------------+
@@ -117,6 +117,7 @@ This program creates a file named `Table.txt`. Here's an example of what that fi
 +-----------+-------------------+----------+-------------+----------------------+
 File Transcoded: aqp60.mkv
 Bitrate: 12.339 Mbps
+Encoder used for the transcodes: x264
 CRF value used for the transcode(s): 23
 ```
 *A 60 seconds long video was transcoded. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast ultrafast`*
