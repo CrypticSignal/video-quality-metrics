@@ -61,7 +61,7 @@ usage: main.py [-h] -ovp ORIGINAL_VIDEO_PATH [--threads THREADS] [-e {x264,x265,
                [-p PRESET(s) [PRESET(s ...]] [-i <an integer between 1 and 600>] [-cl <an integer between 1 and 60>] [-t ENCODE_LENGTH] [-pm]
                [-dp DECIMAL_PLACES] [-ssim] [-psnr] [-ntm] [-tvp TRANSCODED_VIDEO_PATH]
                           
-optional arguments:
+Available arguments:
   -h, --help            show this help message and exit
   -ovp ORIGINAL_VIDEO_PATH, --original-video-path ORIGINAL_VIDEO_PATH
                         Enter the path of the original video. A relative or absolute path can be specified. If the path contains a space, it must be surrounded in double quotes.
