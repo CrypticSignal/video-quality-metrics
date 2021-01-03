@@ -31,10 +31,14 @@ def main():
     parser.add_argument('--threads', type=str, default=str(os.cpu_count()),
                         help='Set the number of threads to be used when computing VMAF.')
     # Which video encoder to use.
-    parser.add_argument('-e', '--video-encoder', type=str, default='x264', choices=['x264', 'x265'],
+    parser.add_argument('-e', '--video-encoder', type=str, default='x264', choices=['x264', 'x265', 'av1'],
                         help='Specify the encoder to use (default: x264).\nExample: -e x265')
+    # Set AV1 speed/quality ratio
+    parser.add_argument('--cpu-used', type=int, default=1, choices=range(1, 9),
+                        help='Only applicable if choosing the AV1 encoder. Set speed/quality ratio. Value Range: 1-8\n'
+                             'Lower values mean slower encoding but better quality, and vice-versa.')
     # CRF value(s).
-    parser.add_argument('-crf', '--crf-value', type=int, nargs='+', choices=range(0, 51),
+    parser.add_argument('-crf', '--crf-value', type=int, nargs='+', choices=range(0, 52),
                         default=23, help='Specify the CRF value(s) to use.', metavar='CRF_VALUE(s)')
     # Preset(s).
     parser.add_argument('-p', '--preset', type=str, nargs='+', choices=[
@@ -170,6 +174,8 @@ def main():
                 arguments = EncodingArguments()
                 arguments.infile = str(original_video_path)
                 arguments.encoder = Encoder[video_encoder]
+                if video_encoder == 'av1':
+                    arguments.av1_compression = str(args.cpu_used)
                 arguments.crf = str(crf)
                 arguments.preset = preset
                 arguments.outfile = transcode_output_path
@@ -200,6 +206,7 @@ def main():
             with open(comparison_table, 'a') as f:
                 f.write(f'\nFile Transcoded: {filename}')
                 f.write(f'\nBitrate: {original_bitrate}')
+                f.write(f'\nEncoder used for the transcodes: {video_encoder}')
                 f.write(f'\nPreset used for the transcodes: {preset}')
                 
 
@@ -263,6 +270,7 @@ def main():
             with open(comparison_table, 'a') as f:
                 f.write(f'\nFile Transcoded: {filename}')
                 f.write(f'\nBitrate: {original_bitrate}')
+                f.write(f'\nEncoder used for the transcodes: {video_encoder}')
                 f.write(f'\nCRF value used for the transcodes: {crf}')
 
     # -ntm argument was specified.
@@ -298,7 +306,7 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     # The reference file will be the cut version of the video.
     # Create the cut version.
     print(f'Cutting the video to a length of {args.encode_length} seconds...')
-    os.system(f'ffmpeg -loglevel warning -y -i {args.original_video_path_path} -t {args.encode_length} '
+    os.system(f'ffmpeg -loglevel warning -y -i {args.original_video_path} -t {args.encode_length} '
               f'-map 0 -c copy "{output_file_path}"')
     print('Done!')
 

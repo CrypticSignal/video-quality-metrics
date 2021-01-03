@@ -5,6 +5,7 @@ from enum import Enum
 class Encoder(Enum):
     x264 = 1
     x265 = 2
+    av1 = 3
 
 
 class FfmpegArguments:
@@ -46,6 +47,14 @@ class EncodingArguments(FfmpegArguments):
         self.__encoder = value
 
     @property
+    def av1_compression(self):
+        return self.__av1_compression
+
+    @av1_compression.setter
+    def av1_compression(self, value):
+        self.__av1_compression = value
+
+    @property
     def preset(self):
         return self.__preset
 
@@ -70,15 +79,19 @@ class EncodingArguments(FfmpegArguments):
         self.__outfile = value
 
     def get_arguments(self):
-        return super().get_arguments() + \
-            [
+        transcode_arguments = [
                 "-map", "0:V",
-                "-c:v", "lib" + self.__encoder.name,
-                "-crf", self.__crf,
-                "-preset", self.__preset,
-                self.__outfile
-            ]
+                "-c:v", "libaom-av1" if self.__encoder.name == 'av1' else f'lib{self.__encoder.name}',
+                "-crf", self.__crf
+        ]
 
+        if self.__encoder.name == 'av1':
+            transcode_arguments += ['-b:v', '0', '-cpu-used', self.__av1_compression, self.__outfile]
+        else:
+            transcode_arguments += ['-preset', self.__preset, self.__outfile]
+            
+        return super().get_arguments() + transcode_arguments
+    
 
 class LibVmafArguments(FfmpegArguments):
     @property
@@ -124,8 +137,8 @@ class FfmpegProcess:
     def __init__(self, arguments):
         self.__arguments = arguments
         # For debugging (optional)
-        #from utils import subprocess_printer
-        #subprocess_printer('The following command will be run', self.__arguments)
+        from utils import subprocess_printer
+        subprocess_printer('Running the following command', self.__arguments)
 
     def run(self):
         subprocess.run(self.__arguments)
