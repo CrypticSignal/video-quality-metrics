@@ -12,7 +12,7 @@ Graph(s) are created and saved as PNG files which show the variation of the VMAF
 
 You already have a transcoded video (and the original) and you want the quality of the transcoded version to be calculated using the VMAF and (optionally) the SSIM and PSNR metrics. The data is saved in a file named **Table.txt**, and a graph is also created which shows the variation of the VMAF/SSIM/PSNR throughout the video. The graph is saved as a PNG file.
 
-Example: `python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
+Example: `python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim`
 
 **[2]:**
 
@@ -22,13 +22,13 @@ Transcode a video using the x264 or x265 encoder and see the VMAF/SSIM/PSNR valu
 
 You want to know the quality (VMAF/SSIM/PSNR) achieved with certain CRF values. The program will automatically transcode the original video with every CRF value that you specify (using the `-crf` argument) without having to manually start a new transcode with a different CRF value. You must specify the CRF values that you want to compare and (optionally) **one** preset (if you don't want the default preset (medium) to be used).
 
-Example: `python main.py -ovp original.mp4 -crf 18 19 20 -p veryfast -ssim -psnr`
+Example: `python main.py -ovp original.mp4 -crf 18 19 20 -p veryfast -ssim`
 
 **[2] (presets comparison mode):**
 
 You want to know the quality (VMAF/SSIM/PSNR) achieved with certain presets. The program will automatically transcode the original video with every preset that you specify (using the `-p` argument) without having to manually start a new encode with each preset. You must specify the presets that you want to compare and (optionally) **one** CRF value (if you don't want the default CRF value of 23 to be used).
 
-Example: `python main.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
+Example: `python main.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim`
 
 # [2] Overview Mode:
 A recent addition to this program is "overview mode", which can be used by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a 2 seconds long segment every 60 seconds. 
@@ -95,7 +95,7 @@ Available arguments:
                         Calculate PSNR in addition to VMAF.
   -ntm, --no-transcoding-mode
                         Use this mode if you've already transcoded a video and would like its VMAF and (optionally) the SSIM and PSNR to be calculated.
-                        Example: -ntm -tvp transcoded.mp4 -ovp original.mp4 -ssim -psnr
+                        Example: -ntm -tvp transcoded.mp4 -ovp original.mp4 -ssim
   -tvp TRANSCODED_VIDEO_PATH, --transcoded-video-path TRANSCODED_VIDEO_PATH
                         The path of the transcoded video (only applicable when using the -ntm mode).
 ```
