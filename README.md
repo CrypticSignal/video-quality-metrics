@@ -119,7 +119,7 @@ File Transcoded: aqp60.mkv
 Bitrate: 12.339 Mbps
 CRF value used for the transcode(s): 23
 ```
-*A 60 seconds long video was transcoded. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast ultrafast -ssim -psnr`*
+*A 60 seconds long video was transcoded. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast ultrafast`*
 
 # About the model files:
 As you may have noticed, two model files have been provided. `vmaf_v0.6.1.json` and `vmaf_4k_v0.6.1.json`. There is also the phone model that can be enabled by using the `-pm` argument.
