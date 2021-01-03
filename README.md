@@ -31,7 +31,7 @@ You want to know the quality (VMAF/SSIM/PSNR) achieved with certain presets. The
 Example: `python main.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim`
 
 # [2] Overview Mode:
-A recent addition to this program is "overview mode", which can be used by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a 2 seconds long segment every 60 seconds. 
+A recent addition to this program is "overview mode", which can be used with feature [2] by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a 2 seconds long segment every 60 seconds. 
   
 Example: `python main.py -ovp original.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
 
@@ -41,18 +41,18 @@ In the example above, we're grabbing 2 seconds (`--clip-length 2`) every minute 
 
 # What data is shown in the table?
 The following data is presented in a table and saved as a file named **Table.txt**:
-- Time taken to transcode the video (in seconds). *Applicable to [2] only.*
+- Time taken to transcode the video (in seconds). *Applicable to feature [2] only.*
 - Filesize (MB).
 - Filesize compared to the original video (as a percentage).
-- [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) - a perceptual video quality assessment algorithm developed by Netflix.
+- [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) values. VMAF is a perceptual video quality assessment algorithm developed by Netflix.
 - [Optional] Structural Similarity Index (SSIM). *You must use the `-ssim` argument.*
 - [Optional] Peak Signal-to-Noise-Ratio (PSNR). *You must use the `-psnr` argument.*
 
 # Requirements:
 1. Python **3.6+**
 2. `pip install -r requirements.txt`
-3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.0.0 of the libvmaf filter.
-- If you're on Windows, get the latest build of FFmpeg [here](https://www.gyan.dev/ffmpeg/builds/) (FFprobe is included) as it has support for the libvmaf filter (the `git essentials` build will suffice).
+3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.0.0 (or above) of the libvmaf filter, and depending on the encoders that you wish the test, libx264, libx265 and libaom. You can check whether your build of FFmpeg has libvmaf/libx264/libx265/libaom by entering `ffmpeg -buildconf` in the terminal and looking for `--enable-libvmaf`, `--enable-libx265`, `--enable-libx264` and `--enable-libaom` under "configuration:".
+- If you're on Windows, you can get the latest build of FFmpeg [here](https://www.gyan.dev/ffmpeg/builds/) (FFprobe is included) as it has support for the libvmaf filter as well as the aforementioned encoders (the `git essentials` build will suffice).
 - If you're on macOS 64-bit, simply download the FFmpeg and FFprobe **snapshot** builds from [here](https://evermeet.cx/ffmpeg/) and you're good to go. Be sure to download the snapshot builds rather than the release builds.
 - If you want to compile FFmpeg yourself, [here](https://github.com/yash1994/Build-FFmpeg-with-libvmaf) are instructions on how to compile FFmpeg (on Ubuntu 20.04) with support for the libvmaf filter (make sure you download v2.0.0 rather than v1.5.2). 
 # Usage:
@@ -120,7 +120,7 @@ Bitrate: 12.339 Mbps
 Encoder used for the transcodes: x264
 CRF value used for the transcode(s): 23
 ```
-*A 60 seconds long video was transcoded. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast ultrafast`*
+*A 60 seconds long video was transcoded. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast`*
 
 # About the model files:
 As you may have noticed, two model files have been provided. `vmaf_v0.6.1.json` and `vmaf_4k_v0.6.1.json`. There is also the phone model that can be enabled by using the `-pm` argument.
