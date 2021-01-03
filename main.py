@@ -11,7 +11,6 @@ from ffmpeg_process_factory import Encoder, EncodingArguments, \
                                    LibVmafArguments, FfmpegProcessFactory
 from arguments_validator import ArgumentsValidator
 
-
 # Change this if you want to use a different VMAF model file.
 vmaf_model_file_path = 'vmaf_models/vmaf_v0.6.1.json'
 
@@ -28,6 +27,9 @@ def main():
                              'video. A relative or absolute path can be specified. '
                              'If the path contains a space, it must be surrounded in double quotes.\n'
                              'Example: -ovp "C:/Users/H/Desktop/file 1.mp4"')
+    # Set the number of threads to be used when computing VMAF.
+    parser.add_argument('--threads', type=str, default=str(os.cpu_count()),
+                        help='Set the number of threads to be used when computing VMAF.')
     # Which video encoder to use.
     parser.add_argument('-e', '--video-encoder', type=str, default='x264', choices=['x264', 'x265'],
                         help='Specify the encoder to use (default: x264).\nExample: -e x265')
@@ -50,7 +52,7 @@ def main():
 							 'Example: -cl 10', 
 						metavar='<an integer between 1 and 60>')
     # Use only the first x seconds of the original video.
-    parser.add_argument('-t', '--encoding-time', type=str,
+    parser.add_argument('-t', '--encode-length', type=str,
                         help='Create a lossless version of the original video that is just the first x seconds of the '
                              'video, use the cut version as the reference and for all encodes. '
                              'You cannot use this option in conjunction with the -i or -cl arguments.'
@@ -157,7 +159,7 @@ def main():
             table.field_names = table_column_names
 
             # The user only wants to transcode the first x seconds of the video.
-            if args.encoding_time and args.interval == 0:
+            if args.encode_length and args.interval == 0:
                 original_video_path = cut_video(filename, args, output_ext, output_folder, comparison_table)
 
             # Transcode the video with each CRF value.
@@ -219,7 +221,7 @@ def main():
             table.field_names = table_column_names
 
             # The user only wants to transcode the first x seconds of the video.
-            if args.encoding_time:
+            if args.encode_length:
                 original_video_path = cut_video(filename, args, output_ext, output_folder, comparison_table)
 
             # Transcode the video with each preset.
@@ -290,17 +292,17 @@ def main():
 
 
 def cut_video(filename, args, output_ext, output_folder, comparison_table):
-    cut_version_filename = f'{Path(filename).stem} [{args.encoding_time}s]{output_ext}'
+    cut_version_filename = f'{Path(filename).stem} [{args.encode_length}s]{output_ext}'
     # Output path for the cut video.
     output_file_path = os.path.join(output_folder, cut_version_filename)
     # The reference file will be the cut version of the video.
     # Create the cut version.
-    print(f'Cutting the video to a length of {args.encoding_time} seconds...')
-    os.system(f'ffmpeg -loglevel warning -y -i {args.original_video_path_path} -t {args.encoding_time} '
+    print(f'Cutting the video to a length of {args.encode_length} seconds...')
+    os.system(f'ffmpeg -loglevel warning -y -i {args.original_video_path_path} -t {args.encode_length} '
               f'-map 0 -c copy "{output_file_path}"')
     print('Done!')
 
-    time_message = f' for {args.encoding_time} seconds' if int(args.encoding_time) > 1 else 'for 1 second'
+    time_message = f' for {args.encode_length} seconds' if int(args.encode_length) > 1 else 'for 1 second'
 
     with open(comparison_table, 'w') as f:
         f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.')
@@ -320,7 +322,8 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
         "model_path": vmaf_model_file_path,
         "phone_model": "1" if args.phone_model else "0",
         "psnr": "1" if args.calculate_psnr else "0",
-        "ssim": "1" if args.calculate_ssim else "0" 
+        "ssim": "1" if args.calculate_ssim else "0",
+        "n_threads": args.threads
     }
     vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
 
