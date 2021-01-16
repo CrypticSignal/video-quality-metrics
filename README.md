@@ -133,5 +133,5 @@ The 4K model (`vmaf_4k_v0.6.1.json`) "predicts the subjective quality of video d
 
 The source of the quoted text, plus more information about VMAF (such as the correct way to calculate VMAF), can be found [here](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12).
 
-- If you are transcoding for content that will be viewed on a mobile phone, you should add the `-pm` argument when using this command line program.
-- If you are transcoding for content that will be viewed on a 4K display, replace the value of the `vmaf_model_file_path` variable in main.py with `'vmaf_models/vmaf_4k_v0.6.1.json'`.
+- If you are transcoding a video that will be viewed on a mobile phone, you can add the `-pm` argument which will enable the [phone model](https://github.com/Netflix/vmaf/blob/master/resource/doc/models.md/#predict-quality-on-a-cellular-phone-screen).
+- If you are transcoding a video that will be viewed on a 4K display, the default model (`vmaf_v0.6.1.json`) is fine if you are only interested in relative VMAF scores, i.e. the score differences between different presets/CRF values, but if you are interested in absolute scores, it may be better to use the 4K model file which was predicts the subjective quality of video displayed on a 4K screen at a distance of 1.5x the height of the screen. To use the 4K model, replace the value of the `vmaf_model_file_path` variable in main.py with `'vmaf_models/vmaf_4k_v0.6.1.json'`.
