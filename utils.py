@@ -10,8 +10,7 @@ def line():
 
 def subprocess_printer(message, arguments_list):
     line()
-    print(f'[DEBUG] {message}:\n{" ".join(arguments_list)}')
-    line()
+    print(f'{message}:\n{" ".join(arguments_list)}\n')
 
 
 def is_list(argument_object):

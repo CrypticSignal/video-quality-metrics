@@ -54,22 +54,22 @@ The following data is presented in a table and saved as a file named **Table.txt
 3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.0.0 (or above) of the libvmaf filter, and depending on the encoders that you wish to test, libx264, libx265 and libaom. You can check whether your build of FFmpeg has libvmaf/libx264/libx265/libaom by entering `ffmpeg -buildconf` in the terminal and looking for `--enable-libvmaf`, `--enable-libx265`, `--enable-libx264` and `--enable-libaom` under "configuration:".
 - If you're on Windows, you can get the latest build of FFmpeg [here](https://www.gyan.dev/ffmpeg/builds/) (FFprobe is included) as it has support for the libvmaf filter as well as the aforementioned encoders (the `git essentials` build will suffice).
 - If you're on macOS 64-bit, simply download the FFmpeg and FFprobe **snapshot** builds from [here](https://evermeet.cx/ffmpeg/) and you're good to go. Be sure to download the snapshot builds rather than the release builds.
-- If you want to compile FFmpeg yourself, [here](https://github.com/yash1994/Build-FFmpeg-with-libvmaf) are instructions on how to compile FFmpeg (on Ubuntu 20.04) with support for the libvmaf filter (make sure you download v2.0.0 rather than v1.5.2). 
+- If you want to compile FFmpeg yourself, [here](https://github.com/yash1994/Build-FFmpeg-with-libvmaf) are instructions on how to compile FFmpeg (on Ubuntu 20.04) with support for the libvmaf filter (make sure you download vmaf v2.0.0 (or above) rather than v1.5.2). 
 # Usage:
 ```
-usage: main.py [-h] -ovp ORIGINAL_VIDEO_PATH [--threads THREADS] [-e {x264,x265,av1}] [--cpu-used {1,2,3,4,5,6,7,8}] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]]
-               [-p PRESET(s) [PRESET(s ...]] [-i <an integer between 1 and 600>] [-cl <an integer between 1 and 60>] [-t ENCODE_LENGTH] [-pm]
-               [-dp DECIMAL_PLACES] [-ssim] [-psnr] [-ntm] [-tvp TRANSCODED_VIDEO_PATH]
-                          
+usage: main.py [-h] -ovp ORIGINAL_VIDEO_PATH [--threads x] [-e {x264,x265,av1}] [--cpu-used {1,2,3,4,5,6,7,8}] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]] [-p PRESET(s) [PRESET(s ...]]
+               [-n x] [-i <an integer between 1 and 600>] [-cl <an integer between 1 and 60>] [-t x] [-pm] [-dp DECIMAL_PLACES] [-ssim] [-psnr] [-ntm] [-tvp TRANSCODED_VIDEO_PATH]       
+
 Available arguments:
   -h, --help            show this help message and exit
   -ovp ORIGINAL_VIDEO_PATH, --original-video-path ORIGINAL_VIDEO_PATH
                         Enter the path of the original video. A relative or absolute path can be specified. If the path contains a space, it must be surrounded in double quotes.
                         Example: -ovp "C:/Users/H/Desktop/file 1.mp4"
-  --threads THREADS     Set the number of threads to be used when computing VMAF.
+  --threads x           Set the number of threads to be used when computing VMAF.
+                        The default is set to what Python's os.cpu_count() method returns. For example, on a dual-core Intel CPU with hyperthreading, the default will be set to 4.       
+                        Example: --threads 2
   -e {x264,x265,av1}, --video-encoder {x264,x265,av1}
                         Specify the encoder to use (default: x264).
-                        Example: -e x265
   --cpu-used {1,2,3,4,5,6,7,8}
                         Only applicable if choosing the AV1 encoder. Set speed/quality ratio. Value Range: 1-8
                         Lower values mean slower encoding but better quality, and vice-versa.
@@ -77,25 +77,29 @@ Available arguments:
                         Specify the CRF value(s) to use.
   -p PRESET(s) [PRESET(s) ...], --preset PRESET(s) [PRESET(s) ...]
                         Specify the preset(s) to use.
+  -n x, --subsample x   Set a value for libvmaf's n_subsample option, if you only want the VMAF to be calculated for every nth frame (default: 1).
+                        Example: -n 24
   -i <an integer between 1 and 600>, --interval <an integer between 1 and 600>
                         Create a lossless overview video by grabbing a <cliplength> seconds long segment every <interval> seconds from the original video and use this overview video as the "original" video that the transcodes are compared with.
                         Example: -i 30
   -cl <an integer between 1 and 60>, --clip-length <an integer between 1 and 60>
-                        Defines the length of the clips. Only applies when used with -i > 0. Default: 1.
-                        Example: -cl 10
-  -t ENCODE_LENGTH, --encode-length ENCODE_LENGTH
-                        Create a lossless version of the original video that is just the first x seconds of the video, use the cut version as the reference and for all encodes. You cannot use this option in conjunction with the -i or -cl arguments.Example: -t 60
+                        Defines the length of the clips (default: 1). Only applies when used with -i > 0.
+                        Example: -cl 2
+  -t x, --encode-length x
+                        Create a lossless version of the original video that is just the first x seconds of the video. This cut version of the original video is what will be transcoded and used as the reference video. You cannot use this option in conjunction with the -i or -cl arguments.
+                        Example: -t 60
   -pm, --phone-model    Enable VMAF phone model.
   -dp DECIMAL_PLACES, --decimal-places DECIMAL_PLACES
                         The number of decimal places to use for the data in the table (default: 2).
                         Example: -dp 3
   -ssim, --calculate-ssim
-                        Calculate SSIM in addition to VMAF.
+                        Enable SSIM calculation in addition to VMAF (default: disabled).
   -psnr, --calculate-psnr
-                        Calculate PSNR in addition to VMAF.
+                        Enable PSNR calculation in addition to VMAF (default: disabled).
   -ntm, --no-transcoding-mode
-                        Use this mode if you've already transcoded a video and would like its VMAF and (optionally) the SSIM and PSNR to be calculated.
-                        Example: -ntm -tvp transcoded.mp4 -ovp original.mp4 -ssim
+                        Enable "no transcoding mode", which allows you to calculate the VMAF/SSIM/PSNR for a video that you have already transcoded.
+                        The original and transcoded video paths must be specified using the -ovp and -tvp arguments, respectively.
+                        Example: python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim
   -tvp TRANSCODED_VIDEO_PATH, --transcoded-video-path TRANSCODED_VIDEO_PATH
                         The path of the transcoded video (only applicable when using the -ntm mode).
 ```

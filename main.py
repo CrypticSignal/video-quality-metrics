@@ -1,9 +1,9 @@
 import os
 import sys
-from argparse import ArgumentParser, RawTextHelpFormatter
 from pathlib import Path
 from prettytable import PrettyTable
 
+from args import parser
 from save_metrics import create_table_plot_metrics, force_decimal_places
 from overview import create_movie_overview
 from utils import line, exit_program, is_list, VideoInfoProvider, Timer
@@ -14,70 +14,11 @@ from arguments_validator import ArgumentsValidator
 # Change this if you want to use a different VMAF model file.
 vmaf_model_file_path = 'vmaf_models/vmaf_v0.6.1.json'
 
-
 def main():
     if len(sys.argv) == 1:
         line()
         print("To see more details about the available arguments, enter 'python main.py -h'")
         line()
-    parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
-    # Original video path.
-    parser.add_argument('-ovp', '--original-video-path', type=str, required=True,
-                        help='Enter the path of the original '
-                             'video. A relative or absolute path can be specified. '
-                             'If the path contains a space, it must be surrounded in double quotes.\n'
-                             'Example: -ovp "C:/Users/H/Desktop/file 1.mp4"')
-    # Set the number of threads to be used when computing VMAF.
-    parser.add_argument('--threads', type=str, default=str(os.cpu_count()),
-                        help='Set the number of threads to be used when computing VMAF.')
-    # Which video encoder to use.
-    parser.add_argument('-e', '--video-encoder', type=str, default='x264', choices=['x264', 'x265', 'av1'],
-                        help='Specify the encoder to use (default: x264).\nExample: -e x265')
-    # Set AV1 speed/quality ratio
-    parser.add_argument('--cpu-used', type=int, default=1, choices=range(1, 9),
-                        help='Only applicable if choosing the AV1 encoder. Set speed/quality ratio. Value Range: 1-8\n'
-                             'Lower values mean slower encoding but better quality, and vice-versa.')
-    # CRF value(s).
-    parser.add_argument('-crf', '--crf-value', type=int, nargs='+', choices=range(0, 52),
-                        default=23, help='Specify the CRF value(s) to use.', metavar='CRF_VALUE(s)')
-    # Preset(s).
-    parser.add_argument('-p', '--preset', type=str, nargs='+', choices=[
-                        'veryslow', 'slower', 'slow', 'medium', 'fast', 'faster', 'veryfast', 'superfast', 'ultrafast'],
-                        default='medium', help='Specify the preset(s) to use.', metavar='PRESET(s)')
-    # The time interval to use when creating the overview video.
-    parser.add_argument('-i', '--interval', type=int, choices=range(1, 600), default=0,
-                        help='Create a lossless overview video by grabbing a <cliplength> seconds long segment '
-							 'every <interval> seconds from the original video and use this overview video '
-							 'as the "original" video that the transcodes are compared with.\nExample: -i 30',
-						metavar='<an integer between 1 and 600>')
-    # The length of each clip.
-    parser.add_argument('-cl', '--clip-length', type=int, choices=range(1, 60), default=1,
-                        help='Defines the length of the clips. Only applies when used with -i > 0. Default: 1.\n'
-							 'Example: -cl 10', 
-						metavar='<an integer between 1 and 60>')
-    # Use only the first x seconds of the original video.
-    parser.add_argument('-t', '--encode-length', type=str,
-                        help='Create a lossless version of the original video that is just the first x seconds of the '
-                             'video, use the cut version as the reference and for all encodes. '
-                             'You cannot use this option in conjunction with the -i or -cl arguments.'
-                             'Example: -t 60')
-    # Enable phone model?
-    parser.add_argument('-pm', '--phone-model', action='store_true', help='Enable VMAF phone model.')
-    # Number of decimal places to use for the data.
-    parser.add_argument('-dp', '--decimal-places', type=int, default=2, help='The number of decimal places to use for the data '
-                                                                   'in the table (default: 2).\nExample: -dp 3')
-    # Calculate SSIM?
-    parser.add_argument('-ssim', '--calculate-ssim', action='store_true', help='Calculate SSIM in addition to VMAF.')
-    # Calculate PSNR?
-    parser.add_argument('-psnr', '--calculate-psnr', action='store_true', help='Calculate PSNR in addition to VMAF.')
-    # No transcoding mode.
-    parser.add_argument('-ntm', '--no-transcoding-mode', action='store_true',
-                        help='Use this mode if you\'ve already transcoded a video and would like its VMAF and '
-                             '(optionally) the SSIM and PSNR to be calculated.\n'
-                             'Example: -ntm -tvp transcoded.mp4 -ovp original.mp4 -ssim -psnr')
-    # Transcoded video path (only applicable when using the -ntm mode).
-    parser.add_argument('-tvp', '--transcoded-video-path',
-                        help='The path of the transcoded video (only applicable when using the -ntm mode).')
 
     args = parser.parse_args()
 
@@ -203,13 +144,14 @@ def main():
                 create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row,
                                           graph_filename, table, output_folder, time_rounded, crf)
 
-            with open(comparison_table, 'a') as f:
-                f.write(f'\nFile Transcoded: {filename}')
-                f.write(f'\nBitrate: {original_bitrate}')
-                f.write(f'\nEncoder used for the transcodes: {video_encoder}')
-                f.write(f'\nPreset used for the transcodes: {preset}')
+                with open(comparison_table, 'a') as f:
+                    f.write(
+                        f'\nFile Transcoded: {filename}\n'
+                        f'Bitrate: {original_bitrate}\n'
+                        f'Encoder used for the transcodes: {video_encoder}\n'
+                        f'Preset used for the transcodes: {crf}\n'
+                        f'n_subsample: {args.subsample}')
                 
-
         # args.preset is a list when more than one preset is specified.
         elif is_list(args.preset):
             print('Presets comparison mode activated.')
@@ -245,7 +187,6 @@ def main():
 
                 process = factory.create_process(arguments)
                 
-                line()
                 print(f'Transcoding the video with preset {preset}...')
                 timer.start()
                 process.run()
@@ -268,10 +209,13 @@ def main():
                                           graph_filename, table, output_folder, time_rounded, preset)
 
             with open(comparison_table, 'a') as f:
-                f.write(f'\nFile Transcoded: {filename}')
-                f.write(f'\nBitrate: {original_bitrate}')
-                f.write(f'\nEncoder used for the transcodes: {video_encoder}')
-                f.write(f'\nCRF value used for the transcodes: {crf}')
+                f.write(
+                    f'\nFile Transcoded: {filename}\n'
+                    f'Bitrate: {original_bitrate}\n'
+                    f'Encoder used for the transcodes: {video_encoder}\n'
+                    f'CRF value used for the transcodes: {crf}\n'
+                    f'n_subsample: {args.subsample}'
+                )
 
     # -ntm argument was specified.
     else:
@@ -328,6 +272,7 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
         "log_fmt": "json",
         "log_path": json_file_path,
         "model_path": vmaf_model_file_path,
+        "n_subsample": "1" if not args.subsample else args.subsample,
         "phone_model": "1" if args.phone_model else "0",
         "psnr": "1" if args.calculate_psnr else "0",
         "ssim": "1" if args.calculate_ssim else "0",

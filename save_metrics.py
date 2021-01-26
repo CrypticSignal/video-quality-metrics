@@ -63,7 +63,7 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 		# Add the PSNR values to the table.
 		data_for_current_row.append(psnr)
 
-	plt.suptitle(graph_filename)
+	plt.suptitle(f'{graph_filename}\nn_subsample: {args.subsample}')
 	plt.xlabel('Frame Number')
 	plt.ylabel('Value of Quality Metric')
 	plt.legend(loc='lower right')
