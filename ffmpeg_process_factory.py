@@ -38,6 +38,8 @@ class EncodingArguments(FfmpegArguments):
     def __init__(self):
         self.__encoder = Encoder.x264
 
+    # Encoder
+
     @property
     def encoder(self):
         return self.__encoder
@@ -45,6 +47,8 @@ class EncodingArguments(FfmpegArguments):
     @encoder.setter
     def encoder(self, value):
         self.__encoder = value
+
+    # AV1 compression
 
     @property
     def av1_compression(self):
@@ -54,6 +58,8 @@ class EncodingArguments(FfmpegArguments):
     def av1_compression(self, value):
         self.__av1_compression = value
 
+    # Preset
+
     @property
     def preset(self):
         return self.__preset
@@ -61,6 +67,8 @@ class EncodingArguments(FfmpegArguments):
     @preset.setter
     def preset(self, value):
         self.__preset = value
+
+    # CRF
 
     @property
     def crf(self):
@@ -70,6 +78,21 @@ class EncodingArguments(FfmpegArguments):
     def crf(self, value):
         self.__crf = value
 
+    # Filterchain
+
+    @property
+    def filterchain(self):
+        return self.__filterchain
+
+    @filterchain.setter
+    def filterchain(self, value):
+        if value is not None:
+            self.__filterchain = ['-vf', value]
+        else:
+            self.__filterchain = ''
+
+    # Output file
+    
     @property
     def outfile(self):
         return(self.__outfile)
@@ -77,6 +100,7 @@ class EncodingArguments(FfmpegArguments):
     @outfile.setter
     def outfile(self, value):
         self.__outfile = value
+
 
     def get_arguments(self):
         transcode_arguments = [
@@ -86,9 +110,9 @@ class EncodingArguments(FfmpegArguments):
         ]
 
         if self.__encoder.name == 'av1':
-            transcode_arguments += ['-b:v', '0', '-cpu-used', self.__av1_compression, self.__outfile]
+            transcode_arguments += ['-b:v', '0', '-cpu-used', self.__av1_compression, *self.__filterchain, self.__outfile]
         else:
-            transcode_arguments += ['-preset', self.__preset, self.__outfile]
+            transcode_arguments += ['-preset', self.__preset, *self.__filterchain, self.__outfile]
             
         return super().get_arguments() + transcode_arguments
     
@@ -103,6 +127,17 @@ class LibVmafArguments(FfmpegArguments):
         self.__second_infile = value
 
     @property
+    def filterchain(self):
+        return self.__filterchain
+
+    @filterchain.setter
+    def filterchain(self, value):
+        if value is not None:
+            self.__filterchain = f',{value}'
+        else:
+            self.__filterchain = ''
+
+    @property
     def vmaf_options(self):
         return self.__vmaf_options
 
@@ -115,8 +150,8 @@ class LibVmafArguments(FfmpegArguments):
             [
                 "-r", self._fps,
                 "-i", self.__second_infile,
-                "-lavfi", "[0:v]setpts=PTS-STARTPTS[dist];"
-                          "[1:v]setpts=PTS-STARTPTS[ref];[dist][ref]"
+                "-lavfi", f"[0:v]setpts=PTS-STARTPTS[dist];"
+                          f"[1:v]setpts=PTS-STARTPTS{self.__filterchain}[ref];[dist][ref]"
                           f'libvmaf={self.__vmaf_options}', "-f", "null", "-"
             ]
 

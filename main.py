@@ -61,6 +61,11 @@ def main():
     print(f'Bitrate: {original_bitrate}')
     print(f'Framerate: {fps} ({fps_float}) FPS')
     line()
+    
+    if args.filterchain:
+        print('The -fc/--filterchain argument has been supplied. The following filter(s) will be used:')
+        print(args.filterchain)
+        line()
 
     table = PrettyTable()
     table_column_names = ['Encoding Time (s)', 'Size', 'Bitrate', 'VMAF']
@@ -87,15 +92,17 @@ def main():
         # args.crf_value is a list when more than one CRF value is specified.
         if is_list(args.crf_value) and len(args.crf_value) > 1:
             print('CRF comparison mode activated.')
+
             crf_values = args.crf_value
             crf_values_string = ', '.join(str(crf) for crf in crf_values)
             preset = args.preset[0] if is_list(args.preset) else args.preset
             print(f'CRF values {crf_values_string} will be compared and the {preset} preset will be used.')
-            video_encoder = args.video_encoder
+
             # Cannot use os.path.join for output_folder as this gives an error like the following:
             # No such file or directory: '(2.mkv)\\Presets comparison at CRF 23/Raw JSON Data/superfast.json'
             output_folder = f'({filename})/CRF comparison at preset {preset}'
             os.makedirs(output_folder, exist_ok=True)
+
             # The comparison table will be in the following path:
             comparison_table = os.path.join(output_folder, 'Table.txt')
             # Add a CRF column.
@@ -113,12 +120,16 @@ def main():
                 graph_filename = f'CRF {crf} at preset {preset}'
 
                 arguments = EncodingArguments()
-                arguments.infile = str(original_video_path)
-                arguments.encoder = Encoder[video_encoder]
-                if video_encoder == 'av1':
+
+                arguments.infile = original_video_path
+                arguments.encoder = Encoder[args.video_encoder]
+
+                if args.video_encoder == 'av1':
                     arguments.av1_compression = str(args.cpu_used)
+
                 arguments.crf = str(crf)
                 arguments.preset = preset
+                arguments.filterchain = args.filterchain if args.filterchain else None
                 arguments.outfile = transcode_output_path
 
                 process = factory.create_process(arguments)
@@ -148,22 +159,25 @@ def main():
                     f.write(
                         f'\nFile Transcoded: {filename}\n'
                         f'Bitrate: {original_bitrate}\n'
-                        f'Encoder used for the transcodes: {video_encoder}\n'
-                        f'Preset used for the transcodes: {crf}\n'
+                        f'Encoder used for the transcodes: {args.video_encoder}\n'
+                        f'Preset used for the transcodes: {preset}\n'
+                        f'Filter(s) used: {"None" if not args.filterchain else args.filterchain}\n'
                         f'n_subsample: {args.subsample}')
                 
         # args.preset is a list when more than one preset is specified.
         elif is_list(args.preset):
             print('Presets comparison mode activated.')
+
             chosen_presets = args.preset
             presets_string = ', '.join(chosen_presets)
             crf = args.crf_value[0] if is_list(args.crf_value) else args.crf_value
-            video_encoder = args.video_encoder
             print(f'Presets {presets_string} will be compared at a CRF of {crf}.')
+
             # Cannot use os.path.join for output_folder as this gives an error like the following:
             # No such file or directory: '(2.mkv)\\Presets comparison at CRF 23/Raw JSON Data/superfast.json'
             output_folder = f'({filename})/Presets comparison at CRF {crf}'
             os.makedirs(output_folder, exist_ok=True)
+
             comparison_table = os.path.join(output_folder, 'Table.txt')
             table_column_names.insert(0, 'Preset')
             # Set the names of the columns
@@ -179,10 +193,16 @@ def main():
                 graph_filename = f"Preset '{preset}'"
                 
                 arguments = EncodingArguments()
+                
                 arguments.infile = original_video_path
-                arguments.encoder = Encoder[video_encoder]
+                arguments.encoder = Encoder[args.video_encoder]
+
+                if args.video_encoder == 'av1':
+                    arguments.av1_compression = str(args.cpu_used)
+
                 arguments.crf = str(crf)
                 arguments.preset = preset
+                arguments.filterchain = args.filterchain if args.filterchain else None
                 arguments.outfile = transcode_output_path
 
                 process = factory.create_process(arguments)
@@ -212,9 +232,10 @@ def main():
                 f.write(
                     f'\nFile Transcoded: {filename}\n'
                     f'Bitrate: {original_bitrate}\n'
-                    f'Encoder used for the transcodes: {video_encoder}\n'
+                    f'Encoder used for the transcodes: {args.video_encoder}\n'
                     f'CRF value used for the transcodes: {crf}\n'
-                    f'n_subsample: {args.subsample}'
+                    f'Filter(s) used: {"None" if not args.filterchain else args.filterchain}\n'
+                    f'n_subsample: {args.subsample}'  
                 )
 
     # -ntm argument was specified.
@@ -281,9 +302,11 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
     vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
 
     libvmaf_arguments = LibVmafArguments()
+
     libvmaf_arguments.infile = transcode_output_path
     libvmaf_arguments.fps = fps
     libvmaf_arguments.second_infile = original_video_path
+    libvmaf_arguments.filterchain = args.filterchain if args.filterchain else None
     libvmaf_arguments.vmaf_options = vmaf_options
 
     process = factory.create_process(libvmaf_arguments)
