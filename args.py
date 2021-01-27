@@ -7,10 +7,11 @@ parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 parser.add_argument(
     '--av1-cpu-used',
     type=int,
-    default=1,
+    default=5,
     choices=range(1, 9),
-    help='Only applicable if choosing the AV1 encoder. Set speed/quality ratio. Value Range: 1-8\n'
-         'Lower values mean slower encoding but better quality, and vice-versa.'
+    help='Only applicable if choosing the AV1 encoder. Set the quality/encoding speed tradeoff.\n'
+         'Lower values mean slower encoding but better quality, and vice-versa.\n'
+         'If this argument is not specified, the value will be set to 5.'
 )
 
 # The length of each clip for Overview Mode.

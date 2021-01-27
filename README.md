@@ -59,13 +59,15 @@ The following data is presented in a table and saved as a file named **Table.txt
 ```
 usage: main.py [-h] [--av1-cpu-used {1,2,3,4,5,6,7,8}] [-cl <an integer between 1 and 60>] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]]
                [-dp DECIMAL_PLACES] [-e {x264,x265,av1}] [-fc FILTERCHAIN] [-i <an integer between 1 and 600>] [-n x] [-ntm] -ovp
-               ORIGINAL_VIDEO_PATH [-pm] [-p PRESET(s) [PRESET(s ...]] [-psnr] [-ssim] [-t x] [--threads x] [-tvp TRANSCODED_VIDEO_PATH]
+               ORIGINAL_VIDEO_PATH [-pm] [-p PRESET(s) [PRESET(s ...]] [-psnr] [-sc] [-ssim] [-t x] [--threads x]
+               [-tvp TRANSCODED_VIDEO_PATH]
 
-optional arguments:
+Available arguments:
   -h, --help            show this help message and exit
   --av1-cpu-used {1,2,3,4,5,6,7,8}
-                        Only applicable if choosing the AV1 encoder. Set speed/quality ratio. Value Range: 1-8
+                        Only applicable if choosing the AV1 encoder. Set the quality/encoding speed tradeoff.
                         Lower values mean slower encoding but better quality, and vice-versa.
+                        If this argument is not specified, the value will be set to 5.
   -cl <an integer between 1 and 60>, --clip-length <an integer between 1 and 60>
                         Defines the length of the clips (default: 1). Only applies when used with -i > 0.
                         Example: -cl 2
@@ -97,6 +99,7 @@ optional arguments:
                         Specify the preset(s) to use.
   -psnr, --calculate-psnr
                         Enable PSNR calculation in addition to VMAF (default: disabled).
+  -sc, --show-commands  Show the FFmpeg commands that are being run.
   -ssim, --calculate-ssim
                         Enable SSIM calculation in addition to VMAF (default: disabled).
   -t x, --encode-length x
@@ -143,4 +146,4 @@ The 4K model (`vmaf_4k_v0.6.1.json`) "predicts the subjective quality of video d
 The source of the quoted text, plus more information about VMAF (such as the correct way to calculate VMAF), can be found [here](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12).
 
 - If you are transcoding a video that will be viewed on a mobile phone, you can add the `-pm` argument which will enable the [phone model](https://github.com/Netflix/vmaf/blob/master/resource/doc/models.md/#predict-quality-on-a-cellular-phone-screen).
-- If you are transcoding a video that will be viewed on a 4K display, the default model (`vmaf_v0.6.1.json`) is fine if you are only interested in relative VMAF scores, i.e. the score differences between different presets/CRF values, but if you are interested in absolute scores, it may be better to use the 4K model file which was predicts the subjective quality of video displayed on a 4K screen at a distance of 1.5x the height of the screen. To use the 4K model, replace the value of the `vmaf_model_file_path` variable in main.py with `'vmaf_models/vmaf_4k_v0.6.1.json'`.
+- If you are transcoding a video that will be viewed on a 4K display, the default model (`vmaf_v0.6.1.json`) is fine if you are only interested in relative VMAF scores, i.e. the score differences between different presets/CRF values, but if you are interested in absolute scores, it may be better to use the 4K model file which was predicts the subjective quality of video displayed on a 4K screen at a distance of 1.5x the height of the screen. To use the 4K model, replace the value of the `vmaf_model_file_path` variable in libvmaf.py with `'vmaf_models/vmaf_4k_v0.6.1.json'`.

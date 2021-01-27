@@ -48,15 +48,15 @@ class EncodingArguments(FfmpegArguments):
     def encoder(self, value):
         self.__encoder = value
 
-    # AV1 compression
+    # libaom-av1 "cpu-used" option.
 
     @property
-    def av1_compression(self):
-        return self.__av1_compression
+    def av1_cpu_used(self):
+        return self.__av1_cpu_used
 
-    @av1_compression.setter
-    def av1_compression(self, value):
-        self.__av1_compression = value
+    @av1_cpu_used.setter
+    def av1_cpu_used(self, value):
+        self.__av1_cpu_used = value
 
     # Preset
 
@@ -109,8 +109,10 @@ class EncodingArguments(FfmpegArguments):
                 "-crf", self.__crf
         ]
 
+        av1_options = ['-b:v', '0', '-cpu-used', self.__av1_cpu_used]
+
         if self.__encoder.name == 'av1':
-            transcode_arguments += ['-b:v', '0', '-cpu-used', self.__av1_compression, *self.__filterchain, self.__outfile]
+            transcode_arguments += [*av1_options, *self.__filterchain, self.__outfile]
         else:
             transcode_arguments += ['-preset', self.__preset, *self.__filterchain, self.__outfile]
             
@@ -148,9 +150,10 @@ class LibVmafArguments(FfmpegArguments):
     def get_arguments(self):
         return super().get_arguments() + \
             [
-                "-r", self._fps, "-i", self.__second_infile, "-an", "-sn",
-                "-lavfi", f"[0:v]setpts=PTS-STARTPTS[dist];"
-                          f"[1:v]setpts=PTS-STARTPTS{self.__filterchain}[ref];"
+                "-r", self._fps, "-i", self.__second_infile,
+                "-map", "0:V", "-map", "1:V",
+                "-lavfi", f'[0:v]setpts=PTS-STARTPTS[dist];'
+                          f'[1:v]setpts=PTS-STARTPTS{self.__filterchain}[ref];'
                           f'[dist][ref]libvmaf={self.__vmaf_options}',
                 "-f", "null", "-"
             ]
