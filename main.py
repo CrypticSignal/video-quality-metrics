@@ -196,7 +196,7 @@ if not args.no_transcoding_mode:
             arguments.encoder = Encoder[args.video_encoder]
 
             if args.video_encoder == 'av1':
-                arguments.av1_cpu_used = str(args.cpu_used)
+                arguments.av1_cpu_used = str(args.av1_cpu_used)
 
             arguments.crf = str(crf)
             arguments.preset = preset

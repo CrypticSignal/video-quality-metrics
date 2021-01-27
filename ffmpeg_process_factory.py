@@ -109,10 +109,8 @@ class EncodingArguments(FfmpegArguments):
                 "-crf", self.__crf
         ]
 
-        av1_options = ['-b:v', '0', '-cpu-used', self.__av1_cpu_used]
-
         if self.__encoder.name == 'av1':
-            transcode_arguments += [*av1_options, *self.__filterchain, self.__outfile]
+            transcode_arguments += ['-b:v', '0', '-cpu-used', self.__av1_cpu_used, *self.__filterchain, self.__outfile]
         else:
             transcode_arguments += ['-preset', self.__preset, *self.__filterchain, self.__outfile]
             
