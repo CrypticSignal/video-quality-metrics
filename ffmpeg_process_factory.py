@@ -9,13 +9,7 @@ class Encoder(Enum):
 
 
 class FfmpegArguments:
-    _fps = 0
-
-    def get_arguments(self):
-        base_ffmpeg_arguments = ["-i", self.__infile]
-        if self._fps != 0:
-            base_ffmpeg_arguments = ["-r", self._fps, "-i", self.__infile]
-        return base_ffmpeg_arguments
+    _fps = None
 
     @property
     def infile(self):
@@ -32,6 +26,12 @@ class FfmpegArguments:
     @fps.setter
     def fps(self, value):
         self._fps = value
+
+    def get_arguments(self):
+        base_ffmpeg_arguments = ["-i", self.__infile]
+        if self._fps is not None:
+            base_ffmpeg_arguments = ["-r", self._fps, "-i", self.__infile]
+        return base_ffmpeg_arguments
 
 
 class EncodingArguments(FfmpegArguments):
@@ -148,32 +148,33 @@ class LibVmafArguments(FfmpegArguments):
     def get_arguments(self):
         return super().get_arguments() + \
             [
-                "-r", self._fps,
-                "-i", self.__second_infile,
+                "-r", self._fps, "-i", self.__second_infile, "-an", "-sn",
                 "-lavfi", f"[0:v]setpts=PTS-STARTPTS[dist];"
-                          f"[1:v]setpts=PTS-STARTPTS{self.__filterchain}[ref];[dist][ref]"
-                          f'libvmaf={self.__vmaf_options}', "-f", "null", "-"
+                          f"[1:v]setpts=PTS-STARTPTS{self.__filterchain}[ref];"
+                          f'[dist][ref]libvmaf={self.__vmaf_options}',
+                "-f", "null", "-"
             ]
 
 
 class FfmpegProcessFactory:
-    def create_process(self, arguments):
+    def create_process(self, arguments, args):
         __process_base_arguments = [
             "ffmpeg", "-loglevel", "warning", "-stats", "-y"
         ]
 
         process = FfmpegProcess(
-            __process_base_arguments + arguments.get_arguments())
+            __process_base_arguments + arguments.get_arguments(), args)
 
         return process
 
 
 class FfmpegProcess:
-    def __init__(self, arguments):
+    def __init__(self, arguments, args):
         self.__arguments = arguments
-        # For debugging (optional)
-        from utils import subprocess_printer
-        subprocess_printer('Running the following command', self.__arguments)
+
+        if args.show_commands:
+            from utils import subprocess_printer
+            subprocess_printer('The following command will run', self.__arguments)
 
     def run(self):
         subprocess.run(self.__arguments)

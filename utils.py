@@ -1,4 +1,6 @@
+import os
 import sys
+from pathlib import Path
 from time import time
 
 from ffmpeg import probe
@@ -10,7 +12,7 @@ def line():
 
 def subprocess_printer(message, arguments_list):
     line()
-    print(f'{message}:\n{" ".join(arguments_list)}\n')
+    print(f'{message}:\n\n{" ".join(arguments_list)}')
 
 
 def is_list(argument_object):
@@ -19,6 +21,25 @@ def is_list(argument_object):
 
 def force_decimal_places(value, decimal_places):
 	return '{:0.{dp}f}'.format(value, dp=decimal_places)
+
+
+def cut_video(filename, args, output_ext, output_folder, comparison_table):
+    cut_version_filename = f'{Path(filename).stem} [{args.encode_length}s]{output_ext}'
+    # Output path for the cut video.
+    output_file_path = os.path.join(output_folder, cut_version_filename)
+    # The reference file will be the cut version of the video.
+    # Create the cut version.
+    print(f'Cutting the video to a length of {args.encode_length} seconds...')
+    os.system(f'ffmpeg -loglevel warning -y -i {args.original_video_path} -t {args.encode_length} '
+              f'-map 0 -c copy "{output_file_path}"')
+    print('Done!')
+
+    time_message = f' for {args.encode_length} seconds' if int(args.encode_length) > 1 else 'for 1 second'
+
+    with open(comparison_table, 'w') as f:
+        f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.')
+
+    return output_file_path
 
 
 def exit_program(message):

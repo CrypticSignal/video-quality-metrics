@@ -7,7 +7,7 @@ from utils import force_decimal_places
 
 
 def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, 
-							  graph_filename, table, output_folder, time_rounded, crf_or_preset=None):
+							  graph_filename, table, output_folder, time_taken, crf_or_preset=None):
 	# Make a list containing the frame numbers from the JSON file.
 	with open(json_file_path, 'r') as f:
 		file_contents = json.load(f)
@@ -73,11 +73,11 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 	if not args.no_transcoding_mode:
 		if isinstance(args.crf_value, list) and len(args.crf_value) > 1:
 			data_for_current_row.insert(0, crf_or_preset)
-			data_for_current_row.insert(1, time_rounded)
+			data_for_current_row.insert(1, time_taken)
 		# Presets comparison mode.
 		else:
 			data_for_current_row.insert(0, crf_or_preset)
-			data_for_current_row.insert(1, time_rounded)
+			data_for_current_row.insert(1, time_taken)
 	
 	table.add_row(data_for_current_row)
 
@@ -87,4 +87,4 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 	with open(comparison_table, 'w') as f:
 		f.write(table.get_string(title=table_title))
 
-	print(f'The following data has been added to the table:\n{data_for_current_row}')
+	print(f'{comparison_table} has been updated.')

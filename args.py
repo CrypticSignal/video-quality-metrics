@@ -129,6 +129,13 @@ parser.add_argument(
     help='Enable PSNR calculation in addition to VMAF (default: disabled).'
 )
 
+# Show the commands being run.
+parser.add_argument(
+    '-sc', '--show-commands',
+    action='store_true',
+    help="Show the FFmpeg commands that are being run."
+)
+
 # SSIM
 parser.add_argument(
     '-ssim', '--calculate-ssim', 
