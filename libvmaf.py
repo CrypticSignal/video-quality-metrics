@@ -23,13 +23,9 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
     }
     vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
 
-    libvmaf_arguments = LibVmafArguments()
-
-    libvmaf_arguments.infile = transcode_output_path
-    libvmaf_arguments.fps = fps
-    libvmaf_arguments.second_infile = original_video_path
-    libvmaf_arguments.filterchain = args.filterchain if args.filterchain else None
-    libvmaf_arguments.vmaf_options = vmaf_options
+    libvmaf_arguments = LibVmafArguments(fps, transcode_output_path, original_video_path, vmaf_options)
+    video_filters = args.video_filters if args.video_filters else None
+    libvmaf_arguments.video_filters(video_filters)
 
     process = factory.create_process(libvmaf_arguments, args)
 
@@ -48,7 +44,7 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
         else:
             end_of_computing_message += f' achieved with preset {crf_or_preset}'
 
-    print(f'\nComputing the VMAF{end_of_computing_message}...\n')
+    print(f'Computing the VMAF{end_of_computing_message}...\n')
     timer = Timer()
     timer.start()
     process.run()

@@ -3,7 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from utils import force_decimal_places
+from utils import line, force_decimal_places
 
 
 def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, 
@@ -20,7 +20,7 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 	min_vmaf = force_decimal_places(min(vmaf_scores), decimal_places)
 	vmaf_std = force_decimal_places(np.std(vmaf_scores), decimal_places) # Standard deviation.
 
-	print(f'VMAF score: {mean_vmaf}, Standard Deviation: {vmaf_std}')
+	print(f'VMAF score: {mean_vmaf}, Standard Deviation: {vmaf_std}\n')
 
 	# Data for the table.
 	vmaf = f'{min_vmaf} | {vmaf_std} | {mean_vmaf}'
@@ -87,4 +87,5 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 	with open(comparison_table, 'w') as f:
 		f.write(table.get_string(title=table_title))
 
-	print(f'{comparison_table} has been updated.')
+	print(f'\n{comparison_table} has been updated.')
+	line()

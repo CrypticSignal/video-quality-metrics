@@ -11,8 +11,7 @@ def line():
 
 
 def subprocess_printer(message, arguments_list):
-    line()
-    print(f'{message}:\n\n{" ".join(arguments_list)}')
+    print(f'{message}:\n\n{" ".join(arguments_list)}\n')
 
 
 def is_list(argument_object):
@@ -49,7 +48,7 @@ def write_table_info(table_path, video_filename, original_bitrate, args, crf_or_
             f'Bitrate: {original_bitrate}\n'
             f'Encoder used for the transcodes: {args.video_encoder}\n'
             f'{crf_or_preset} was used.\n'
-            f'Filter(s) used: {"None" if not args.filterchain else args.filterchain}\n'
+            f'Filter(s) used: {"None" if not args.video_filters else args.video_filters}\n'
             f'n_subsample: {args.subsample}')
 
 
@@ -64,12 +63,12 @@ class VideoInfoProvider:
     def __init__(self, video_path):
         self._video_path = video_path
 
-    def get_bitrate(self, video_path=None):
+    def get_bitrate(self, decimal_places, video_path=None):
         if video_path:
             bitrate = probe(video_path)['format']['bit_rate'] 
         else:
             bitrate = probe(self._video_path)['format']['bit_rate']
-        return f'{round(int(bitrate) / 1_000_000, 3)} Mbps'
+        return f'{force_decimal_places(int(bitrate) / 1_000_000, decimal_places)} Mbps'
 
     def get_framerate_fraction(self):
         r_frame_rate = [stream for stream in probe(self._video_path)['streams']

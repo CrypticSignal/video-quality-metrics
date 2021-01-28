@@ -57,10 +57,9 @@ The following data is presented in a table and saved as a file named **Table.txt
 - If you want to compile FFmpeg yourself, [here](https://github.com/yash1994/Build-FFmpeg-with-libvmaf) are instructions on how to compile FFmpeg (on Ubuntu 20.04) with support for the libvmaf filter (make sure you download vmaf v2.0.0 (or above) rather than v1.5.2). 
 # Usage:
 ```
-usage: main.py [-h] [--av1-cpu-used {1,2,3,4,5,6,7,8}] [-cl <an integer between 1 and 60>] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]]
-               [-dp DECIMAL_PLACES] [-e {x264,x265,av1}] [-fc FILTERCHAIN] [-i <an integer between 1 and 600>] [-n x] [-ntm] -ovp
-               ORIGINAL_VIDEO_PATH [-pm] [-p PRESET(s) [PRESET(s ...]] [-psnr] [-sc] [-ssim] [-t x] [--threads x]
-               [-tvp TRANSCODED_VIDEO_PATH]
+usage: main.py [-h] [--av1-cpu-used {1,2,3,4,5,6,7,8}] [-cl <an integer between 1 and 60>] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]] [-dp DECIMAL_PLACES] [-e {x264,x265,av1}]
+               [-i <an integer between 1 and 600>] [-n x] [-ntm] -ovp ORIGINAL_VIDEO_PATH [-pm] [-p PRESET(s) [PRESET(s ...]] [-psnr] [-sc] [-ssim] [-t x] [--threads x]
+               [-tvp TRANSCODED_VIDEO_PATH] [-vf VIDEO_FILTERS]
 
 Available arguments:
   -h, --help            show this help message and exit
@@ -78,9 +77,6 @@ Available arguments:
                         Example: -dp 3
   -e {x264,x265,av1}, --video-encoder {x264,x265,av1}
                         Specify the encoder to use (default: x264).
-  -fc FILTERCHAIN, --filterchain FILTERCHAIN
-                        Add FFmpeg video filter(s). Each filter must be separated by a comma.
-                        Example: -fc bwdif=mode=0,crop=1920:800:0:140
   -i <an integer between 1 and 600>, --interval <an integer between 1 and 600>
                         Create a lossless overview video by grabbing a <cliplength> seconds long segment every <interval> seconds from the original video and use this overview video as the "original" video that the transcodes are compared with.
                         Example: -i 30
@@ -110,6 +106,9 @@ Available arguments:
                         Example: --threads 2
   -tvp TRANSCODED_VIDEO_PATH, --transcoded-video-path TRANSCODED_VIDEO_PATH
                         The path of the transcoded video (only applicable when using the -ntm mode).
+  -vf VIDEO_FILTERS, --video-filters VIDEO_FILTERS
+                        Add FFmpeg video filter(s). Each filter must be separated by a comma.
+                        Example: -fc bwdif=mode=0,crop=1920:800:0:140
 ```
 
 # Example Table:

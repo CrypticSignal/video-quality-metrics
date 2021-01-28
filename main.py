@@ -37,7 +37,7 @@ if not validation_result:
 
 def create_output_folder_initialise_table(crf_or_preset):
     # Cannot use os.path.join for output_folder as this gives an error like the following:
-    # No such file or directory: '(2.mkv)\\Presets comparison at CRF 23/Raw JSON Data/superfast.json'
+    # No such file or directory: '(2.mkv)\\Presets comparison at CRF 23/Metrics for each frame/superfast.json'
     output_folder = f'({filename})/{crf_or_preset} Comparison'
     os.makedirs(output_folder, exist_ok=True)
 
@@ -57,7 +57,7 @@ def create_output_folder_initialise_table(crf_or_preset):
 provider = VideoInfoProvider(args.original_video_path)
 fps = provider.get_framerate_fraction()
 fps_float = provider.get_framerate_float()
-original_bitrate = provider.get_bitrate()
+original_bitrate = provider.get_bitrate(args.decimal_places)
 
 line()
 print('Video Quality Metrics\nGitHub.com/BassThatHertz/video-quality-metrics')
@@ -68,9 +68,9 @@ print(f'Bitrate: {original_bitrate}')
 print(f'Framerate: {fps} ({fps_float}) FPS')
 line()
 
-if args.filterchain:
-    print('The -fc/--filterchain argument has been supplied. The following filter(s) will be used:')
-    print(args.filterchain)
+if args.video_filters:
+    print('The -vf/--video-filters argument has been supplied. The following filter(s) will be used:')
+    print(args.video_filters)
     line()
 
 table = PrettyTable()
@@ -104,6 +104,7 @@ if not args.no_transcoding_mode:
         preset = args.preset[0] if is_list(args.preset) else args.preset
         print(f'CRF values {crf_values_string} will be compared and the {preset} preset will be used.')
         line()
+    
 
         output_folder, comparison_table, output_ext = create_output_folder_initialise_table('Presets')
 
@@ -113,19 +114,19 @@ if not args.no_transcoding_mode:
 
         # Transcode the video with each CRF value.
         for crf in crf_values:
+            print(f'| CRF {crf} |')
+            line()
             transcode_output_path = os.path.join(output_folder, f'CRF {crf}{output_ext}')
-            
+            # Encode the video.
             factory, time_taken = encode_video(args, crf, preset, transcode_output_path, 'CRF {crf}')
             
             transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-            transcoded_bitrate = provider.get_bitrate(transcode_output_path)
-            size_rounded = force_decimal_places(round(transcode_size, args.decimal_places), args.decimal_places)
+            transcoded_bitrate = provider.get_bitrate(args.decimal_places, transcode_output_path)
+            size_rounded = force_decimal_places(transcode_size, args.decimal_places)
             data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
             
-            os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
-            # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with
-            # slashes.
-            json_file_path = f'{output_folder}/Raw JSON Data/CRF {crf}.json'
+            os.makedirs(os.path.join(output_folder, 'Metrics for each frame'), exist_ok=True)
+            json_file_path = f'{output_folder}/Metrics for each frame/CRF {crf}.json'
 
             run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, crf)
 
@@ -153,19 +154,19 @@ if not args.no_transcoding_mode:
 
         # Transcode the video with each preset.
         for preset in chosen_presets:
+            print(f'| Preset {preset} |')
+            line()
             transcode_output_path = os.path.join(output_folder, f'{preset}{output_ext}')
-        
-            factory, time_taken = encode_video(args, crf, preset, transcode_output_path, 'preset {preset}')
+            # Encode the video.
+            factory, time_taken = encode_video(args, crf, preset, transcode_output_path, f'preset {preset}')
 
             transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-            transcoded_bitrate = provider.get_bitrate(transcode_output_path)
-            size_rounded = force_decimal_places(round(transcode_size, args.decimal_places), args.decimal_places)
+            transcoded_bitrate = provider.get_bitrate(args.decimal_places, transcode_output_path)
+            size_rounded = force_decimal_places(transcode_size, args.decimal_places)
             data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
         
-            os.makedirs(os.path.join(output_folder, 'Raw JSON Data'), exist_ok=True)
-            # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with
-            # slashes.
-            json_file_path = f'{output_folder}/Raw JSON Data/{preset}.json'
+            os.makedirs(os.path.join(output_folder, 'Metrics for each frame'), exist_ok=True)
+            json_file_path = f'{output_folder}/Metrics for each frame/{preset}.json'
 
             run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, preset)
 

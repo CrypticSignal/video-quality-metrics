@@ -52,14 +52,6 @@ parser.add_argument(
     help='Specify the encoder to use (default: x264).'
 )
 
-# FFmpeg Video Filter(s)
-parser.add_argument(
-    '-fc', '--filterchain',
-    type=str,
-    help='Add FFmpeg video filter(s). Each filter must be separated by a comma.\n'
-         'Example: -fc bwdif=mode=0,crop=1920:800:0:140'
-)
-
 # The time interval for Overview Mode.
 parser.add_argument(
     '-i', '--interval', 
@@ -170,4 +162,12 @@ parser.add_argument(
 parser.add_argument(
     '-tvp', '--transcoded-video-path',
     help='The path of the transcoded video (only applicable when using the -ntm mode).'
+)
+
+# FFmpeg Video Filter(s)
+parser.add_argument(
+    '-vf', '--video-filters',
+    type=str,
+    help='Add FFmpeg video filter(s). Each filter must be separated by a comma.\n'
+         'Example: -fc bwdif=mode=0,crop=1920:800:0:140'
 )
