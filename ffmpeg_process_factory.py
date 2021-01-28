@@ -1,163 +1,89 @@
 import subprocess
+from utils import subprocess_printer
 
 
-class BaseFfmpegArguments:
-    _fps = None
-
-    @property
-    def infile(self):
-        return self._infile
-
-    @infile.setter
-    def infile(self, value):
-        self._infile = value
-
-    @property
-    def fps(self):
-        return self._fps
-
-    @fps.setter
-    def fps(self, value):
-        self._fps = value
-
-    def get_arguments(self):
-        base_ffmpeg_arguments = ["-i", self._infile]
-        if self._fps is not None:
-            base_ffmpeg_arguments = ["-r", self._fps, "-i", self._infile]
-        return base_ffmpeg_arguments
-
-
-class EncodingArguments(BaseFfmpegArguments):
-    def __init__(self, encoder):
+class EncodingArguments():
+    def __init__(self, infile, encoder, outfile):
+        self._infile = infile
         self._encoder = encoder
+        self._outfile = outfile
+        self._base_ffmpeg_arguments = ["-i", self._infile]
 
     # libaom-av1 "cpu-used" option.
-
-    @property
-    def av1_cpu_used(self):
-        return self._av1_cpu_used
-
-    @av1_cpu_used.setter
     def av1_cpu_used(self, value):
         self._av1_cpu_used = value
 
-    # Preset
-
-    @property
-    def preset(self):
-        return self._preset
-
-    @preset.setter
     def preset(self, value):
         self._preset = value
 
-    # CRF
-
-    @property
-    def crf(self):
-        return self._crf
-
-    @crf.setter
     def crf(self, value):
         self._crf = value
 
-    # Filterchain
-
-    @property
-    def filterchain(self):
-        return self._filterchain
-
-    @filterchain.setter
-    def filterchain(self, value):
-        if value is not None:
-            self._filterchain = ['-vf', value]
+    def video_filters(self, filters):
+        if filters is not None:
+            self._video_filters = ['-vf', filters]
         else:
-            self._filterchain = ''
+            self._video_filters = ''
 
-    # Output file
-    
-    @property
-    def outfile(self):
-        return(self._outfile)
-
-    @outfile.setter
     def outfile(self, value):
         self._outfile = value
 
-
     def get_arguments(self):
-        transcode_arguments = [
+        base_encoding_arguments = [
                 "-map", "0:V",
                 "-c:v", "libaom-av1" if self._encoder == 'av1' else f'lib{self._encoder}',
                 "-crf", self._crf
         ]
 
         if self._encoder == 'av1':
-            transcode_arguments += ['-b:v', '0', '-cpu-used', self._av1_cpu_used, *self._filterchain, self._outfile]
+            encoding_arguments = base_encoding_arguments + [
+                '-b:v', '0', '-cpu-used', self._av1_cpu_used, *self._video_filters, self._outfile
+            ]
         else:
-            transcode_arguments += ['-preset', self._preset, *self._filterchain, self._outfile]
+            encoding_arguments = base_encoding_arguments + [
+                '-preset', self._preset, *self._video_filters, self._outfile
+            ]
             
-        return super().get_arguments() + transcode_arguments
+        return self._base_ffmpeg_arguments + encoding_arguments
     
 
-class LibVmafArguments(BaseFfmpegArguments):
-    @property
-    def second_infile(self):
-        return self._second_infile
+class LibVmafArguments():
+    def __init__(self, fps, distorted_video, original_video, vmaf_options):
+        self._fps = fps
+        self._distorted_video = distorted_video
+        self._original_video = original_video
+        self._vmaf_options = vmaf_options 
 
-    @second_infile.setter
-    def second_infile(self, value):
-        self._second_infile = value
-
-    @property
-    def filterchain(self):
-        return self._filterchain
-
-    @filterchain.setter
-    def filterchain(self, value):
-        if value is not None:
-            self._filterchain = f',{value}'
+    def video_filters(self, filters):
+        if filters is not None:
+            self._video_filters = f',{filters}'
         else:
-            self._filterchain = ''
-
-    @property
-    def vmaf_options(self):
-        return self._vmaf_options
-
-    @vmaf_options.setter
-    def vmaf_options(self, value):
-        self._vmaf_options = value
+            self._video_filters = ''
 
     def get_arguments(self):
-        return super().get_arguments() + \
-            [
-                "-r", self._fps, "-i", self._second_infile,
-                "-map", "0:V", "-map", "1:V",
-                "-lavfi", f'[0:v]setpts=PTS-STARTPTS[dist];'
-                          f'[1:v]setpts=PTS-STARTPTS{self._filterchain}[ref];'
-                          f'[dist][ref]libvmaf={self._vmaf_options}',
-                "-f", "null", "-"
-            ]
-
+        return [
+            "-r", self._fps, "-i", self._distorted_video,
+            "-r", self._fps, "-i", self._original_video,
+            "-map", "0:V", "-map", "1:V",
+            "-lavfi", f'[0:v]setpts=PTS-STARTPTS[dist];'
+                      f'[1:v]setpts=PTS-STARTPTS{self._video_filters}[ref];'
+                      f'[dist][ref]libvmaf={self._vmaf_options}',
+            "-f", "null", "-"
+        ]
+        
 
 class FfmpegProcessFactory:
     def create_process(self, arguments, args):
-        __process_base_arguments = [
-            "ffmpeg", "-loglevel", "warning", "-stats", "-y"
-        ]
-
-        process = FfmpegProcess(
-            __process_base_arguments + arguments.get_arguments(), args)
-
+        _process_base_arguments = ["ffmpeg", "-loglevel", "warning", "-stats", "-y"]
+        process = FfmpegProcess(_process_base_arguments + arguments.get_arguments(), args)
         return process
 
 
 class FfmpegProcess:
     def __init__(self, arguments, args):
         self._arguments = arguments
-
-        if args.show_commands:
-            from utils import subprocess_printer
+        self._args = args
+        if self._args.show_commands:
             subprocess_printer('The following command will run', self._arguments)
 
     def run(self):
