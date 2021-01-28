@@ -42,14 +42,15 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
     else:
         end_of_computing_message = ''
 
-    if isinstance(args.crf_value, list) and len(args.crf_value) > 1:
-        end_of_computing_message += f' achieved with CRF {crf_or_preset}'
-    else:
-        end_of_computing_message += f' achieved with preset {crf_or_preset}'
+    if not args.no_transcoding_mode:
+        if isinstance(args.crf_value, list) and len(args.crf_value) > 1:
+            end_of_computing_message += f' achieved with CRF {crf_or_preset}'
+        else:
+            end_of_computing_message += f' achieved with preset {crf_or_preset}'
 
     print(f'\nComputing the VMAF{end_of_computing_message}...\n')
     timer = Timer()
     timer.start()
     process.run()
-    time_taken = timer.end(args.decimal_places)
+    time_taken = timer.stop(args.decimal_places)
     print(f'Done! Time taken: {time_taken} seconds.')

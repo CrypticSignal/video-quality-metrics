@@ -96,6 +96,7 @@ def concatenate_clips(txt_file_path, output_folder, extension, interval_seconds,
 
 
 def create_movie_overview(video_path, output_folder, interval_seconds, clip_length):
+    os.makedirs(output_folder, exist_ok=True)
     extension = Path(video_path).suffix
     try:
         txt_file_path = create_clips(video_path, output_folder, interval_seconds, clip_length)

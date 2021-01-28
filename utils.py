@@ -42,6 +42,17 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     return output_file_path
 
 
+def write_table_info(table_path, video_filename, original_bitrate, args, crf_or_preset):
+    with open(table_path, 'a') as f:
+        f.write(
+            f'\nFile Transcoded: {video_filename}\n'
+            f'Bitrate: {original_bitrate}\n'
+            f'Encoder used for the transcodes: {args.video_encoder}\n'
+            f'{crf_or_preset} was used.\n'
+            f'Filter(s) used: {"None" if not args.filterchain else args.filterchain}\n'
+            f'n_subsample: {args.subsample}')
+
+
 def exit_program(message):
     line()
     print(f'{message}\nThis program will now exit.')
@@ -77,7 +88,7 @@ class Timer:
     def start(self):
         self.__start_time = time()
 
-    def end(self, decimal_places):
+    def stop(self, decimal_places):
         time_to_convert = time() - self.__start_time
         time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
         return time_rounded
