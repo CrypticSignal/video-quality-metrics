@@ -1,4 +1,4 @@
-# Video Quality Metrics
+# Video Quality Metrics (VQM)
 
 **What kind of graph does this program produce?**
 
@@ -30,7 +30,7 @@ You want to know the quality (VMAF/SSIM/PSNR) achieved with certain presets. The
 
 Example: `python main.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim`
 
-# [2] Overview Mode:
+# Overview Mode:
 A recent addition to this program is "overview mode", which can be used with feature [2] by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a 2 seconds long segment every 60 seconds. 
   
 Example: `python main.py -ovp original.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
@@ -51,10 +51,16 @@ The following data is presented in a table and saved as a file named **Table.txt
 # Requirements:
 1. Python **3.6+**
 2. `pip install -r requirements.txt`
-3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.0.0 (or above) of the libvmaf filter, and depending on the encoders that you wish to test, libx264, libx265 and libaom. You can check whether your build of FFmpeg has libvmaf/libx264/libx265/libaom by entering `ffmpeg -buildconf` in the terminal and looking for `--enable-libvmaf`, `--enable-libx265`, `--enable-libx264` and `--enable-libaom` under "configuration:".
-- If you're on Windows, you can get the latest build of FFmpeg [here](https://www.gyan.dev/ffmpeg/builds/) (FFprobe is included) as it has support for the libvmaf filter as well as the aforementioned encoders (the `git essentials` build will suffice).
-- If you're on macOS 64-bit, simply download the FFmpeg and FFprobe **snapshot** builds from [here](https://evermeet.cx/ffmpeg/) and you're good to go. Be sure to download the snapshot builds rather than the release builds.
-- If you want to compile FFmpeg yourself, [here](https://github.com/yash1994/Build-FFmpeg-with-libvmaf) are instructions on how to compile FFmpeg (on Ubuntu 20.04) with support for the libvmaf filter (make sure you download vmaf v2.0.0 (or above) rather than v1.5.2). 
+3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.1.1 (or above) of the libvmaf filter, and depending on the encoders that you wish to test, libx264, libx265 and libaom. You can check whether your build of FFmpeg has libvmaf/libx264/libx265/libaom by entering `ffmpeg -buildconf` in the terminal and looking for `--enable-libvmaf`, `--enable-libx265`, `--enable-libx264` and `--enable-libaom` under "configuration:".
+
+FFmpeg builds that support all features of VQM:
+
+**Windows:** https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z
+
+**macOS:** https://evermeet.cx/ffmpeg/). You must download the snapshot build rather than the release build.
+
+**Linux (kernels 3.2.0+):** https://johnvansickle.com/ffmpeg/. Download the **git** build. Installation instructions, as well as how to add FFmpeg and FFprobe to your PATH, can be found [here](https://www.johnvansickle.com/ffmpeg/faq/).
+
 # Usage:
 ```
 usage: main.py [-h] [--av1-cpu-used {1,2,3,4,5,6,7,8}] [-cl <an integer between 1 and 60>] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]] [-dp DECIMAL_PLACES] [-e {x264,x265,av1}]
