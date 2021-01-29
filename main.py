@@ -21,11 +21,6 @@ args = parser.parse_args()
 original_video_path = args.original_video_path
 filename = Path(original_video_path).name
 
-if args.calculate_psnr:
-    exit_program('PSNR calculation is currently unavailable due to a change that was made in libvmaf v2.0.0.\n'
-                 'Visit https://github.com/Netflix/vmaf/issues/787 for more information.\n'
-                 'You can re-run your command without the psnr argument, but PSNR values will not be calculated.')
-
 args_validator = ArgumentsValidator()
 validation_result, validation_errors = args_validator.validate(args)
 

@@ -57,7 +57,7 @@ FFmpeg builds that support all features of VQM:
 
 **Windows:** https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z
 
-**macOS:** https://evermeet.cx/ffmpeg/). You must download the snapshot build rather than the release build.
+**macOS:** https://evermeet.cx/ffmpeg/. You must download the snapshot build rather than the release build.
 
 **Linux (kernels 3.2.0+):** https://johnvansickle.com/ffmpeg/. Download the **git** build. Installation instructions, as well as how to add FFmpeg and FFprobe to your PATH, can be found [here](https://www.johnvansickle.com/ffmpeg/faq/).
 
