@@ -113,7 +113,7 @@ if not args.no_transcoding_mode:
             line()
             transcode_output_path = os.path.join(output_folder, f'CRF {crf}{output_ext}')
             # Encode the video.
-            factory, time_taken = encode_video(args, crf, preset, transcode_output_path, 'CRF {crf}')
+            factory, time_taken = encode_video(args, crf, preset, transcode_output_path, f'CRF {crf}')
             
             transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
             transcoded_bitrate = provider.get_bitrate(args.decimal_places, transcode_output_path)
