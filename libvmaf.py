@@ -2,7 +2,7 @@ from ffmpeg_process_factory import LibVmafArguments
 from utils import Timer
 
 # Change this if you want to use a different VMAF model file.
-vmaf_model_file_path = 'vmaf_models/vmaf_float_v0.6.1.json'
+vmaf_model_file_path = 'vmaf_models/vmaf_v0.6.1.json'
 
 
 def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, crf_or_preset):
