@@ -169,5 +169,5 @@ parser.add_argument(
     '-vf', '--video-filters',
     type=str,
     help='Add FFmpeg video filter(s). Each filter must be separated by a comma.\n'
-         'Example: -fc bwdif=mode=0,crop=1920:800:0:140'
+         'Example: -vf bwdif=mode=0,crop=1920:800:0:140'
 )
