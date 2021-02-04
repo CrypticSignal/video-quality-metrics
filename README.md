@@ -114,7 +114,7 @@ Available arguments:
                         The path of the transcoded video (only applicable when using the -ntm mode).
   -vf VIDEO_FILTERS, --video-filters VIDEO_FILTERS
                         Add FFmpeg video filter(s). Each filter must be separated by a comma.
-                        Example: -fc bwdif=mode=0,crop=1920:800:0:140
+                        Example: -vf bwdif=mode=0,crop=1920:800:0:140
 ```
 
 # Example Table:
@@ -135,7 +135,7 @@ This program creates a file named `Table.txt`. Here's an example of what that fi
 File Transcoded: aqp60.mkv
 Bitrate: 12.339 Mbps
 Encoder used for the transcodes: x264
-CRF value used for the transcode(s): 23
+CRF 23 was used.
 ```
 *A 60 seconds long video was transcoded. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast`*
 
