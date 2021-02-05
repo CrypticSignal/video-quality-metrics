@@ -19,7 +19,7 @@ def is_list(argument_object):
 
 
 def force_decimal_places(value, decimal_places):
-    return f'{value:.{str(decimal_places)}f}'
+    return f'{value:.{decimal_places}f}'
 
 
 def cut_video(filename, args, output_ext, output_folder, comparison_table):
