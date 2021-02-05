@@ -48,7 +48,7 @@ def create_output_folder_initialise_table(crf_or_preset):
     
     return output_folder, comparison_table, output_ext
 
-# Use class VideoInfoProvider  to get the framerate, bitrate and duration
+# Use the VideoInfoProvider class to get the framerate, bitrate and duration.
 provider = VideoInfoProvider(args.original_video_path)
 fps = provider.get_framerate_fraction()
 fps_float = provider.get_framerate_float()
@@ -177,7 +177,7 @@ else:
     output_folder = f'({args.transcoded_video_path})'
     os.makedirs(output_folder, exist_ok=True)
 
-    comparison_table = os.path.join(output_folder, 'Table.txt')
+    table_path = os.path.join(output_folder, 'Table.txt')
     table.field_names = table_column_names
 
     # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
@@ -187,8 +187,8 @@ else:
     run_libvmaf(args.transcoded_video_path, args, json_file_path, fps, original_video_path, factory, crf_or_preset=None)
 
     transcode_size = os.path.getsize(args.transcoded_video_path) / 1_000_000
-    size_rounded = force_decimal_places(round(transcode_size, args.decimal_places), args.decimal_places)
-    transcoded_bitrate = provider.get_bitrate(args.transcoded_video_path)
+    size_rounded = force_decimal_places(transcode_size, args.decimal_places)
+    transcoded_bitrate = provider.get_bitrate(args.decimal_places, args.transcoded_video_path)
     data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
 
     graph_name = 'VMAF'
@@ -199,8 +199,11 @@ else:
     elif args.calculate_ssim:
         graph_name += ' and SSIM'
  
-    create_table_plot_metrics(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row, 
+    create_table_plot_metrics(table_path, json_file_path, args, args.decimal_places, data_for_current_row, 
                               graph_name, table, output_folder, time_taken=None)
+
+    with open(table_path, 'a') as f:
+        f.write(f'\nOriginal Bitrate: {original_bitrate}')
 
 
 line()

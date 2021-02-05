@@ -1,3 +1,4 @@
+from math import ceil
 import os
 import sys
 from pathlib import Path
@@ -19,7 +20,7 @@ def is_list(argument_object):
 
 
 def force_decimal_places(value, decimal_places):
-	return '{:0.{dp}f}'.format(value, dp=decimal_places)
+    return f'{value:.{decimal_places}f}'
 
 
 def cut_video(filename, args, output_ext, output_folder, comparison_table):
@@ -68,7 +69,7 @@ class VideoInfoProvider:
             bitrate = probe(video_path)['format']['bit_rate'] 
         else:
             bitrate = probe(self._video_path)['format']['bit_rate']
-        return f'{force_decimal_places(int(bitrate) / 1_000_000, decimal_places)} Mbps'
+        return f'{force_decimal_places((int(bitrate) / 1_000_000), decimal_places)} Mbps'
 
     def get_framerate_fraction(self):
         r_frame_rate = [stream for stream in probe(self._video_path)['streams']
@@ -85,9 +86,9 @@ class VideoInfoProvider:
 
 class Timer:
     def start(self):
-        self.__start_time = time()
+        self._start_time = time()
 
     def stop(self, decimal_places):
-        time_to_convert = time() - self.__start_time
+        time_to_convert = time() - self._start_time
         time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
         return time_rounded
