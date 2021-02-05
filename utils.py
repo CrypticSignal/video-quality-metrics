@@ -1,4 +1,3 @@
-from math import ceil
 import os
 import sys
 from pathlib import Path
@@ -20,7 +19,7 @@ def is_list(argument_object):
 
 
 def force_decimal_places(value, decimal_places):
-    return f'{value:.{decimal_places}f}'
+    return f'{value:.{str(decimal_places)}f}'
 
 
 def cut_video(filename, args, output_ext, output_folder, comparison_table):
