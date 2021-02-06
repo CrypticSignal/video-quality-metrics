@@ -1,48 +1,53 @@
 # Video Quality Metrics (VQM)
 
-**What kind of graph does this program produce?**
+**What kind of graphs does this program produce?**
 
-Graph(s) are created and saved as PNG files which show the variation of the VMAF/SSIM/PSNR throughout the video. Here's an example:
+Graphs are created and saved as PNG files which show the variation of the VMAF/SSIM/PSNR throughout the video. Here's a VMAF graph as an example:
 
 ![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/Example%20Graphs/VMAF.png)
+
+*Example SSIM and PSNR graphs can be found in the [Example Graphs folder](https://github.com/BassThatHertz/video-quality-metrics/tree/master/Example%20Graphs).*
 
 **This program has two main features, and they will be referred to as [1] and [2].**
 
 **[1]:**
 
-You already have a transcoded video (and the original) and you want the quality of the transcoded version to be calculated using the VMAF and (optionally) the SSIM and PSNR metrics. The data is saved in a file named **Table.txt**, and a graph is also created which shows the variation of the VMAF/SSIM/PSNR throughout the video. The graph is saved as a PNG file.
+You already have a transcoded video (and the original) and you want the quality of the transcoded version to be calculated using the VMAF and (optionally) the SSIM and PSNR metrics. The values of the aforementioned quality metrics are saved in a table, in a file named *Table.txt*. A VMAF graph is created (and SSIM/PSNR graphs, if the `-ssim` and `-psnr` arguments are specified) which shows the variation of the VMAF/SSIM/PSNR throughout the video. The graph(s) are saved as PNG files.
 
-Example: `python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim`
+Example: `python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
 
 **[2]:**
 
-Transcode a video using the x264 or x265 encoder and see the VMAF/SSIM/PSNR values that you get with different presets or CRF values. There are two modes; CRF comparison mode and presets comparison mode. You must specify multiple CRF values OR presets and this program will automatically transcode the video with each preset/CRF value, and the quality of each transcode is calculated using the VMAF and (optionally) the SSIM and PSNR metrics. Other factors such as the time taken to transcode the video and the resulting filesize are also shown in a table (Table.txt). [Here's](https://github.com/BassThatHertz/video-quality-metrics#example-table) an example. In addition to this, a graph is created for each preset/CRF value, showing the variation of the SSIM, PSNR and VMAF throughout the transcoded video.
+Transcode a video using the x264 or x265 encoder and see the VMAF/SSIM/PSNR values that you get with the specified presets or CRF values. There are two modes; CRF comparison mode and presets comparison mode. You must specify multiple CRF values OR presets and this program will automatically transcode the video with each preset/CRF value, and the quality of each transcode is calculated using the VMAF and (optionally) the SSIM and PSNR metrics. These metrics are saved in a table, in a file named *Table.txt*. [Here's](https://github.com/BassThatHertz/video-quality-metrics#example-table) an example table. In addition to this, VMAF/SSIM/PSNR graphs are created for each preset/CRF value, showing the variation of the quality metric throughout the video.
 
-**[2] (CRF comparison mode):**
+**[2] CRF Comparison Mode Example:**
 
-You want to know the quality (VMAF/SSIM/PSNR) achieved with certain CRF values. The program will automatically transcode the original video with every CRF value that you specify (using the `-crf` argument) without having to manually start a new transcode with a different CRF value. You must specify the CRF values that you want to compare and (optionally) **one** preset (if you don't want the default preset (medium) to be used).
+`python main.py -ovp original.mp4 -crf 18 19 20 -p veryfast -ssim -psnr`
 
-Example: `python main.py -ovp original.mp4 -crf 18 19 20 -p veryfast -ssim`
+*You must specify the CRF values that you want to compare and (optionally) **one** preset. If you do not specify a preset, the `medium` preset will be used.*
 
-**[2] (presets comparison mode):**
+**[2] Presets Comparison Mode Example:**
 
-You want to know the quality (VMAF/SSIM/PSNR) achieved with certain presets. The program will automatically transcode the original video with every preset that you specify (using the `-p` argument) without having to manually start a new encode with each preset. You must specify the presets that you want to compare and (optionally) **one** CRF value (if you don't want the default CRF value of 23 to be used).
+`python main.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
 
-Example: `python main.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim`
+*You must specify the presets that you want to compare and (optionally) **one** CRF value. If you do specify a CRF value, a CRF of 23 will be used.*
 
-# Overview Mode:
+To see example graphs (which are created whether feature [1] or [2] is used), check out the [Example Graphs](https://github.com/BassThatHertz/video-quality-metrics/tree/master/Example%20Graphs) folder.
+
+# [2] Overview Mode:
 A recent addition to this program is "overview mode", which can be used with feature [2] by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a 2 seconds long segment every 60 seconds. 
   
 Example: `python main.py -ovp original.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
 
-In the example above, we're grabbing 2 seconds (`--clip-length 2`) every minute (`--interval 60`) in the video. These 2-second long clips are concatenated to make the overview video. A 1-hour long video is turned into an overview video that is 1 minute and 58 seconds long. The benefit of overview mode should now be clear - transcoding and computing the quality metrics of a <2 minutes long video is **much** quicker than doing so with an hour long video.
+In the example above, we're grabbing a two-second-long clip (`--clip-length 2`) every minute (`--interval 60`) in the video. These 2-second long clips are concatenated to make the overview video. A 1-hour long video is turned into an overview video that is 1 minute and 58 seconds long. The benefit of overview mode should now be clear - transcoding and computing the quality metrics of a <2 minutes long video is **much** quicker than doing so with an hour long video.
 
 *An alternative method of reducing the execution time of this program is by only using the first x seconds of the original video (you can do this with the `-t` argument), but **Overview Mode** provides a better representation of the whole video.*
 
 # What data is shown in the table?
-The following data is presented in a table and saved as a file named **Table.txt**:
+The following data is presented in a table and saved as a file named *Table.txt*:
 - Time taken to transcode the video (in seconds). *Applicable to feature [2] only.*
-- Filesize (MB).
+- Filesize (MB)
+- Bitrate (Mbps)
 - Filesize compared to the original video (as a percentage).
 - [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) values. VMAF is a perceptual video quality assessment algorithm developed by Netflix.
 - [Optional] Structural Similarity Index (SSIM). *You must use the `-ssim` argument.*
@@ -118,7 +123,7 @@ Available arguments:
 ```
 
 # Example Table:
-This program creates a file named `Table.txt`. Here's an example of what that file will contain when opting to compare presets:
+This program creates a file named *Table.txt*. Here's an example of what that file will contain when opting to compare presets:
 ```
 +-------------------------------------------------------------------------------+
 |        VMAF values are in the format: Min | Standard Deviation | Mean         |
@@ -137,7 +142,7 @@ Bitrate: 12.339 Mbps
 Encoder used for the transcodes: x264
 CRF 23 was used.
 ```
-*A 60 seconds long video was transcoded. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast`*
+*The `-ssim` and `-psnr` arguments were not specified. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast`*
 
 # About the model files:
 As you may have noticed, two model files have been provided. `vmaf_v0.6.1.json` and `vmaf_4k_v0.6.1.json`. There is also the phone model that can be enabled by using the `-pm` argument.
