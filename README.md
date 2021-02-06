@@ -2,9 +2,9 @@
 
 **What kind of graph does this program produce?**
 
-Graph(s) are created and saved as PNG files which show the variation of the VMAF/SSIM/PSNR values throughout the video. Here's an example:
+Graph(s) are created and saved as PNG files which show the variation of the VMAF/SSIM/PSNR throughout the video. Here's an example:
 
-![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/CRF%2023.png?raw=true)
+![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/Example%20Graphs/VMAF.png)
 
 **This program has two main features, and they will be referred to as [1] and [2].**
 
