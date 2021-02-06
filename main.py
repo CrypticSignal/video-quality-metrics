@@ -174,7 +174,7 @@ if not args.no_transcoding_mode:
 
 # -ntm mode
 else:
-    output_folder = f'({args.transcoded_video_path})'
+    output_folder = f'[VQM] {Path(args.transcoded_video_path).name}'
     os.makedirs(output_folder, exist_ok=True)
 
     table_path = os.path.join(output_folder, 'Table.txt')
@@ -207,5 +207,5 @@ else:
 
 
 line()
-output_folder = f'({filename})' if not args.no_transcoding_mode else f'({args.transcoded_video_path})'
-print(f'All done! Check out the {output_folder} folder.')
+output_folder = f'({filename})' if not args.no_transcoding_mode else f'[VQM] {Path(args.transcoded_video_path).name}'
+print(f'All done! Check out the "{output_folder}" folder.')
