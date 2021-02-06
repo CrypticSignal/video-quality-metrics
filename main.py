@@ -183,16 +183,8 @@ else:
     transcoded_bitrate = provider.get_bitrate(args.decimal_places, args.transcoded_video_path)
     data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
 
-    graph_name = 'VMAF'
-    if args.calculate_psnr and args.calculate_ssim:
-        graph_name += ', PSNR and SSIM'
-    elif args.calculate_psnr:
-        graph_name += ' and PSNR'
-    elif args.calculate_ssim:
-        graph_name += ' and SSIM'
- 
     create_table_plot_metrics(table_path, json_file_path, args, args.decimal_places, data_for_current_row, 
-                              graph_name, table, output_folder, time_taken=None)
+                              table, output_folder, time_taken=None)
 
     with open(table_path, 'a') as f:
         f.write(f'\nOriginal Bitrate: {original_bitrate}')
