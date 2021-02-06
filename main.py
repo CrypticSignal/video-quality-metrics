@@ -34,7 +34,6 @@ def create_output_folder_initialise_table(crf_or_preset):
     # Cannot use os.path.join for output_folder as this gives an error like the following:
     # No such file or directory: '(2.mkv)\\Presets comparison at CRF 23/Metrics for each frame/superfast.json'
     output_folder = f'({filename})/{crf_or_preset} Comparison'
-    os.makedirs(output_folder, exist_ok=True)
 
     comparison_table = os.path.join(output_folder, 'Table.txt')
     table_column_names.insert(0, crf_or_preset)
@@ -88,30 +87,29 @@ if args.interval > 0:
     else:
         exit_program('Something went wrong when trying to create the overview video.')
 
-
 if not args.no_transcoding_mode:
     # CRF comparison mode.
     if is_list(args.crf_value) and len(args.crf_value) > 1:
         print('CRF comparison mode activated.')
-
         crf_values = args.crf_value
         crf_values_string = ', '.join(str(crf) for crf in crf_values)
         preset = args.preset[0] if is_list(args.preset) else args.preset
         print(f'CRF values {crf_values_string} will be compared and the {preset} preset will be used.')
         line()
-    
 
-        output_folder, comparison_table, output_ext = create_output_folder_initialise_table('Presets')
+        prev_output_folder, comparison_table, output_ext = create_output_folder_initialise_table('CRF')
 
         # The user only wants to transcode the first x seconds of the video.
         if args.encode_length:
-            original_video_path = cut_video(filename, args, output_ext, output_folder, comparison_table)
+            original_video_path = cut_video(filename, args, output_ext, prev_output_folder, comparison_table)
 
-        # Transcode the video with each CRF value.
         for crf in crf_values:
             print(f'| CRF {crf} |')
             line()
+            output_folder = f'{prev_output_folder}/CRF {crf}'
+            os.makedirs(output_folder, exist_ok=True)
             transcode_output_path = os.path.join(output_folder, f'CRF {crf}{output_ext}')
+
             # Encode the video.
             factory, time_taken = encode_video(args, crf, preset, transcode_output_path, f'CRF {crf}')
             
@@ -120,38 +118,36 @@ if not args.no_transcoding_mode:
             size_rounded = force_decimal_places(transcode_size, args.decimal_places)
             data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
             
-            os.makedirs(os.path.join(output_folder, 'Metrics for each frame'), exist_ok=True)
-            json_file_path = f'{output_folder}/Metrics for each frame/CRF {crf}.json'
-
+            json_file_path = f'{output_folder}/Metrics of each frame.json'
             run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, crf)
 
-            graph_filename = f'CRF {crf} at preset {preset}'
             create_table_plot_metrics(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row,
-                                        graph_filename, table, output_folder, time_taken, crf)
+                                      table, output_folder, time_taken, crf)
 
             write_table_info(comparison_table, filename, original_bitrate, args, f'Preset {preset}')
             
     # Presets comparison mode.
     elif is_list(args.preset):
         print('Presets comparison mode activated.')
-
         chosen_presets = args.preset
         presets_string = ', '.join(chosen_presets)
         crf = args.crf_value[0] if is_list(args.crf_value) else args.crf_value
         print(f'Presets {presets_string} will be compared at a CRF of {crf}.')
         line()
 
-        output_folder, comparison_table, output_ext = create_output_folder_initialise_table('Preset')
+        prev_output_folder, comparison_table, output_ext = create_output_folder_initialise_table('Preset')
 
-        # The user only wants to transcode the first x seconds of the video.
+        # The -t/--encode-length argument was specified.
         if args.encode_length:
-            original_video_path = cut_video(filename, args, output_ext, output_folder, comparison_table)
+            original_video_path = cut_video(filename, args, output_ext, prev_output_folder, comparison_table)
 
-        # Transcode the video with each preset.
         for preset in chosen_presets:
             print(f'| Preset {preset} |')
             line()
+            output_folder = f'{prev_output_folder}/Preset {preset}'
+            os.makedirs(output_folder, exist_ok=True)
             transcode_output_path = os.path.join(output_folder, f'{preset}{output_ext}')
+
             # Encode the video.
             factory, time_taken = encode_video(args, crf, preset, transcode_output_path, f'preset {preset}')
 
@@ -160,19 +156,15 @@ if not args.no_transcoding_mode:
             size_rounded = force_decimal_places(transcode_size, args.decimal_places)
             data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
         
-            os.makedirs(os.path.join(output_folder, 'Metrics for each frame'), exist_ok=True)
-            json_file_path = f'{output_folder}/Metrics for each frame/{preset}.json'
-
+            json_file_path = f'{output_folder}/Metrics of each frame.json'
             run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, preset)
 
-            graph_filename = f'Preset {preset} at CRF {crf}'
             create_table_plot_metrics(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row, 
-                                        graph_filename, table, output_folder, time_taken, preset)
+                                      table, output_folder, time_taken, preset)
 
             write_table_info(comparison_table, filename, original_bitrate, args, f'CRF {crf}')
 
-
-# -ntm mode
+# -ntm mode.
 else:
     output_folder = f'[VQM] {Path(args.transcoded_video_path).name}'
     os.makedirs(output_folder, exist_ok=True)
@@ -181,7 +173,7 @@ else:
     table.field_names = table_column_names
 
     # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
-    json_file_path = f'{output_folder}/QualityMetrics.json'
+    json_file_path = f'{output_folder}/Metrics of each frame.json'
 
     factory = FfmpegProcessFactory()
     run_libvmaf(args.transcoded_video_path, args, json_file_path, fps, original_video_path, factory, crf_or_preset=None)
