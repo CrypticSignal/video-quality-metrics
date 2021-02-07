@@ -2,11 +2,7 @@
 
 **What kind of graphs does this program produce?**
 
-<<<<<<< Updated upstream
 Graphs are created and saved as PNG files which show the variation of the VMAF/SSIM/PSNR throughout the video. Here's a VMAF graph as an example:
-=======
-Graph(s) are created and saved as PNG files which show the variation of the VMAF/SSIM/PSNR throughout the video. Here's an example:
->>>>>>> Stashed changes
 
 ![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/Example%20Graphs/VMAF.png)
 
