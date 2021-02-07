@@ -84,6 +84,14 @@ parser.add_argument(
          'Example: python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim'
 )
 
+parser.add_argument(
+    '-o', '--output-folder',
+    type=str,
+    help='Use this argument if you want a specific name for the output folder.\n'
+         'If you want the name of the output folder to contain a space, the string must be surrounded in double quotes.'
+         '\nExample: -o "VQM Output"'
+)
+
 # Original Video Path
 parser.add_argument(
     '-ovp', '--original-video-path', 

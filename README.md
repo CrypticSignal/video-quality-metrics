@@ -2,7 +2,11 @@
 
 **What kind of graphs does this program produce?**
 
+<<<<<<< Updated upstream
 Graphs are created and saved as PNG files which show the variation of the VMAF/SSIM/PSNR throughout the video. Here's a VMAF graph as an example:
+=======
+Graph(s) are created and saved as PNG files which show the variation of the VMAF/SSIM/PSNR throughout the video. Here's an example:
+>>>>>>> Stashed changes
 
 ![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/Example%20Graphs/VMAF.png)
 
@@ -69,8 +73,8 @@ FFmpeg builds that support all features of VQM:
 # Usage:
 ```
 usage: main.py [-h] [--av1-cpu-used {1,2,3,4,5,6,7,8}] [-cl <an integer between 1 and 60>] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]] [-dp DECIMAL_PLACES] [-e {x264,x265,av1}]
-               [-i <an integer between 1 and 600>] [-n x] [-ntm] -ovp ORIGINAL_VIDEO_PATH [-pm] [-p PRESET(s) [PRESET(s ...]] [-psnr] [-sc] [-ssim] [-t x] [--threads x]
-               [-tvp TRANSCODED_VIDEO_PATH] [-vf VIDEO_FILTERS]
+               [-i <an integer between 1 and 600>] [-n x] [-ntm] [-o OUTPUT_FOLDER] -ovp ORIGINAL_VIDEO_PATH [-pm] [-p PRESET(s) [PRESET(s ...]] [-psnr] [-sc] [-ssim] [-t x]
+               [--threads x] [-tvp TRANSCODED_VIDEO_PATH] [-vf VIDEO_FILTERS]
 
 Available arguments:
   -h, --help            show this help message and exit
@@ -98,6 +102,10 @@ Available arguments:
                         Enable "no transcoding mode", which allows you to calculate the VMAF/SSIM/PSNR for a video that you have already transcoded.
                         The original and transcoded video paths must be specified using the -ovp and -tvp arguments, respectively.
                         Example: python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim
+  -o OUTPUT_FOLDER, --output-folder OUTPUT_FOLDER
+                        Use this argument if you want a specific name for the output folder.
+                        If you want the name of the output folder to contain a space, the string must be surrounded in double quotes.
+                        Example: -o "VQM Output"
   -ovp ORIGINAL_VIDEO_PATH, --original-video-path ORIGINAL_VIDEO_PATH
                         Enter the path of the original video. A relative or absolute path can be specified. If the path contains a space, it must be surrounded in double quotes.
                         Example: -ovp "C:/Users/H/Desktop/file 1.mp4"
@@ -113,7 +121,7 @@ Available arguments:
                         Create a lossless version of the original video that is just the first x seconds of the video. This cut version of the original video is what will be transcoded and used as the reference video. You cannot use this option in conjunction with the -i or -cl arguments.
                         Example: -t 60
   --threads x           Set the number of threads to be used when computing VMAF.
-                        The default is set to what Python's os.cpu_count() method returns. For example, on a dual-core Intel CPU with hyperthreading, the default will be set to 4.
+                        The default is set to what Python's os.cpu_count() method returns. For example, on a dual-core Intel CPU with hyperthreading, the default will be set to 4.       
                         Example: --threads 2
   -tvp TRANSCODED_VIDEO_PATH, --transcoded-video-path TRANSCODED_VIDEO_PATH
                         The path of the transcoded video (only applicable when using the -ntm mode).

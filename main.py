@@ -31,9 +31,10 @@ if not validation_result:
 
 
 def create_output_folder_initialise_table(crf_or_preset):
-    # Cannot use os.path.join for output_folder as this gives an error like the following:
-    # No such file or directory: '(2.mkv)\\Presets comparison at CRF 23/Metrics for each frame/superfast.json'
-    output_folder = f'({filename})/{crf_or_preset} Comparison'
+    if args.output_folder:
+        output_folder = args.output_folder
+    else:
+        output_folder = f'({filename})/{crf_or_preset} Comparison'
 
     comparison_table = os.path.join(output_folder, 'Table.txt')
     table_column_names.insert(0, crf_or_preset)
@@ -166,7 +167,11 @@ if not args.no_transcoding_mode:
 
 # -ntm mode.
 else:
-    output_folder = f'[VQM] {Path(args.transcoded_video_path).name}'
+    if args.output_folder:
+        output_folder = args.output_folder
+    else:
+        output_folder = f'[VQM] {Path(args.transcoded_video_path).name}'
+
     os.makedirs(output_folder, exist_ok=True)
 
     table_path = os.path.join(output_folder, 'Table.txt')
@@ -191,5 +196,4 @@ else:
 
 
 line()
-output_folder = f'({filename})' if not args.no_transcoding_mode else f'[VQM] {Path(args.transcoded_video_path).name}'
 print(f'All done! Check out the "{output_folder}" folder.')
