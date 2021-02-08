@@ -32,7 +32,7 @@ if not validation_result:
 
 def create_output_folder_initialise_table(crf_or_preset):
     if args.output_folder:
-        output_folder = args.output_folder
+        output_folder = f'{args.output_folder}/{crf_or_preset} Comparison'
     else:
         output_folder = f'({filename})/{crf_or_preset} Comparison'
 
@@ -196,4 +196,4 @@ else:
 
 
 line()
-print(f'All done! Check out the "{output_folder}" folder.')
+print(f'All done! Check out the contents of the "{Path(output_folder).parent}" directory.')
