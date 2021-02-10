@@ -2,7 +2,7 @@ from ffmpeg_process_factory import EncodingArguments, FfmpegProcessFactory
 from utils import Timer
 
 
-def encode_video(args, crf, preset, output_path, message):
+def encode_video(args, crf, preset, output_path, message, duration):
     arguments = EncodingArguments(args.original_video_path, args.video_encoder, output_path)
     
     arguments.infile = args.original_video_path
@@ -18,11 +18,11 @@ def encode_video(args, crf, preset, output_path, message):
     factory = FfmpegProcessFactory()
     process = factory.create_process(arguments, args)
     
-    print(f'Transcoding the video with {message}...\n')
+    print(f'Converting the video using {message}...')
     timer = Timer()
     timer.start()
-    process.run()
+    process.run(duration)
     time_taken = timer.stop(args.decimal_places)
-    print(f'Done! Time taken: {time_taken} seconds.\n')
+    print(f'Done!')
 
     return factory, time_taken

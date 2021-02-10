@@ -1,11 +1,10 @@
 from ffmpeg_process_factory import LibVmafArguments
-from utils import Timer
 
 # Change this if you want to use a different VMAF model file.
 vmaf_model_file_path = 'vmaf_models/vmaf_v0.6.1.json'
 
 
-def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, crf_or_preset):
+def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, crf_or_preset, duration):
     characters_to_escape = ["'", ":", ",", "[", "]"]
     for character in characters_to_escape:
         if character in json_file_path:
@@ -19,7 +18,7 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
         "phone_model": "1" if args.phone_model else "0",
         "psnr": "1" if args.calculate_psnr else "0",
         "ssim": "1" if args.calculate_ssim else "0",
-        "n_threads": args.threads
+        "n_threads": '1'
     }
     vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
 
@@ -44,9 +43,6 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
         else:
             end_of_computing_message += f' achieved with preset {crf_or_preset}'
 
-    print(f'Computing the VMAF{end_of_computing_message}...\n')
-    timer = Timer()
-    timer.start()
-    process.run()
-    time_taken = timer.stop(args.decimal_places)
-    print(f'Done! Time taken: {time_taken} seconds.')
+    print(f'Calculating the VMAF{end_of_computing_message}...')
+    process.run(duration)
+    print('Done!')

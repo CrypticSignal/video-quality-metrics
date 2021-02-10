@@ -50,6 +50,7 @@ def create_output_folder_initialise_table(crf_or_preset):
 
 # Use the VideoInfoProvider class to get the framerate, bitrate and duration.
 provider = VideoInfoProvider(args.original_video_path)
+duration = float(provider.get_duration())
 fps = provider.get_framerate_fraction()
 fps_float = provider.get_framerate_float()
 original_bitrate = provider.get_bitrate(args.decimal_places)
@@ -112,7 +113,7 @@ if not args.no_transcoding_mode:
             transcode_output_path = os.path.join(output_folder, f'CRF {crf}{output_ext}')
 
             # Encode the video.
-            factory, time_taken = encode_video(args, crf, preset, transcode_output_path, f'CRF {crf}')
+            factory, time_taken = encode_video(args, crf, preset, transcode_output_path, f'CRF {crf}', duration)
             
             transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
             transcoded_bitrate = provider.get_bitrate(args.decimal_places, transcode_output_path)
@@ -120,7 +121,7 @@ if not args.no_transcoding_mode:
             data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
             
             json_file_path = f'{output_folder}/Metrics of each frame.json'
-            run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, crf)
+            run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, crf, duration)
 
             create_table_plot_metrics(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row,
                                       table, output_folder, time_taken, crf)
@@ -195,5 +196,4 @@ else:
         f.write(f'\nOriginal Bitrate: {original_bitrate}')
 
 
-line()
 print(f'All done! Check out the contents of the "{Path(output_folder).parent}" directory.')

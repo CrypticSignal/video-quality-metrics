@@ -1,7 +1,7 @@
 import os
 import sys
 from pathlib import Path
-from time import time
+from time import time, sleep
 
 from ffmpeg import probe
 
@@ -12,6 +12,19 @@ def line():
 
 def subprocess_printer(message, arguments_list):
     print(f'{message}:\n\n{" ".join(arguments_list)}\n')
+
+
+def show_progress_bar(progress, total, dp, extra_info=''):
+    width, height = os.get_terminal_size()
+    extra_info_len = len(extra_info)
+    bar_length = width - extra_info_len - 10
+    filled_length = int(bar_length * (progress / total))
+
+    bar = ('█' * filled_length) + ('-' * (bar_length - filled_length))
+    percentage_complete = round(100.0 * (progress / total), dp)
+
+    sys.stdout.write(f'|{bar}| {percentage_complete}% {extra_info}\r')
+    sys.stdout.flush() 
 
 
 def is_list(argument_object):
@@ -62,6 +75,9 @@ def exit_program(message):
 class VideoInfoProvider:
     def __init__(self, video_path):
         self._video_path = video_path
+
+    def get_duration(self):
+        return float(probe(self._video_path)['format']['duration'])
 
     def get_bitrate(self, decimal_places, video_path=None):
         if video_path:

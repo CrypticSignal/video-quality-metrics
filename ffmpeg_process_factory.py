@@ -1,5 +1,7 @@
 import subprocess
-from utils import subprocess_printer
+import os
+from time import sleep
+from utils import subprocess_printer, show_progress_bar
 
 
 class EncodingArguments():
@@ -64,6 +66,7 @@ class LibVmafArguments():
         return [
             "-r", self._fps, "-i", self._distorted_video,
             "-r", self._fps, "-i", self._original_video,
+            "-threads", '1',
             "-map", "0:V", "-map", "1:V",
             "-lavfi", f'[0:v]setpts=PTS-STARTPTS[dist];'
                       f'[1:v]setpts=PTS-STARTPTS{self._video_filters}[ref];'
@@ -74,7 +77,7 @@ class LibVmafArguments():
 
 class FfmpegProcessFactory:
     def create_process(self, arguments, args):
-        _process_base_arguments = ["ffmpeg", "-loglevel", "warning", "-stats", "-y"]
+        _process_base_arguments = ["ffmpeg", "-progress", "-", "-nostats", "-loglevel", "warning", "-y"]
         process = FfmpegProcess(_process_base_arguments + arguments.get_arguments(), args)
         return process
 
@@ -86,5 +89,38 @@ class FfmpegProcess:
         if self._args.show_commands:
             subprocess_printer('The following command will run', self._arguments)
 
-    def run(self):
-        subprocess.run(self._arguments)
+    def run(self, duration):
+        fps = 0
+        percentage = 0
+        speed = 1
+        secs = 1
+        process = subprocess.Popen(self._arguments, stdout=subprocess.PIPE)
+        while True:
+            # If the process hasn't completed
+            if process.poll() is not None:
+                width, height = os.get_terminal_size()
+                print('\r' + ' ' * (width - 1) + '\r', end='')
+                break
+            else:
+                output = process.stdout.readline()
+
+                if 'fps' in output.decode('utf-8'):
+                    fps = round(float(output.decode('utf-8')[4:]), 1)
+
+                elif 'out_time_ms' in output.decode('utf-8'):
+                    microseconds = int(output.decode('utf-8').strip()[12:])
+                    secs = microseconds / 1_000_000
+                    percentage = (secs / duration) * 100
+
+                elif "speed" in output.decode('utf-8'):
+                    speed = float(output.decode('utf-8').strip()[6:-1].replace(' ', ''))
+                    if not speed > 0:
+                        speed = 1
+        
+                eta = (duration - secs) / speed
+                minutes = round(eta / 60)
+                seconds = f'{round(eta % 60):02d}'
+                sleep(0.1)
+                show_progress_bar(percentage, 100, 1, f'(Speed: {speed}x, FPS: {fps}, ETA: {minutes}:{seconds} [M:S])')
+                   
+
