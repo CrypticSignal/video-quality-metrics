@@ -91,8 +91,8 @@ class FfmpegProcess:
     def run(self, duration):
         fps = 0
         percentage = 0
-        speed = 1
-        secs = 1
+        speed = 0
+        secs = 0
         process = subprocess.Popen(self._arguments, stdout=subprocess.PIPE)
         while True:
             # If the process hasn't completed
@@ -112,14 +112,17 @@ class FfmpegProcess:
                     percentage = (secs / duration) * 100
 
                 elif "speed" in output.decode('utf-8'):
-                    speed = float(output.decode('utf-8').strip()[6:-1].replace(' ', ''))
-                    if not speed > 0:
-                        speed = 1
-        
-                eta = (duration - secs) / speed
-                minutes = round(eta / 60)
-                seconds = f'{round(eta % 60):02d}'
-                sleep(0.1)
-                show_progress_bar(percentage, 100, 1, f'(Speed: {speed}x, FPS: {fps}, ETA: {minutes}:{seconds} [M:S])')
+                    speed = float(output.decode('utf-8').strip()[6:-1])
+
+                try:
+                    eta = (duration - secs) / speed
+                except ZeroDivisionError:
+                    sleep(0.1)
+                    show_progress_bar(percentage, 100, 1, f'(Speed: ..., FPS: {fps}, ETA: ...)')
+                else:
+                    minutes = round(eta / 60)
+                    seconds = f'{round(eta % 60):02d}'
+                    sleep(0.1)
+                    show_progress_bar(percentage, 100, 1, f'(Speed: {speed}x, FPS: {fps}, ETA: {minutes}:{seconds} [M:S])')
                    
 
