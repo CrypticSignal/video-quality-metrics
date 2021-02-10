@@ -66,7 +66,6 @@ class LibVmafArguments():
         return [
             "-r", self._fps, "-i", self._distorted_video,
             "-r", self._fps, "-i", self._original_video,
-            "-threads", '1',
             "-map", "0:V", "-map", "1:V",
             "-lavfi", f'[0:v]setpts=PTS-STARTPTS[dist];'
                       f'[1:v]setpts=PTS-STARTPTS{self._video_filters}[ref];'
