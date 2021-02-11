@@ -3,7 +3,9 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from utils import line, force_decimal_places
+from utils import line, force_decimal_places, Logger
+
+log = Logger('save_metrics')
 
 
 def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, 
@@ -17,18 +19,17 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 	mean_vmaf = force_decimal_places(np.mean(vmaf_scores), decimal_places)
 	min_vmaf = force_decimal_places(min(vmaf_scores), decimal_places)
 	vmaf_std = force_decimal_places(np.std(vmaf_scores), decimal_places) # Standard deviation.
-	print(f'VMAF score: {mean_vmaf}, Standard Deviation: {vmaf_std}')
 
 	frame_numbers = [frame['frameNum'] for frame in file_contents['frames']]
 
-	print(f'Creating VMAF graph...')
+	log.info(f'Creating VMAF graph...')
 	plt.plot(frame_numbers, vmaf_scores, label=f'VMAF ({mean_vmaf})')
 	plt.suptitle(f'VMAF\nn_subsample: {args.subsample}')
 	plt.xlabel('Frame Number')
 	plt.ylabel('Value of Quality Metric')
 	plt.legend(loc='lower right')
 	plt.savefig(os.path.join(output_folder, 'VMAF'))
-	print(f'Done! Graph saved at {output_folder}/VMAF.png')
+	log.info(f'Done! Graph saved at {output_folder}/VMAF.png')
 	plt.clf()
 
 	# VMAF data.
@@ -47,14 +48,14 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 		ssim_std = force_decimal_places(np.std(ssim_scores), decimal_places) # Standard deviation.
 		ssim = f'{min_ssim} | {ssim_std} | {mean_ssim}'
 	
-		print(f'Creating SSIM graph...')
+		log.info(f'Creating SSIM graph...')
 		plt.plot(frame_numbers, ssim_scores, label=f'SSIM ({mean_ssim})')
 		plt.suptitle(f'SSIM\nn_subsample: {args.subsample}')
 		plt.xlabel('Frame Number')
 		plt.ylabel('Value of Quality Metric')
 		plt.legend(loc='lower right')
 		plt.savefig(os.path.join(output_folder, 'SSIM'))
-		print(f'Done! Graph saved at {output_folder}/SSIM.png')
+		log.info(f'Done! Graph saved at {output_folder}/SSIM.png')
 		plt.clf()
 		# Add the SSIM values to the table.
 		data_for_current_row.append(ssim)
@@ -67,14 +68,14 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 		psnr_std = force_decimal_places(np.std(psnr_scores), decimal_places) # Standard deviation.
 		psnr = f'{min_psnr} | {psnr_std} | {mean_psnr}'
 
-		print(f'Creating PSNR graph...')
+		log.info(f'Creating PSNR graph...')
 		plt.plot(frame_numbers, psnr_scores, label=f'PSNR ({mean_psnr})')
 		plt.suptitle(f'PSNR\nn_subsample: {args.subsample}')
 		plt.xlabel('Frame Number')
 		plt.ylabel('Value of Quality Metric')
 		plt.legend(loc='lower right')
 		plt.savefig(os.path.join(output_folder, 'PSNR'))
-		print(f'Done! Graph saved at {output_folder}/PSNR.png')
+		log.info(f'Done! Graph saved at {output_folder}/PSNR.png')
 		plt.clf()
 		# Add the PSNR values to the table.
 		data_for_current_row.append(psnr)
@@ -90,5 +91,5 @@ def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_pl
 	with open(comparison_table, 'w') as f:
 		f.write(table.get_string(title=table_title))
 
-	print(f'{comparison_table} has been updated.')
+	log.info(f'{comparison_table} has been updated.')
 	line()

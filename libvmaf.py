@@ -1,4 +1,7 @@
+from utils import Logger
 from ffmpeg_process_factory import LibVmafArguments
+
+log = Logger('libmaf')
 
 # Change this if you want to use a different VMAF model file.
 vmaf_model_file_path = 'vmaf_models/vmaf_v0.6.1.json'
@@ -45,4 +48,4 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
 
     print(f'Calculating the VMAF{end_of_computing_message}...')
     process.run(duration)
-    print('Done!')
+    log.info('Done!')

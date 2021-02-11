@@ -1,8 +1,10 @@
 import subprocess
 import os
 from time import sleep
-from utils import subprocess_printer, show_progress_bar
+from utils import show_progress_bar, Logger
 
+
+log = Logger('factory', print_to_terminal=False)
 
 class EncodingArguments():
     def __init__(self, infile, encoder, outfile):
@@ -84,9 +86,8 @@ class FfmpegProcessFactory:
 class FfmpegProcess:
     def __init__(self, arguments, args):
         self._arguments = arguments
-        self._args = args
-        if self._args.show_commands:
-            subprocess_printer('The following command will run', self._arguments)
+        if args.show_commands:
+            log.debug(f'Running: {" ".join(self._arguments)}')
 
     def run(self, duration):
         fps = 0
@@ -95,7 +96,7 @@ class FfmpegProcess:
         secs = 0
         process = subprocess.Popen(self._arguments, stdout=subprocess.PIPE)
         while True:
-            # If the process hasn't completed
+            # If the process has completed
             if process.poll() is not None:
                 width, height = os.get_terminal_size()
                 print('\r' + ' ' * (width - 1) + '\r', end='')
@@ -112,17 +113,14 @@ class FfmpegProcess:
                     percentage = (secs / duration) * 100
 
                 elif "speed" in output.decode('utf-8'):
-                    speed = float(output.decode('utf-8').strip()[6:-1])
+                    speed = float(output.decode('utf-8').strip()[6:-1])       
 
                 try:
                     eta = (duration - secs) / speed
                 except ZeroDivisionError:
-                    sleep(0.1)
                     show_progress_bar(percentage, 100, 1, f'(Speed: ..., FPS: {fps}, ETA: ...)')
                 else:
                     minutes = round(eta / 60)
                     seconds = f'{round(eta % 60):02d}'
-                    sleep(0.1)
                     show_progress_bar(percentage, 100, 1, f'(Speed: {speed}x, FPS: {fps}, ETA: {minutes}:{seconds} [M:S])')
                    
-

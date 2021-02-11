@@ -6,15 +6,17 @@ from prettytable import PrettyTable
 from args import parser
 from save_metrics import create_table_plot_metrics, force_decimal_places
 from overview import create_movie_overview
-from utils import line, is_list, cut_video, exit_program, VideoInfoProvider, write_table_info
+from utils import line, is_list, cut_video, exit_program, VideoInfoProvider, write_table_info, Logger
 from ffmpeg_process_factory import FfmpegProcessFactory
 from encode_video import encode_video
 from libvmaf import run_libvmaf
 from arguments_validator import ArgumentsValidator
 
+log = Logger('main.py')
+
 if len(sys.argv) == 1:
     line()
-    print('For more details about the available arguments, enter "python main.py -h"')
+    log.info('For more details about the available arguments, enter "python main.py -h"')
     line()
 
 args = parser.parse_args()
@@ -26,7 +28,7 @@ validation_result, validation_errors = args_validator.validate(args)
 
 if not validation_result:
     for error in validation_errors:
-        print(f'Error: {error}')
+        log.info(f'Error: {error}')
     exit_program('Argument validation failed.')
 
 
@@ -48,6 +50,7 @@ def create_output_folder_initialise_table(crf_or_preset):
     
     return output_folder, comparison_table, output_ext
 
+
 # Use the VideoInfoProvider class to get the framerate, bitrate and duration.
 provider = VideoInfoProvider(args.original_video_path)
 duration = float(provider.get_duration())
@@ -56,17 +59,17 @@ fps_float = provider.get_framerate_float()
 original_bitrate = provider.get_bitrate(args.decimal_places)
 
 line()
-print('Video Quality Metrics\nGitHub.com/BassThatHertz/video-quality-metrics')
+log.info('Video Quality Metrics\nGitHub.com/BassThatHertz/video-quality-metrics')
 line()
-print('Here\'s some information about the original video:')
-print(f'Filename: {filename}')
-print(f'Bitrate: {original_bitrate}')
-print(f'Framerate: {fps} ({fps_float}) FPS')
+log.info('Here\'s some information about the original video:')
+log.info(f'Filename: {filename}')
+log.info(f'Bitrate: {original_bitrate}')
+log.info(f'Framerate: {fps} ({fps_float}) FPS')
 line()
 
 if args.video_filters:
-    print('The -vf/--video-filters argument has been supplied. The following filter(s) will be used:')
-    print(args.video_filters)
+    log.info('The -vf/--video-filters argument has been supplied. The following filter(s) will be used:')
+    log.info(args.video_filters)
     line()
 
 table = PrettyTable()
@@ -92,11 +95,11 @@ if args.interval > 0:
 if not args.no_transcoding_mode:
     # CRF comparison mode.
     if is_list(args.crf_value) and len(args.crf_value) > 1:
-        print('CRF comparison mode activated.')
+        log.info('CRF comparison mode activated.')
         crf_values = args.crf_value
         crf_values_string = ', '.join(str(crf) for crf in crf_values)
         preset = args.preset[0] if is_list(args.preset) else args.preset
-        print(f'CRF values {crf_values_string} will be compared and the {preset} preset will be used.')
+        log.info(f'CRF values {crf_values_string} will be compared and the {preset} preset will be used.')
         line()
 
         prev_output_folder, comparison_table, output_ext = create_output_folder_initialise_table('CRF')
@@ -106,7 +109,7 @@ if not args.no_transcoding_mode:
             original_video_path = cut_video(filename, args, output_ext, prev_output_folder, comparison_table)
 
         for crf in crf_values:
-            print(f'| CRF {crf} |')
+            log.info(f'| CRF {crf} |')
             line()
             output_folder = f'{prev_output_folder}/CRF {crf}'
             os.makedirs(output_folder, exist_ok=True)
@@ -130,11 +133,11 @@ if not args.no_transcoding_mode:
             
     # Presets comparison mode.
     elif is_list(args.preset):
-        print('Presets comparison mode activated.')
+        log.info('Presets comparison mode activated.')
         chosen_presets = args.preset
         presets_string = ', '.join(chosen_presets)
         crf = args.crf_value[0] if is_list(args.crf_value) else args.crf_value
-        print(f'Presets {presets_string} will be compared at a CRF of {crf}.')
+        log.info(f'Presets {presets_string} will be compared at a CRF of {crf}.')
         line()
 
         prev_output_folder, comparison_table, output_ext = create_output_folder_initialise_table('Preset')
@@ -144,14 +147,14 @@ if not args.no_transcoding_mode:
             original_video_path = cut_video(filename, args, output_ext, prev_output_folder, comparison_table)
 
         for preset in chosen_presets:
-            print(f'| Preset {preset} |')
+            log.info(f'| Preset {preset} |')
             line()
             output_folder = f'{prev_output_folder}/Preset {preset}'
             os.makedirs(output_folder, exist_ok=True)
             transcode_output_path = os.path.join(output_folder, f'{preset}{output_ext}')
 
             # Encode the video.
-            factory, time_taken = encode_video(args, crf, preset, transcode_output_path, f'preset {preset}')
+            factory, time_taken = encode_video(args, crf, preset, transcode_output_path, f'preset {preset}', duration)
 
             transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
             transcoded_bitrate = provider.get_bitrate(args.decimal_places, transcode_output_path)
@@ -159,7 +162,7 @@ if not args.no_transcoding_mode:
             data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
         
             json_file_path = f'{output_folder}/Metrics of each frame.json'
-            run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, preset)
+            run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, preset, duration)
 
             create_table_plot_metrics(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row, 
                                       table, output_folder, time_taken, preset)
@@ -196,4 +199,4 @@ else:
         f.write(f'\nOriginal Bitrate: {original_bitrate}')
 
 
-print(f'All done! Check out the contents of the "{Path(output_folder).parent}" directory.')
+log.info(f'All done! Check out the contents of the "{Path(output_folder).parent}" directory.')

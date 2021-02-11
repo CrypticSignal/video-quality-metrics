@@ -5,8 +5,9 @@ import shutil
 import time
 
 from pathlib import Path
+from utils import VideoInfoProvider, line, exit_program, Logger
 
-from utils import VideoInfoProvider, line, exit_program
+log = Logger('overview')
 
 
 class ClipError(Exception):
@@ -45,8 +46,8 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
     # Create the file.
     open(txt_file_path, 'w').close()
 
-    print('Overview mode activated.')
-    print(f'Creating a {clip_length} second clip every {interval_seconds} seconds from {video_path}...')
+    log.info('Overview mode activated.')
+    log.info(f'Creating a {clip_length} second clip every {interval_seconds} seconds from {video_path}...')
     line()
 
     try:
@@ -56,7 +57,7 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
                 f.write(f"file '{clip_name}'\n")
             clip_output_path = os.path.join(output_folder, clip_name)
             clip_offset = step_to_movie_timestamp(step * interval_seconds)
-            print(f'Creating clip {step} which starts at {clip_offset}...')
+            log.info(f'Creating clip {step} which starts at {clip_offset}...')
             subprocess_cut_args = [
                 "ffmpeg", "-loglevel", "warning", "-stats", "-y",
                 "-ss", clip_offset, "-i", video_path,
@@ -66,7 +67,7 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
             ]
             subprocess.run(subprocess_cut_args)
     except Exception as error:
-        print('An error occurred while trying to create the clips.')
+        log.info('An error occurred while trying to create the clips.')
         exit_program(error)
     else:
         return txt_file_path
@@ -85,11 +86,11 @@ def concatenate_clips(txt_file_path, output_folder, extension, interval_seconds,
     ]
 
     line()
-    print('Concatenating the clips to create the overview video...')
+    log.info('Concatenating the clips to create the overview video...')
     result = subprocess.run(subprocess_concatenate_args)
-    print('Done!')
+    log.info('Done!')
     shutil.rmtree(os.path.join(output_folder, 'clips'))
-    print('The clips have been deleted as they are no longer needed.')
+    log.info('The clips have been deleted as they are no longer needed.')
 
     if result.returncode == 0:
         return concatenated_filepath
@@ -110,6 +111,6 @@ def create_movie_overview(video_path, output_folder, interval_seconds, clip_leng
         exit_program(err.args[0])
 
     if result:
-        print(f'Overview Video: {clip_length}-{interval_seconds} (ClipLength-IntervalSeconds){extension}')
+        log.info(f'Overview Video: {clip_length}-{interval_seconds} (ClipLength-IntervalSeconds){extension}')
         line()
         return result, output_file
