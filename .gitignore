@@ -11,10 +11,10 @@
 *.bat
 *.code-workspace
 *.exe
+*.log
 *.txt
 # Folders
+*)
 __pycache__/
 venv/
 .vscode/
-# Ignore any output folders (e.g. "(video.mp4)") produced by VQM
-*)
