@@ -102,19 +102,19 @@ class FfmpegProcess:
                 print('\r' + ' ' * (width - 1) + '\r', end='')
                 break
             else:
-                output = process.stdout.readline()
+                output = process.stdout.readline().decode('utf-8')
 
-                if 'fps' in output.decode('utf-8'):
-                    fps = round(float(output.decode('utf-8')[4:]), 1)
+                if 'fps' in output:
+                    fps = round(float(output[4:]), 1)
 
-                elif 'out_time_ms' in output.decode('utf-8'):
-                    microseconds = int(output.decode('utf-8').strip()[12:])
+                elif 'out_time_ms' in output:
+                    microseconds = int(output.strip()[12:])
                     secs = microseconds / 1_000_000
                     percentage = (secs / duration) * 100
 
-                elif "speed" in output.decode('utf-8'):
-                    speed = float(output.decode('utf-8').strip()[6:-1])       
-
+                elif "speed" in output:
+                    speed = output.strip()[6:]
+                    speed = 0 if ' ' in speed or 'N/A' in speed else float(speed[:-1])
                 try:
                     eta = (duration - secs) / speed
                 except ZeroDivisionError:
