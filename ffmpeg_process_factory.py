@@ -1,10 +1,10 @@
 import subprocess
 import os
 from time import sleep
-from utils import show_progress_bar, Logger
+from utils import show_progress_bar, Logger, line
 
 
-log = Logger('factory', print_to_terminal=False)
+log = Logger('factory')
 
 class EncodingArguments():
     def __init__(self, infile, encoder, outfile):
@@ -87,7 +87,9 @@ class FfmpegProcess:
     def __init__(self, arguments, args):
         self._arguments = arguments
         if args.show_commands:
-            log.debug(f'Running: {" ".join(self._arguments)}')
+            line()
+            log.debug(f'Running the following command:\n{" ".join(self._arguments)}')
+            line()
 
     def run(self, duration):
         fps = 0
@@ -99,6 +101,7 @@ class FfmpegProcess:
             # If the process has completed
             if process.poll() is not None:
                 width, height = os.get_terminal_size()
+                # Clear the progress bar by returning to the start of the line (\r) and printing an empty string
                 print('\r' + ' ' * (width - 1) + '\r', end='')
                 break
             else:
@@ -115,6 +118,7 @@ class FfmpegProcess:
                 elif "speed" in output:
                     speed = output.strip()[6:]
                     speed = 0 if ' ' in speed or 'N/A' in speed else float(speed[:-1])
+
                 try:
                     eta = (duration - secs) / speed
                 except ZeroDivisionError:

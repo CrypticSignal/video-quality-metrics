@@ -69,8 +69,8 @@ FFmpeg builds that support all features of VQM:
 # Usage:
 ```
 usage: main.py [-h] [--av1-cpu-used {1,2,3,4,5,6,7,8}] [-cl <an integer between 1 and 60>] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]] [-dp DECIMAL_PLACES] [-e {x264,x265,av1}]
-               [-i <an integer between 1 and 600>] [-n x] [-ntm] [-o OUTPUT_FOLDER] -ovp ORIGINAL_VIDEO_PATH [-pm] [-p PRESET(s) [PRESET(s ...]] [-psnr] [-sc] [-ssim] [-t x]
-               [--threads x] [-tvp TRANSCODED_VIDEO_PATH] [-vf VIDEO_FILTERS]
+               [-i <an integer between 1 and 600>] [-n x] [-ntm] [-o OUTPUT_FOLDER] -ovp ORIGINAL_VIDEO_PATH [-pm] [-p PRESET(s) [PRESET(s ...]] [-psnr] [-sc] [-ssim] [-t SECONDS]       
+               [-nt N_THREADS] [-tvp TRANSCODED_VIDEO_PATH] [-vf VIDEO_FILTERS]
 
 Available arguments:
   -h, --help            show this help message and exit
@@ -113,12 +113,13 @@ Available arguments:
   -sc, --show-commands  Show the FFmpeg commands that are being run.
   -ssim, --calculate-ssim
                         Enable SSIM calculation in addition to VMAF (default: disabled).
-  -t x, --encode-length x
+  -t SECONDS, --encode-length SECONDS
                         Create a lossless version of the original video that is just the first x seconds of the video. This cut version of the original video is what will be transcoded and used as the reference video. You cannot use this option in conjunction with the -i or -cl arguments.
                         Example: -t 60
-  --threads x           Set the number of threads to be used when computing VMAF.
+  -nt N_THREADS, --n-threads N_THREADS
+                        Set the number of threads to be used when computing VMAF.
                         The default is set to what Python's os.cpu_count() method returns. For example, on a dual-core Intel CPU with hyperthreading, the default will be set to 4.       
-                        Example: --threads 2
+                        Example: --n-threads 2
   -tvp TRANSCODED_VIDEO_PATH, --transcoded-video-path TRANSCODED_VIDEO_PATH
                         The path of the transcoded video (only applicable when using the -ntm mode).
   -vf VIDEO_FILTERS, --video-filters VIDEO_FILTERS

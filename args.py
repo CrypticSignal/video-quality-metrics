@@ -148,7 +148,7 @@ parser.add_argument(
 parser.add_argument(
     '-t', '--encode-length',
     type=str,
-    metavar='x',
+    metavar='SECONDS',
     help='Create a lossless version of the original video that is just the first x seconds of the video. '
          'This cut version of the original video is what will be transcoded and used as the reference video. '
          'You cannot use this option in conjunction with the -i or -cl arguments.\nExample: -t 60'
@@ -156,14 +156,14 @@ parser.add_argument(
 
 # Set the number of threads to be used when computing VMAF.
 parser.add_argument(
-    '--threads',
+    '-nt',
+    '--n-threads',
     type=str,
     default=str(os.cpu_count()),
-    metavar='x',
     help='Set the number of threads to be used when computing VMAF.\n'
          'The default is set to what Python\'s os.cpu_count() method returns. '
          'For example, on a dual-core Intel CPU with hyperthreading, the default will be set to 4.\n'
-         'Example: --threads 2'
+         'Example: --n-threads 2'
 )
 
 # Transcoded video path (only applicable when using the -ntm mode).
