@@ -101,7 +101,7 @@ class FfmpegProcess:
             # If the process has completed
             if process.poll() is not None:
                 width, height = os.get_terminal_size()
-                # Clear the progress bar by returning to the start of the line (\r) and printing an empty string
+                # Clear the progress bar by using carriage return and overwriting the progress bar with spaces
                 print('\r' + ' ' * (width - 1) + '\r', end='')
                 break
             else:
