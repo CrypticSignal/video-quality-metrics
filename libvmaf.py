@@ -21,7 +21,7 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
         "phone_model": "1" if args.phone_model else "0",
         "psnr": "1" if args.calculate_psnr else "0",
         "ssim": "1" if args.calculate_ssim else "0",
-        "n_threads": '1'
+        "n_threads": args.n_threads
     }
     vmaf_options = ":".join(f'{key}={value}' for key, value in vmaf_options.items())
 
