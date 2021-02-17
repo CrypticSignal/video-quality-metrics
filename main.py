@@ -53,7 +53,7 @@ def create_output_folder_initialise_table(crf_or_preset):
 
 # Use the VideoInfoProvider class to get the framerate, bitrate and duration.
 provider = VideoInfoProvider(args.original_video_path)
-duration = float(provider.get_duration())
+duration = provider.get_duration()
 fps = provider.get_framerate_fraction()
 fps_float = provider.get_framerate_float()
 original_bitrate = provider.get_bitrate(args.decimal_places)

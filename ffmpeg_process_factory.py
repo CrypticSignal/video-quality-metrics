@@ -1,10 +1,10 @@
 import subprocess
 import os
 from time import sleep
-from utils import show_progress_bar, Logger, line
-
+from utils import Logger, line
 
 log = Logger('factory')
+
 
 class EncodingArguments():
     def __init__(self, infile, encoder, outfile):
@@ -101,30 +101,24 @@ class FfmpegProcess:
             # If the process has completed
             if process.poll() is not None:
                 width, height = os.get_terminal_size()
-                # Clear the progress bar by using carriage return and overwriting the progress bar with spaces
-                print('\r' + ' ' * (width - 1) + '\r', end='')
+                # # Clear the progress, speed and ETA
+                print(' ' * (width - 1) + '\r', end='')
                 break
             else:
                 output = process.stdout.readline().decode('utf-8')
-
-                if 'fps' in output:
-                    fps = round(float(output[4:]), 1)
-
-                elif 'out_time_ms' in output:
+                if 'out_time_ms' in output:
                     microseconds = int(output.strip()[12:])
                     secs = microseconds / 1_000_000
                     percentage = (secs / duration) * 100
-
                 elif "speed" in output:
                     speed = output.strip()[6:]
                     speed = 0 if ' ' in speed or 'N/A' in speed else float(speed[:-1])
-
-                try:
-                    eta = (duration - secs) / speed
-                except ZeroDivisionError:
-                    show_progress_bar(percentage, 100, 1, f'(Speed: ..., FPS: {fps}, ETA: ...)')
-                else:
-                    minutes = round(eta / 60)
-                    seconds = f'{round(eta % 60):02d}'
-                    show_progress_bar(percentage, 100, 1, f'(Speed: {speed}x, FPS: {fps}, ETA: {minutes}:{seconds} [M:S])')
+                    try:
+                        eta = (duration - secs) / speed
+                    except ZeroDivisionError:
+                        continue
+                    else:
+                        minutes = round(eta / 60)
+                        seconds = f'{round(eta % 60):02d}'
+                        print(f'Progress: {round(percentage, 1)}% | Speed: {speed}x | ETA: {minutes}:{seconds} [M:S]', end='\r')
                    
