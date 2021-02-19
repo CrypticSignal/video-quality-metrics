@@ -41,7 +41,7 @@ def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video
         end_of_computing_message = ''
 
     if not args.no_transcoding_mode:
-        if isinstance(args.crf_value, list) and len(args.crf_value) > 1:
+        if isinstance(args.crf, list) and len(args.crf) > 1:
             end_of_computing_message += f' achieved with CRF {crf_or_preset}'
         else:
             end_of_computing_message += f' achieved with preset {crf_or_preset}'

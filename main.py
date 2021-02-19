@@ -82,8 +82,7 @@ if args.calculate_ssim:
 if args.calculate_psnr:
     table_column_names.append('PSNR')
 
-# args.interval will be greater than 0 if the -i/--interval argument was specified.
-if args.interval > 0:
+if args.interval is not None:
     output_folder = f'({filename})'
     clip_length = str(args.clip_length)
     result, concatenated_video = create_movie_overview(original_video_path, output_folder, args.interval, clip_length)
@@ -94,9 +93,9 @@ if args.interval > 0:
 
 if not args.no_transcoding_mode:
     # CRF comparison mode.
-    if is_list(args.crf_value) and len(args.crf_value) > 1:
+    if is_list(args.crf) and len(args.crf) > 1:
         log.info('CRF comparison mode activated.')
-        crf_values = args.crf_value
+        crf_values = args.crf
         crf_values_string = ', '.join(str(crf) for crf in crf_values)
         preset = args.preset[0] if is_list(args.preset) else args.preset
         log.info(f'CRF values {crf_values_string} will be compared and the {preset} preset will be used.')
@@ -136,7 +135,7 @@ if not args.no_transcoding_mode:
         log.info('Presets comparison mode activated.')
         chosen_presets = args.preset
         presets_string = ', '.join(chosen_presets)
-        crf = args.crf_value[0] if is_list(args.crf_value) else args.crf_value
+        crf = args.crf[0] if is_list(args.crf) else args.crf
         log.info(f'Presets {presets_string} will be compared at a CRF of {crf}.')
         line()
 

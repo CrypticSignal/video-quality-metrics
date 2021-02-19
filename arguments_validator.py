@@ -12,7 +12,7 @@ class ArgumentsValidator:
         validation_results.append(self.__validate_original_video_exists(
                 args.original_video_path))
         validation_results.append(
-            self.__validate_crf_and_preset_count(args.no_transcoding_mode, args.crf_value, args.preset))
+            self.__validate_crf_and_preset_count(args.no_transcoding_mode, args.crf, args.preset))
 
         for validation_tuple in validation_results:
             if not validation_tuple[0]:
