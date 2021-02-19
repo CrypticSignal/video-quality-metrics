@@ -90,7 +90,7 @@ VMAF Arguments:
   -subsample SUBSAMPLE  Set a value for libvmaf's n_subsample option if you only want the VMAF/SSIM/PSNR to be calculated for every nth frame. Without this argument,
                         VMAF/SSIM/PSNR scores will be calculated for every frame (default: 1)
   --n-threads N_THREADS
-                        Specify the number of threads to use when calculating VMAF (default: 4)
+                        Specify the number of threads to use when calculating VMAF
   --phone-model         Enable VMAF phone model (default: False)
 
 Overview Mode Arguments:
