@@ -9,7 +9,7 @@ def encode_video(args, crf, preset, output_path, message, duration):
     
     arguments.infile = args.original_video_path
 
-    if args.video_encoder == 'av1':
+    if args.video_encoder == 'libaom-av1':
         arguments.av1_cpu_used(str(args.av1_cpu_used))
 
     arguments.crf(str(crf))
