@@ -1,7 +1,7 @@
 from utils import Logger
 from ffmpeg_process_factory import LibVmafArguments
 
-log = Logger('libmaf')
+log = Logger('libvmaf')
 
 # Change this if you want to use a different VMAF model file.
 vmaf_model_file_path = 'vmaf_models/vmaf_v0.6.1.json'
