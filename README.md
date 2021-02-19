@@ -67,64 +67,67 @@ FFmpeg builds that support all features of VQM:
 **Linux (kernels 3.2.0+):** https://johnvansickle.com/ffmpeg/. Download the **git** build. Installation instructions, as well as how to add FFmpeg and FFprobe to your PATH, can be found [here](https://www.johnvansickle.com/ffmpeg/faq/).
 
 # Usage:
+You can find the output of `python main.py -h` below:
 ```
-usage: main.py [-h] [--av1-cpu-used {1,2,3,4,5,6,7,8}] [-cl <an integer between 1 and 60>] [-crf CRF_VALUEs) [CRF_VALUE(s) ...]] [-dp DECIMAL_PLACES] [-e {x264,x265,av1}]
-               [-i <an integer between 1 and 600>] [-n x] [-ntm] [-o OUTPUT_FOLDER] -ovp ORIGINAL_VIDEO_PATH [-pm] [-p PRESET(s) [PRESET(s ...]] [-psnr] [-sc] [-ssim] [-t SECONDS]       
-               [-nt N_THREADS] [-tvp TRANSCODED_VIDEO_PATH] [-vf VIDEO_FILTERS]
+usage: main.py [-h] [--av1-cpu-used <1-8>] [-cl <1-60>] [-crf <0-51> [<0-51> ...]] [-dp DECIMAL_PLACES] [-e {x264,x265,libaom-av1}] [-i <1-600>] [-subsample SUBSAMPLE]
+               [--n-threads N_THREADS] [-ntm] [-o OUTPUT_FOLDER] -ovp ORIGINAL_VIDEO_PATH [-p <preset/s> [<preset/s> ...]] [--phone-model] [-psnr] [-sc] [-ssim]
+               [-t SECONDS] [-tvp TRANSCODED_VIDEO_PATH] [-vf VIDEO_FILTERS]
 
-Available arguments:
+optional arguments:
   -h, --help            show this help message and exit
-  --av1-cpu-used {1,2,3,4,5,6,7,8}
-                        Only applicable if choosing the AV1 encoder. Set the quality/encoding speed tradeoff.
-                        Lower values mean slower encoding but better quality, and vice-versa.
-                        If this argument is not specified, the value will be set to 5.
-  -cl <an integer between 1 and 60>, --clip-length <an integer between 1 and 60>
-                        Defines the length of the clips (default: 1). Only applies when used with -i > 0.
-                        Example: -cl 2
-  -crf CRF_VALUE(s) [CRF_VALUE(s) ...], --crf-value CRF_VALUE(s) [CRF_VALUE(s) ...]
-                        Specify the CRF value(s) to use.
+
+Encoding Arguments:
+  --av1-cpu-used <1-8>  Only applicable if the libaom-av1 (AV1) encoder is chosen. Set the quality/encoding speed tradeoff. Lower values mean slower encoding but better
+                        quality, and vice-versa (default: 5)
+  -crf <0-51> [<0-51> ...]
+                        Specify the CRF value(s) to use (default: 23)
+  -e {x264,x265,libaom-av1}, --video-encoder {x264,x265,libaom-av1}
+                        Specify whether to use the x264 (H.264), x265 (H.265) or libaom-av1 (AV1) encoder (default: x264)
+  -p <preset/s> [<preset/s> ...], --preset <preset/s> [<preset/s> ...]
+                        Specify the preset(s) to use (default: medium)
+
+VMAF Arguments:
+  -subsample SUBSAMPLE  Set a value for libvmaf's n_subsample option if you only want the VMAF/SSIM/PSNR to be calculated for every nth frame. Without this argument,
+                        VMAF/SSIM/PSNR scores will be calculated for every frame (default: 1)
+  --n-threads N_THREADS
+                        Specify the number of threads to use when calculating VMAF (default: 4)
+  --phone-model         Enable VMAF phone model (default: False)
+
+Overview Mode Arguments:
+  -cl <1-60>, --clip-length <1-60>
+                        When using Overview Mode, a X seconds long segment is taken from the original video every --interval seconds and these segments are concatenated to
+                        create the overview video. Specify a value for X (in the range 1-60) (default: 1)
+  -i <1-600>, --interval <1-600>
+                        To activate Overview Mode, this argument must be specified. Overview Mode creates a lossless overview video by grabbing a --clip-length long segment
+                        every X seconds from the original video. Specify a value for X (in the range 1-600) (default: None)
+
+General Arguments:
   -dp DECIMAL_PLACES, --decimal-places DECIMAL_PLACES
-                        The number of decimal places to use for the data in the table (default: 2).
-                        Example: -dp 3
-  -e {x264,x265,av1}, --video-encoder {x264,x265,av1}
-                        Specify the encoder to use (default: x264).
-  -i <an integer between 1 and 600>, --interval <an integer between 1 and 600>
-                        Create a lossless overview video by grabbing a <cliplength> seconds long segment every <interval> seconds from the original video and use this overview video as the "original" video that the transcodes are compared with.
-                        Example: -i 30
-  -n x, --subsample x   Set a value for libvmaf's n_subsample option if you only want the VMAF/SSSIM to be calculated for every nth frame.
-                        Without this argument, VMAF/SSIM scores will be calculated for every frame.
-                        Example: -n 24
+                        The number of decimal places to use for the data in the table (default: 2)
   -ntm, --no-transcoding-mode
-                        Enable "no transcoding mode", which allows you to calculate the VMAF/SSIM/PSNR for a video that you have already transcoded.
-                        The original and transcoded video paths must be specified using the -ovp and -tvp arguments, respectively.
-                        Example: python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim
+                        Enable "no transcoding mode", which allows you to calculate the VMAF/SSIM/PSNR for a video that you have already transcoded. The original and
+                        transcoded video paths must be specified using the -ovp and -tvp arguments, respectively. Example: python main.py -ntm -ovp original.mp4 -tvp
+                        transcoded.mp4 (default: False)
   -o OUTPUT_FOLDER, --output-folder OUTPUT_FOLDER
-                        Use this argument if you want a specific name for the output folder.
-                        If you want the name of the output folder to contain a space, the string must be surrounded in double quotes.
-                        Example: -o "VQM Output"
+                        Use this argument if you want a specific name for the output folder. If you want the name of the output folder to contain a space, the string must
+                        be surrounded in double quotes (default: None)
   -ovp ORIGINAL_VIDEO_PATH, --original-video-path ORIGINAL_VIDEO_PATH
-                        Enter the path of the original video. A relative or absolute path can be specified. If the path contains a space, it must be surrounded in double quotes.
-                        Example: -ovp "C:/Users/H/Desktop/file 1.mp4"
-  -pm, --phone-model    Enable VMAF phone model.
-  -p PRESET(s) [PRESET(s) ...], --preset PRESET(s) [PRESET(s) ...]
-                        Specify the preset(s) to use.
-  -psnr, --calculate-psnr
-                        Enable PSNR calculation in addition to VMAF (default: disabled).
-  -sc, --show-commands  Show the FFmpeg commands that are being run.
-  -ssim, --calculate-ssim
-                        Enable SSIM calculation in addition to VMAF (default: disabled).
+                        Enter the path of the original video. A relative or absolute path can be specified. If the path contains a space, it must be surrounded in double
+                        quotes (default: None)
+  -sc, --show-commands  Show the FFmpeg commands that are being run. (default: False)
   -t SECONDS, --encode-length SECONDS
-                        Create a lossless version of the original video that is just the first x seconds of the video. This cut version of the original video is what will be transcoded and used as the reference video. You cannot use this option in conjunction with the -i or -cl arguments.
-                        Example: -t 60
-  -nt N_THREADS, --n-threads N_THREADS
-                        Set the number of threads to be used when computing VMAF.
-                        The default is set to what Python's os.cpu_count() method returns. For example, on a dual-core Intel CPU with hyperthreading, the default will be set to 4.       
-                        Example: --n-threads 2
+                        Create a lossless version of the original video that is just the first x seconds of the video. This cut version of the original video is what will
+                        be transcoded and used as the reference video. You cannot use this option in conjunction with the -i or -cl arguments (default: None)
   -tvp TRANSCODED_VIDEO_PATH, --transcoded-video-path TRANSCODED_VIDEO_PATH
-                        The path of the transcoded video (only applicable when using the -ntm mode).
+                        The path of the transcoded video (only applicable when using the -ntm mode) (default: None)
   -vf VIDEO_FILTERS, --video-filters VIDEO_FILTERS
-                        Add FFmpeg video filter(s). Each filter must be separated by a comma.
-                        Example: -vf bwdif=mode=0,crop=1920:800:0:140
+                        Add FFmpeg video filter(s). Each filter must be separated by a comma. Example: -vf bwdif=mode=0,crop=1920:800:0:140 (default: None)
+
+Optional Metrics:
+  -psnr, --calculate-psnr
+                        Enable PSNR calculation in addition to VMAF (default: False)
+  -ssim, --calculate-ssim
+                        Enable SSIM calculation in addition to VMAF (default: False)
 ```
 
 # Example Table:
