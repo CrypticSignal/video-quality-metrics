@@ -35,11 +35,11 @@ class EncodingArguments():
     def get_arguments(self):
         base_encoding_arguments = [
                 "-map", "0:V",
-                "-c:v", "libaom-av1" if self._encoder == 'av1' else f'lib{self._encoder}',
+                "-c:v", "libaom-av1" if self._encoder == 'libaom-av1' else f'lib{self._encoder}',
                 "-crf", self._crf
         ]
 
-        if self._encoder == 'av1':
+        if self._encoder == 'libaom-av1':
             encoding_arguments = base_encoding_arguments + [
                 '-b:v', '0', '-cpu-used', self._av1_cpu_used, *self._video_filters, self._outfile
             ]
