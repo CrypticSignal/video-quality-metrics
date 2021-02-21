@@ -1,5 +1,5 @@
-from utils import Logger
 from ffmpeg_process_factory import LibVmafArguments
+from utils import Logger
 
 log = Logger('libvmaf')
 
