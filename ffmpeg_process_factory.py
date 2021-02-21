@@ -1,6 +1,6 @@
-import subprocess
 import os
-from time import sleep
+import subprocess
+
 from utils import Logger, line
 
 log = Logger('factory')
