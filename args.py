@@ -1,5 +1,5 @@
-import os
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import os
 
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 
