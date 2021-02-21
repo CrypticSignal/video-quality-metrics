@@ -1,10 +1,10 @@
-import os
 import math
-import subprocess
+import os
+from pathlib import Path
 import shutil
+import subprocess
 import time
 
-from pathlib import Path
 from utils import VideoInfoProvider, line, exit_program, Logger
 
 log = Logger('overview')
