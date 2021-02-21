@@ -1,16 +1,17 @@
 import os
-import sys
 from pathlib import Path
+import sys
+
 from prettytable import PrettyTable
 
 from args import parser
-from save_metrics import create_table_plot_metrics, force_decimal_places
-from overview import create_movie_overview
-from utils import line, is_list, cut_video, exit_program, VideoInfoProvider, write_table_info, Logger
-from ffmpeg_process_factory import FfmpegProcessFactory
-from encode_video import encode_video
-from libvmaf import run_libvmaf
 from arguments_validator import ArgumentsValidator
+from encode_video import encode_video
+from ffmpeg_process_factory import FfmpegProcessFactory
+from libvmaf import run_libvmaf
+from metrics import get_metrics_save_table
+from overview import create_movie_overview
+from utils import cut_video, exit_program, is_list, line, Logger, VideoInfoProvider, write_table_info
 
 log = Logger('main.py')
 
@@ -125,8 +126,8 @@ if not args.no_transcoding_mode:
             json_file_path = f'{output_folder}/Metrics of each frame.json'
             run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, crf, duration)
 
-            create_table_plot_metrics(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row,
-                                      table, output_folder, time_taken, crf)
+            get_metrics_save_table(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row, 
+                                   table, output_folder, time_taken, crf)
 
             write_table_info(comparison_table, filename, original_bitrate, args, f'Preset {preset}')
             
@@ -163,8 +164,8 @@ if not args.no_transcoding_mode:
             json_file_path = f'{output_folder}/Metrics of each frame.json'
             run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, preset, duration)
 
-            create_table_plot_metrics(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row, 
-                                      table, output_folder, time_taken, preset)
+            get_metrics_save_table(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row, 
+                                   table, output_folder, time_taken, preset)
 
             write_table_info(comparison_table, filename, original_bitrate, args, f'CRF {crf}')
 
@@ -191,11 +192,10 @@ else:
     transcoded_bitrate = provider.get_bitrate(args.decimal_places, args.transcoded_video_path)
     data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
 
-    create_table_plot_metrics(table_path, json_file_path, args, args.decimal_places, data_for_current_row, 
-                              table, output_folder, time_taken=None)
+    get_metrics_save_table(table_path, json_file_path, args, args.decimal_places, data_for_current_row, 
+                           table, output_folder, time_taken=None)
 
     with open(table_path, 'a') as f:
         f.write(f'\nOriginal Bitrate: {original_bitrate}')
-
 
 log.info(f'All done! Check out the contents of the "{Path(output_folder).parent}" directory.')
