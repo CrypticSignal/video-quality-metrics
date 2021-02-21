@@ -1,6 +1,5 @@
-from utils import Logger
 from ffmpeg_process_factory import EncodingArguments, FfmpegProcessFactory
-from utils import Timer
+from utils import Logger, Timer
 
 log = Logger('encode_video.py')
 
