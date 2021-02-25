@@ -35,8 +35,7 @@ overview_mode_args.add_argument(
 # CRF value(s).
 encoding_args.add_argument(
     '-crf',
-    type=int, 
-    default=23,
+    type=int,
     choices=range(0, 52),
     nargs='+',
     metavar='<0-51>',
