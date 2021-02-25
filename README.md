@@ -153,7 +153,7 @@ CRF 23 was used.
 Filter(s) used: None
 n_subsample: 1
 ```
-*The `-ssim` and `-psnr` arguments were not specified. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast`*
+*Command: `python main.py -ovp aqp60.mkv -p veryslow slower slow medium fast faster veryfast superfast ultrafast`*
 
 # About the model files:
 As you may have noticed, two model files have been provided. `vmaf_v0.6.1.json` and `vmaf_4k_v0.6.1.json`. There is also the phone model that can be enabled by using the `-pm` argument.
