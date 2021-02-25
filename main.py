@@ -11,7 +11,7 @@ from ffmpeg_process_factory import FfmpegProcessFactory
 from libvmaf import run_libvmaf
 from metrics import get_metrics_save_table
 from overview import create_movie_overview
-from utils import cut_video, exit_program, is_list, line, Logger, VideoInfoProvider, write_table_info
+from utils import cut_video, exit_program, force_decimal_places, is_list, line, Logger, VideoInfoProvider, write_table_info
 
 log = Logger('main.py')
 
