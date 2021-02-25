@@ -80,7 +80,7 @@ Encoding Arguments:
   --av1-cpu-used <1-8>  Only applicable if the libaom-av1 (AV1) encoder is chosen. Set the quality/encoding speed tradeoff. Lower values mean slower encoding but better
                         quality, and vice-versa (default: 5)
   -crf <0-51> [<0-51> ...]
-                        Specify the CRF value(s) to use (default: 23)
+                        Specify the CRF value(s) to use
   -e {x264,x265,libaom-av1}, --video-encoder {x264,x265,libaom-av1}
                         Specify whether to use the x264 (H.264), x265 (H.265) or libaom-av1 (AV1) encoder (default: x264)
   -p <preset/s> [<preset/s> ...], --preset <preset/s> [<preset/s> ...]
@@ -133,22 +133,25 @@ Optional Metrics:
 # Example Table:
 This program creates a file named *Table.txt*. Here's an example of what that file will contain when opting to compare presets:
 ```
-+-------------------------------------------------------------------------------+
-|        VMAF values are in the format: Min | Standard Deviation | Mean         |
-+-----------+-------------------+----------+-------------+----------------------+
-|   Preset  | Encoding Time (s) |   Size   |   Bitrate   |         VMAF         |
-+-----------+-------------------+----------+-------------+----------------------+
-|    slow   |       20.64       | 25.44 MB | 3.379 Mbps  | 88.79 | 2.56 | 97.58 |
-|   medium  |       12.96       | 26.04 MB | 3.458 Mbps  | 88.77 | 2.55 | 97.58 |
-|    fast   |       11.50       | 27.65 MB | 3.672 Mbps  | 88.66 | 2.71 | 97.38 |
-|   faster  |        9.09       | 25.93 MB | 3.444 Mbps  | 88.78 | 2.84 | 97.18 |
-|  veryfast |        5.89       | 22.53 MB | 2.993 Mbps  | 84.33 | 4.00 | 95.17 |
-| superfast |        3.96       | 39.77 MB | 5.282 Mbps  | 88.55 | 3.19 | 96.72 |
-+-----------+-------------------+----------+-------------+----------------------+
++-----------+-------------------+----------+-----------+----------------------+
+|   Preset  | Encoding Time (s) |   Size   |  Bitrate  |         VMAF         |
++-----------+-------------------+----------+-----------+----------------------+
+|  veryslow |       68.12       | 18.70 MB | 2.48 Mbps | 89.75 | 2.51 | 97.62 |
+|   slower  |       32.57       | 20.43 MB | 2.71 Mbps | 89.54 | 2.44 | 97.72 |
+|    slow   |       17.84       | 20.62 MB | 2.74 Mbps | 89.08 | 2.55 | 97.58 |
+|   medium  |       12.16       | 21.24 MB | 2.82 Mbps | 88.88 | 2.56 | 97.57 |
+|    fast   |       10.39       | 22.85 MB | 3.04 Mbps | 88.59 | 2.72 | 97.37 |
+|   faster  |        8.37       | 21.11 MB | 2.80 Mbps | 88.66 | 2.83 | 97.18 |
+|  veryfast |        5.78       | 17.71 MB | 2.35 Mbps | 84.75 | 4.00 | 95.18 |
+| superfast |        3.83       | 34.95 MB | 4.64 Mbps | 88.52 | 3.19 | 96.71 |
+| ultrafast |        2.34       | 49.38 MB | 6.56 Mbps | 90.03 | 2.11 | 98.24 |
++-----------+-------------------+----------+-----------+----------------------+
 File Transcoded: aqp60.mkv
-Bitrate: 12.339 Mbps
+Bitrate: 12.34 Mbps
 Encoder used for the transcodes: x264
 CRF 23 was used.
+Filter(s) used: None
+n_subsample: 1
 ```
 *The `-ssim` and `-psnr` arguments were not specified. Command: `python main.py -ovp aqp60.mkv -p slow medium fast faster veryfast superfast`*
 
