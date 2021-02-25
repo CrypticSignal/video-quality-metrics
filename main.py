@@ -23,6 +23,7 @@ if len(sys.argv) == 1:
 args = parser.parse_args()
 original_video_path = args.original_video_path
 filename = Path(original_video_path).name
+video_encoder = args.video_encoder
 
 args_validator = ArgumentsValidator()
 validation_result, validation_errors = args_validator.validate(args)
@@ -92,7 +93,16 @@ if args.interval is not None:
     else:
         exit_program('Something went wrong when trying to create the overview video.')
 
+# The -ntm argument was not specified.
 if not args.no_transcoding_mode:
+    
+    if video_encoder == 'x264':
+        crf = '23'
+    elif video_encoder == 'x265':
+        crf = '28'
+    elif video_encoder == 'libaom-av1'
+        crf = '32'
+
     # CRF comparison mode.
     if is_list(args.crf) and len(args.crf) > 1:
         log.info('CRF comparison mode activated.')
@@ -136,7 +146,7 @@ if not args.no_transcoding_mode:
         log.info('Presets comparison mode activated.')
         chosen_presets = args.preset
         presets_string = ', '.join(chosen_presets)
-        crf = args.crf[0] if is_list(args.crf) else args.crf
+        crf = args.crf[0] if is_list(args.crf) else crf
         log.info(f'Presets {presets_string} will be compared at a CRF of {crf}.')
         line()
 
