@@ -112,15 +112,11 @@ def line():
     log.info('--------------------------------------------------------------------------------------------------------')
 
 
-def plot_graph(title, independent_variable, dependent_variable, x_values, y_values, save_path, xticks=False):
+def plot_graph(title, independent_variable, dependent_variable, x_values, y_values, dependent_variable_mean, save_path):
     plt.suptitle(title)
     plt.xlabel(independent_variable)
     plt.ylabel(dependent_variable)
-    if xticks:
-        fig, ax = plt.subplots(1,1) 
-        ax.plot(x_values,y_values)
-        ax.set_xticklabels(x_values)
-    plt.plot(x_values, y_values, label=f'{dependent_variable}')
+    plt.plot(x_values, y_values, label=f'{dependent_variable} ({dependent_variable_mean})')
     plt.legend(loc='lower right')
     plt.savefig(save_path)
     log.info(f'Done! Graph saved at {save_path}')

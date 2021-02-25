@@ -1,69 +1,84 @@
 import json
 import os
-
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
-from utils import force_decimal_places, line, Logger, plot_graph
+from utils import line, force_decimal_places, Logger
 
 log = Logger('save_metrics')
 
 
-def get_metrics_save_table(comparison_table, json_file_path, args, decimal_places, data_for_current_row, 
-						   table, output_folder, time_taken, crf_or_preset=None):
+def create_table_plot_metrics(comparison_table, json_file_path, args, decimal_places, data_for_current_row, 
+							  table, output_folder, time_taken, crf_or_preset=None):
+
 	with open(json_file_path, 'r') as f:
 		file_contents = json.load(f)
 
-	# Get the VMAF score of each frame from the JSON file created by libvmaf.
+	# Grab the VMAF data from the JSON file.
 	vmaf_scores = [frame['metrics']['vmaf'] for frame in file_contents['frames']]
-
-	# Calculate the mean, minimum and standard deviation.
 	mean_vmaf = force_decimal_places(np.mean(vmaf_scores), decimal_places)
 	min_vmaf = force_decimal_places(min(vmaf_scores), decimal_places)
-	vmaf_std = force_decimal_places(np.std(vmaf_scores), decimal_places)
+	vmaf_std = force_decimal_places(np.std(vmaf_scores), decimal_places) # Standard deviation.
 
 	frame_numbers = [frame['frameNum'] for frame in file_contents['frames']]
 
-	plot_graph(f'VMAF\nn_subsample: {args.subsample}', 'Frame Number', 'VMAF', frame_numbers,
-			   vmaf_scores, mean_vmaf, os.path.join(output_folder, 'VMAF'))
+	log.info(f'Creating VMAF graph...')
+	plt.plot(frame_numbers, vmaf_scores, label=f'VMAF ({mean_vmaf})')
+	plt.suptitle(f'VMAF\nn_subsample: {args.subsample}')
+	plt.xlabel('Frame Number')
+	plt.ylabel('Value of Quality Metric')
+	plt.legend(loc='lower right')
+	plt.savefig(os.path.join(output_folder, 'VMAF'))
+	log.info(f'Done! Graph saved at {output_folder}/VMAF.png')
+	plt.clf()
 
+	# VMAF data.
+	vmaf = f'{min_vmaf} | {vmaf_std} | {mean_vmaf}'
 	# Add the VMAF values to the table.
-	data_for_current_row.append(f'{min_vmaf} | {vmaf_std} | {mean_vmaf}')
+	data_for_current_row.append(vmaf)
 
 	ssim_string = ''
 	psnr_string = ''
 	
 	if args.calculate_ssim:
 		ssim_string = '/SSIM'
-		# Get the SSIM score of each frame from the JSON file created by libvmaf.
 		ssim_scores = [ssim['metrics']['ssim'] for ssim in file_contents['frames']]
-
 		mean_ssim = force_decimal_places(np.mean(ssim_scores), decimal_places)
 		min_ssim = force_decimal_places(min(ssim_scores), decimal_places)
 		ssim_std = force_decimal_places(np.std(ssim_scores), decimal_places) # Standard deviation.
+		ssim = f'{min_ssim} | {ssim_std} | {mean_ssim}'
 	
 		log.info(f'Creating SSIM graph...')
-		plot_graph(f'SSIM\nn_subsample: {args.subsample}', 'Frame Number', 'SSIM', frame_numbers,
-			       ssim_scores, mean_ssim, os.path.join(output_folder, 'SSIM'))
-
+		plt.plot(frame_numbers, ssim_scores, label=f'SSIM ({mean_ssim})')
+		plt.suptitle(f'SSIM\nn_subsample: {args.subsample}')
+		plt.xlabel('Frame Number')
+		plt.ylabel('Value of Quality Metric')
+		plt.legend(loc='lower right')
+		plt.savefig(os.path.join(output_folder, 'SSIM'))
+		log.info(f'Done! Graph saved at {output_folder}/SSIM.png')
+		plt.clf()
 		# Add the SSIM values to the table.
-		data_for_current_row.append(f'{min_ssim} | {ssim_std} | {mean_ssim}')
+		data_for_current_row.append(ssim)
 
 	if args.calculate_psnr:
 		psnr_string = '/PSNR'
-		# Get the PSNR score of each frame from the JSON file created by libvmaf.
 		psnr_scores = [psnr['metrics']['psnr'] for psnr in file_contents['frames']]
-
 		mean_psnr = force_decimal_places(np.mean(psnr_scores), decimal_places)
 		min_psnr = force_decimal_places(min(psnr_scores), decimal_places)
 		psnr_std = force_decimal_places(np.std(psnr_scores), decimal_places) # Standard deviation.
+		psnr = f'{min_psnr} | {psnr_std} | {mean_psnr}'
 
 		log.info(f'Creating PSNR graph...')
-		plot_graph(f'PSNR\nn_subsample: {args.subsample}', 'Frame Number', 'PSNR', frame_numbers,
-				   psnr_scores, mean_psnr, os.path.join(output_folder, 'PSNR'))
-
+		plt.plot(frame_numbers, psnr_scores, label=f'PSNR ({mean_psnr})')
+		plt.suptitle(f'PSNR\nn_subsample: {args.subsample}')
+		plt.xlabel('Frame Number')
+		plt.ylabel('Value of Quality Metric')
+		plt.legend(loc='lower right')
+		plt.savefig(os.path.join(output_folder, 'PSNR'))
+		log.info(f'Done! Graph saved at {output_folder}/PSNR.png')
+		plt.clf()
 		# Add the PSNR values to the table.
-		data_for_current_row.append(f'{min_psnr} | {psnr_std} | {mean_psnr}')
+		data_for_current_row.append(psnr)
 
 	if not args.no_transcoding_mode:
 		data_for_current_row.insert(0, crf_or_preset)
