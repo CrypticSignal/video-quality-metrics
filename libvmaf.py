@@ -7,7 +7,8 @@ log = Logger('libvmaf')
 vmaf_model_file_path = 'vmaf_models/vmaf_v0.6.1.json'
 
 
-def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, crf_or_preset, duration):
+def run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, duration, 
+                crf_or_preset=None):
     characters_to_escape = ["'", ":", ",", "[", "]"]
     for character in characters_to_escape:
         if character in json_file_path:
