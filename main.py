@@ -95,12 +95,11 @@ if args.interval is not None:
 
 # The -ntm argument was not specified.
 if not args.no_transcoding_mode:
-    
     if video_encoder == 'x264':
         crf = '23'
     elif video_encoder == 'x265':
         crf = '28'
-    elif video_encoder == 'libaom-av1'
+    elif video_encoder == 'libaom-av1':
         crf = '32'
 
     # CRF comparison mode.
@@ -134,7 +133,7 @@ if not args.no_transcoding_mode:
             data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
             
             json_file_path = f'{output_folder}/Metrics of each frame.json'
-            run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, crf, duration)
+            run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, duration, crf)
 
             get_metrics_save_table(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row, 
                                    table, output_folder, time_taken, crf)
@@ -172,7 +171,8 @@ if not args.no_transcoding_mode:
             data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
         
             json_file_path = f'{output_folder}/Metrics of each frame.json'
-            run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, preset, duration)
+            run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, duration, 
+                        preset)
 
             get_metrics_save_table(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row, 
                                    table, output_folder, time_taken, preset)
@@ -195,7 +195,7 @@ else:
     json_file_path = f'{output_folder}/Metrics of each frame.json'
 
     factory = FfmpegProcessFactory()
-    run_libvmaf(args.transcoded_video_path, args, json_file_path, fps, original_video_path, factory, crf_or_preset=None)
+    run_libvmaf(args.transcoded_video_path, args, json_file_path, fps, original_video_path, factory, duration)
 
     transcode_size = os.path.getsize(args.transcoded_video_path) / 1_000_000
     size_rounded = force_decimal_places(transcode_size, args.decimal_places)
@@ -208,4 +208,6 @@ else:
     with open(table_path, 'a') as f:
         f.write(f'\nOriginal Bitrate: {original_bitrate}')
 
-log.info(f'All done! Check out the contents of the "{Path(output_folder).parent}" directory.')
+
+output_directory = output_folder if args.no_transcoding_mode else Path(output_folder).parent
+log.info(f'All done! Check out the contents of the "{output_directory}" directory.')
