@@ -1,4 +1,6 @@
 import logging
+import math
+import numpy as np
 import os
 from pathlib import Path
 import sys
@@ -112,14 +114,40 @@ def line():
     log.info('--------------------------------------------------------------------------------------------------------')
 
 
-def plot_graph(title, independent_variable, dependent_variable, x_values, y_values, dependent_variable_mean, save_path):
+def plot_graph(title, x_label, y_label, x_values, y_values, save_path, bar_graph=False):
     plt.suptitle(title)
-    plt.xlabel(independent_variable)
-    plt.ylabel(dependent_variable)
-    plt.plot(x_values, y_values, label=f'{dependent_variable} ({dependent_variable_mean})')
-    plt.legend(loc='lower right')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    if bar_graph:
+        xlocs = x_values
+        rotation = 0
+        # If the X values are strings, presets comparison mode was used. Otherwise, CRF comparison mode was used.
+        # xlocs is a list which defines the locations of the xticks.
+        if isinstance(x_values[0], str):
+            xlocs = np.arange(len(x_values))
+            xticks_labels_rotation = 45
+        else:         
+            xlocs = x_values
+            xticks_labels_rotation = 0
+    
+        plt.xticks(xlocs, x_values, rotation=xticks_labels_rotation)
+        # Set the range of the y-axis values.
+        plt.ylim(min(y_values) - 1, math.ceil(max(y_values)))
+
+        i = 0
+        for value in x_values:
+            plt.bar(value, y_values[i], label=y_values[i])
+            i += 1
+
+        plt.legend(loc='center right', bbox_to_anchor=(1, 0.5))
+        plt.tight_layout()
+        
+    # Plot a line graph.
+    else:
+        plt.plot(x_values, y_values)
+        plt.legend(loc='lower right')
+    
     plt.savefig(save_path)
-    log.info(f'Done! Graph saved at {save_path}')
     plt.clf()
 
 
@@ -131,4 +159,5 @@ def write_table_info(table_path, video_filename, original_bitrate, args, crf_or_
             f'Encoder used for the transcodes: {args.video_encoder}\n'
             f'{crf_or_preset} was used.\n'
             f'Filter(s) used: {"None" if not args.video_filters else args.video_filters}\n'
-            f'n_subsample: {args.subsample}')
+            f'n_subsample: {args.subsample}'
+        )
