@@ -25,7 +25,7 @@ def get_metrics_save_table(comparison_table, json_file_path, args, decimal_place
 	frame_numbers = [frame['frameNum'] for frame in file_contents['frames']]
 
 	plot_graph(f'VMAF\nn_subsample: {args.subsample}', 'Frame Number', 'VMAF', frame_numbers,
-			   vmaf_scores, mean_vmaf, os.path.join(output_folder, 'VMAF'))
+			   vmaf_scores, os.path.join(output_folder, 'VMAF'))
 
 	# Add the VMAF values to the table.
 	data_for_current_row.append(f'{min_vmaf} | {vmaf_std} | {mean_vmaf}')
@@ -78,3 +78,4 @@ def get_metrics_save_table(comparison_table, json_file_path, args, decimal_place
 
 	log.info(f'{comparison_table} has been updated.')
 	line()
+	return float(mean_vmaf)
