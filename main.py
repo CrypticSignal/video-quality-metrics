@@ -11,7 +11,8 @@ from ffmpeg_process_factory import FfmpegProcessFactory
 from libvmaf import run_libvmaf
 from metrics import get_metrics_save_table
 from overview import create_movie_overview
-from utils import cut_video, exit_program, force_decimal_places, is_list, line, Logger, VideoInfoProvider, write_table_info
+from utils import cut_video, exit_program, force_decimal_places, is_list, line, Logger, \
+                  plot_graph, VideoInfoProvider, write_table_info
 
 log = Logger('main.py')
 
@@ -51,7 +52,6 @@ def create_output_folder_initialise_table(crf_or_preset):
         output_ext = '.mp4'
     
     return output_folder, comparison_table, output_ext
-
 
 # Use the VideoInfoProvider class to get the framerate, bitrate and duration.
 provider = VideoInfoProvider(args.original_video_path)
@@ -95,6 +95,7 @@ if args.interval is not None:
 
 # The -ntm argument was not specified.
 if not args.no_transcoding_mode:
+    vmaf_scores = []
     if video_encoder == 'x264':
         crf = '23'
     elif video_encoder == 'x265':
@@ -131,14 +132,20 @@ if not args.no_transcoding_mode:
             transcoded_bitrate = provider.get_bitrate(args.decimal_places, transcode_output_path)
             size_rounded = force_decimal_places(transcode_size, args.decimal_places)
             data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
-            
+
+            # Save the output of libvmaf to the following path.
             json_file_path = f'{output_folder}/Metrics of each frame.json'
+             # Run the libvmaf filter.
             run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, duration, crf)
 
-            get_metrics_save_table(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row, 
-                                   table, output_folder, time_taken, crf)
+            vmaf_scores.append(get_metrics_save_table(comparison_table, json_file_path, args, args.decimal_places, 
+                               data_for_current_row, table, output_folder, time_taken, crf))
 
             write_table_info(comparison_table, filename, original_bitrate, args, f'Preset {preset}')
+
+        # Plot a bar graph showing the average VMAF score of each CRF value.
+        plot_graph('CRF vs VMAF', 'CRF', 'VMAF', crf_values, vmaf_scores, f'{prev_output_folder}/CRF vs VMAF', 
+                   bar_graph=True)
             
     # Presets comparison mode.
     elif is_list(args.preset):
@@ -169,15 +176,20 @@ if not args.no_transcoding_mode:
             transcoded_bitrate = provider.get_bitrate(args.decimal_places, transcode_output_path)
             size_rounded = force_decimal_places(transcode_size, args.decimal_places)
             data_for_current_row = [f'{size_rounded} MB', transcoded_bitrate]
-        
+
+            # Save the output of libvmaf to the following path.
             json_file_path = f'{output_folder}/Metrics of each frame.json'
+            # Run the libvmaf filter.
             run_libvmaf(transcode_output_path, args, json_file_path, fps, original_video_path, factory, duration, 
                         preset)
 
-            get_metrics_save_table(comparison_table, json_file_path, args, args.decimal_places, data_for_current_row, 
-                                   table, output_folder, time_taken, preset)
+            vmaf_scores.append(get_metrics_save_table(comparison_table, json_file_path, args, args.decimal_places, 
+                               data_for_current_row, table, output_folder, time_taken, preset))
 
             write_table_info(comparison_table, filename, original_bitrate, args, f'CRF {crf}')
+
+        # Plot a bar graph showing the average VMAF score of each preset.
+        plot_graph('Preset vs VMAF', 'Preset', 'VMAF', chosen_presets, vmaf_scores, f'{prev_output_folder}/Preset vs VMAF', bar_graph=True)
 
 # -ntm mode.
 else:
@@ -191,7 +203,6 @@ else:
     table_path = os.path.join(output_folder, 'Table.txt')
     table.field_names = table_column_names
 
-    # os.path.join doesn't work with libvmaf's log_path option so we're manually defining the path with slashes.
     json_file_path = f'{output_folder}/Metrics of each frame.json'
 
     factory = FfmpegProcessFactory()
