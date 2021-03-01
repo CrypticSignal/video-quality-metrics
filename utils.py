@@ -139,7 +139,7 @@ def plot_graph(title, x_label, y_label, x_values, y_values, save_path, bar_graph
             plt.bar(value, y_values[i], label=y_values[i])
             i += 1
 
-        plt.legend(loc='center right', bbox_to_anchor=(1, 0.5))
+        plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         plt.tight_layout()
         
     # Plot a line graph.
