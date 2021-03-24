@@ -1,5 +1,5 @@
 # Video Quality Metrics (VQM)
-VQM is a command line program that has two main features. These features are outlined in **Section Two: Features**, and they are referred to as **[1]** and **[2]**, respectively.
+VQM is a command line program that has two main features. These features are outlined in [**Section Two: Features**](https://github.com/CrypticSignal/video-quality-metrics#section-two-features), and they are referred to as **[1]** and **[2]**, respectively.
 
 **What kind of data does this program produce?**
 
