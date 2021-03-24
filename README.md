@@ -7,12 +7,12 @@ This program provides you with two types of data. Graphs (saved as PNG files) an
 
 **What kind of graphs are created?**
 
-When using **feature [2]**, two types of graphs are created:
-1. A graph where the average VMAF is plotted against the presets/CRF values. Here is an example:
+When using feature **[2]**, two types of graphs are created:
+- A graph where the average VMAF is plotted against the presets/CRF values. If one opts to compare CRF values, the following type of graph will produced:
 
 ![CRF vs VMAF graph example](https://github.com/CrypticSignal/video-quality-metrics/blob/master/Example%20Graphs/CRF%20vs%20VMAF.png)
 
-2. A graph is created for each preset/CRF value, showing the variation of the VMAF/SSIM/PSNR throughout the video. Here's what a VMAF variation graph will look like:
+- A graph for each preset/CRF value, showing the variation of the VMAF/SSIM/PSNR throughout the video. An example is shown below.
 
 ![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/Example%20Graphs/VMAF.png)
 
@@ -79,8 +79,6 @@ Transcode a video using the x264 or x265 encoder and see the VMAF/SSIM/PSNR valu
 `python main.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
 
 *You must specify the presets that you want to compare and (optionally) **one** CRF value. If you do specify a CRF value, a CRF of 23 will be used.*
-
-To see example graphs (which are created whether feature [1] or [2] is used), check out the [Example Graphs](https://github.com/BassThatHertz/video-quality-metrics/tree/master/Example%20Graphs) folder.
 
 **[2] Overview Mode:**
 
