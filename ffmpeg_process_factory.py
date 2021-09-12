@@ -1,3 +1,4 @@
+import math
 import os
 import subprocess
 
@@ -118,7 +119,7 @@ class FfmpegProcess:
                     except ZeroDivisionError:
                         continue
                     else:
-                        minutes = round(eta / 60)
+                        minutes = math.floor(eta / 60)
                         seconds = f'{round(eta % 60):02d}'
                         print(f'Progress: {round(percentage, 1)}% | Speed: {speed}x | ETA: {minutes}:{seconds} [M:S]', end='\r')
                    
