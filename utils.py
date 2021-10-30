@@ -114,7 +114,7 @@ def line():
     log.info('--------------------------------------------------------------------------------------------------------')
 
 
-def plot_graph(title, x_label, y_label, x_values, y_values, label_v, save_path, bar_graph=False):
+def plot_graph(title, x_label, y_label, x_values, y_values, mean_y_value, save_path, bar_graph=False):
     plt.suptitle(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
@@ -144,7 +144,7 @@ def plot_graph(title, x_label, y_label, x_values, y_values, label_v, save_path, 
         
     # Plot a line graph.
     else:
-        plt.plot(x_values, y_values, label=f'{y_label} ({label_v})')
+        plt.plot(x_values, y_values, label=f'{y_label} ({mean_y_value})')
         plt.legend(loc='lower right')
     
     plt.savefig(save_path)
