@@ -1,5 +1,4 @@
 ffmpeg-python==0.2.0
 matplotlib==3.3.0
-numpy==1.18.2
+numpy==1.21.3
 prettytable==0.7.2
-PTable==0.9.2
