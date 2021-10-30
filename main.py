@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import sys
 
+import numpy as np
 from prettytable import PrettyTable
 
 from args import parser
@@ -61,7 +62,7 @@ fps_float = provider.get_framerate_float()
 original_bitrate = provider.get_bitrate(args.decimal_places)
 
 line()
-log.info('Video Quality Metrics\nGitHub.com/BassThatHertz/video-quality-metrics')
+log.info('Video Quality Metrics\nGitHub.com/CrypticSignal/video-quality-metrics')
 line()
 log.info('Here\'s some information about the original video:')
 log.info(f'Filename: {filename}')
@@ -126,7 +127,7 @@ if not args.no_transcoding_mode:
             transcode_output_path = os.path.join(output_folder, f'CRF {crf}{output_ext}')
 
             # Encode the video.
-            factory, time_taken = encode_video(args, crf, preset, transcode_output_path, f'CRF {crf}', duration)
+            factory, time_taken = encode_video(original_video_path, args, crf, preset, transcode_output_path, f'CRF {crf}', duration)
             
             transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
             transcoded_bitrate = provider.get_bitrate(args.decimal_places, transcode_output_path)
@@ -141,10 +142,12 @@ if not args.no_transcoding_mode:
             vmaf_scores.append(get_metrics_save_table(comparison_table, json_file_path, args, args.decimal_places, 
                                data_for_current_row, table, output_folder, time_taken, crf))
 
+            mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
+
             write_table_info(comparison_table, filename, original_bitrate, args, f'Preset {preset}')
 
         # Plot a bar graph showing the average VMAF score of each CRF value.
-        plot_graph('CRF vs VMAF', 'CRF', 'VMAF', crf_values, vmaf_scores, f'{prev_output_folder}/CRF vs VMAF', 
+        plot_graph('CRF vs VMAF', 'CRF', 'VMAF', crf_values, vmaf_scores, mean_vmaf, f'{prev_output_folder}/CRF vs VMAF', 
                    bar_graph=True)
             
     # Presets comparison mode.
@@ -170,7 +173,7 @@ if not args.no_transcoding_mode:
             transcode_output_path = os.path.join(output_folder, f'{preset}{output_ext}')
 
             # Encode the video.
-            factory, time_taken = encode_video(args, crf, preset, transcode_output_path, f'preset {preset}', duration)
+            factory, time_taken = encode_video(original_video_path, args, crf, preset, transcode_output_path, f'preset {preset}', duration)
 
             transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
             transcoded_bitrate = provider.get_bitrate(args.decimal_places, transcode_output_path)
@@ -186,10 +189,12 @@ if not args.no_transcoding_mode:
             vmaf_scores.append(get_metrics_save_table(comparison_table, json_file_path, args, args.decimal_places, 
                                data_for_current_row, table, output_folder, time_taken, preset))
 
-            write_table_info(comparison_table, filename, original_bitrate, args, f'CRF {crf}')
+            mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
+
+            write_table_info(comparison_table, original_video_path, original_bitrate, args, f'CRF {crf}')
 
         # Plot a bar graph showing the average VMAF score of each preset.
-        plot_graph('Preset vs VMAF', 'Preset', 'VMAF', chosen_presets, vmaf_scores, f'{prev_output_folder}/Preset vs VMAF', bar_graph=True)
+        plot_graph('Preset vs VMAF', 'Preset', 'VMAF', chosen_presets, vmaf_scores, mean_vmaf, f'{prev_output_folder}/Preset vs VMAF', bar_graph=True)
 
 # -ntm mode.
 else:

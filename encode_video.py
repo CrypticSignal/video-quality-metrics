@@ -3,10 +3,8 @@ from utils import Logger, Timer
 
 log = Logger('encode_video.py')
 
-def encode_video(args, crf, preset, output_path, message, duration):
-    arguments = EncodingArguments(args.original_video_path, args.video_encoder, output_path)
-    
-    arguments.infile = args.original_video_path
+def encode_video(video_path, args, crf, preset, output_path, message, duration):
+    arguments = EncodingArguments(video_path, args.video_encoder, output_path)
 
     if args.video_encoder == 'libaom-av1':
         arguments.av1_cpu_used(str(args.av1_cpu_used))
