@@ -10,32 +10,33 @@ from ffmpeg import probe
 import matplotlib.pyplot as plt
 
 
-class Logger():
-    def __init__(self, name, filename='logs.log', print_to_terminal=True):
-        with open(filename, 'w'): pass
-        
+class Logger:
+    def __init__(self, name, filename="logs.log", print_to_terminal=True):
+        with open(filename, "w"):
+            pass
+
         logger = logging.getLogger(name)
         logger.setLevel(10)
 
         file_handler = logging.FileHandler(filename)
         logger.addHandler(file_handler)
         self._file_handler = file_handler
-        
+
         if print_to_terminal:
             logger.addHandler(logging.StreamHandler())
 
         self._logger = logger
 
     def info(self, msg):
-        self._file_handler.setFormatter(logging.Formatter('[%(name)s] %(message)s'))
+        self._file_handler.setFormatter(logging.Formatter("[%(name)s] %(message)s"))
         self._logger.info(msg)
 
     def warning(self, msg):
-        self._file_handler.setFormatter(logging.Formatter('[%(name)s] [WARNING] %(message)s'))
+        self._file_handler.setFormatter(logging.Formatter("[%(name)s] [WARNING] %(message)s"))
         self._logger.warning(msg)
 
     def debug(self, msg):
-        self._file_handler.setFormatter(logging.Formatter('[%(name)s] [DEBUG] %(message)s'))
+        self._file_handler.setFormatter(logging.Formatter("[%(name)s] [DEBUG] %(message)s"))
         self._logger.debug(msg)
 
 
@@ -55,55 +56,62 @@ class VideoInfoProvider:
 
     def get_bitrate(self, decimal_places, video_path=None):
         if video_path:
-            bitrate = probe(video_path)['format']['bit_rate'] 
+            bitrate = probe(video_path)["format"]["bit_rate"]
         else:
-            bitrate = probe(self._video_path)['format']['bit_rate']
-        return f'{force_decimal_places((int(bitrate) / 1_000_000), decimal_places)} Mbps'
+            bitrate = probe(self._video_path)["format"]["bit_rate"]
+        return f"{force_decimal_places((int(bitrate) / 1_000_000), decimal_places)} Mbps"
 
     def get_framerate_fraction(self):
-        r_frame_rate = [stream for stream in probe(self._video_path)['streams']
-                        if stream['codec_type'] == 'video'][0]['r_frame_rate']
+        r_frame_rate = [
+            stream
+            for stream in probe(self._video_path)["streams"]
+            if stream["codec_type"] == "video"
+        ][0]["r_frame_rate"]
         return r_frame_rate
 
     def get_framerate_float(self):
-        numerator, denominator = self.get_framerate_fraction().split('/')
+        numerator, denominator = self.get_framerate_fraction().split("/")
         return round((int(numerator) / int(denominator)), 3)
 
     def get_duration(self):
-        return float(probe(self._video_path)['format']['duration'])
+        return float(probe(self._video_path)["format"]["duration"])
 
 
-log = Logger('utils')
+log = Logger("utils")
 
 
 def cut_video(filename, args, output_ext, output_folder, comparison_table):
-    cut_version_filename = f'{Path(filename).stem} [{args.encode_length}s]{output_ext}'
+    cut_version_filename = f"{Path(filename).stem} [{args.encode_length}s]{output_ext}"
     # Output path for the cut video.
     output_file_path = os.path.join(output_folder, cut_version_filename)
     # The reference file will be the cut version of the video.
     # Create the cut version.
-    log.info(f'Cutting the video to a length of {args.encode_length} seconds...')
-    os.system(f'ffmpeg -loglevel warning -y -i {args.original_video_path} -t {args.encode_length} '
-              f'-map 0 -c copy "{output_file_path}"')
-    log.info('Done!')
+    log.info(f"Cutting the video to a length of {args.encode_length} seconds...")
+    os.system(
+        f"ffmpeg -loglevel warning -y -i {args.original_video_path} -t {args.encode_length} "
+        f'-map 0 -c copy "{output_file_path}"'
+    )
+    log.info("Done!")
 
-    time_message = f' for {args.encode_length} seconds' if int(args.encode_length) > 1 else 'for 1 second'
+    time_message = (
+        f" for {args.encode_length} seconds" if int(args.encode_length) > 1 else "for 1 second"
+    )
 
-    with open(comparison_table, 'w') as f:
-        f.write(f'You chose to encode {filename}{time_message} using {args.video_encoder}.')
+    with open(comparison_table, "w") as f:
+        f.write(f"You chose to encode {filename}{time_message} using {args.video_encoder}.")
 
     return output_file_path
 
 
 def exit_program(message):
     line()
-    log.info(f'{message}\nThis program will now exit.')
+    log.info(f"{message}\nThis program will now exit.")
     line()
     sys.exit()
 
 
 def force_decimal_places(value, decimal_places):
-    return f'{value:.{decimal_places}f}'
+    return f"{value:.{decimal_places}f}"
 
 
 def is_list(argument_object):
@@ -111,10 +119,14 @@ def is_list(argument_object):
 
 
 def line():
-    log.info('--------------------------------------------------------------------------------------------------------')
+    log.info(
+        "--------------------------------------------------------------------------------------------------------"
+    )
 
 
-def plot_graph(title, x_label, y_label, x_values, y_values, mean_y_value, save_path, bar_graph=False):
+def plot_graph(
+    title, x_label, y_label, x_values, y_values, mean_y_value, save_path, bar_graph=False
+):
     plt.suptitle(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
@@ -126,10 +138,10 @@ def plot_graph(title, x_label, y_label, x_values, y_values, mean_y_value, save_p
         if isinstance(x_values[0], str):
             xlocs = np.arange(len(x_values))
             xticks_labels_rotation = 45
-        else:         
+        else:
             xlocs = x_values
             xticks_labels_rotation = 0
-    
+
         plt.xticks(xlocs, x_values, rotation=xticks_labels_rotation)
         # Set the range of the y-axis values.
         plt.ylim(min(y_values) - 1, math.ceil(max(y_values)))
@@ -139,25 +151,25 @@ def plot_graph(title, x_label, y_label, x_values, y_values, mean_y_value, save_p
             plt.bar(value, y_values[i], label=y_values[i])
             i += 1
 
-        plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         plt.tight_layout()
-        
+
     # Plot a line graph.
     else:
-        plt.plot(x_values, y_values, label=f'{y_label} ({mean_y_value})')
-        plt.legend(loc='lower right')
-    
+        plt.plot(x_values, y_values, label=f"{y_label} ({mean_y_value})")
+        plt.legend(loc="lower right")
+
     plt.savefig(save_path)
     plt.clf()
 
 
 def write_table_info(table_path, video_filename, original_bitrate, args, crf_or_preset):
-    with open(table_path, 'a') as f:
+    with open(table_path, "a") as f:
         f.write(
-            f'\nFile Transcoded: {video_filename}\n'
-            f'Bitrate: {original_bitrate}\n'
-            f'Encoder used for the transcodes: {args.video_encoder}\n'
-            f'{crf_or_preset} was used.\n'
+            f"\nFile Transcoded: {video_filename}\n"
+            f"Bitrate: {original_bitrate}\n"
+            f"Encoder used for the transcodes: {args.video_encoder}\n"
+            f"{crf_or_preset} was used.\n"
             f'Filter(s) used: {"None" if not args.video_filters else args.video_filters}\n'
-            f'n_subsample: {args.subsample}'
+            f"n_subsample: {args.subsample}"
         )

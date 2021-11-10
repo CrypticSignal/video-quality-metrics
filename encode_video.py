@@ -1,12 +1,13 @@
 from ffmpeg_process_factory import EncodingArguments, FfmpegProcessFactory
 from utils import Logger, Timer
 
-log = Logger('encode_video.py')
+log = Logger("encode_video.py")
+
 
 def encode_video(video_path, args, crf, preset, output_path, message, duration):
     arguments = EncodingArguments(video_path, args.video_encoder, output_path)
 
-    if args.video_encoder == 'libaom-av1':
+    if args.video_encoder == "libaom-av1":
         arguments.av1_cpu_used(str(args.av1_cpu_used))
 
     arguments.crf(str(crf))
@@ -16,12 +17,12 @@ def encode_video(video_path, args, crf, preset, output_path, message, duration):
 
     factory = FfmpegProcessFactory()
     process = factory.create_process(arguments, args)
-    
-    log.info(f'Converting the video using {message}...')
+
+    log.info(f"Converting the video using {message}...")
     timer = Timer()
     timer.start()
     process.run(duration)
     time_taken = timer.stop(args.decimal_places)
-    log.info(f'Done!')
+    log.info(f"Done!")
 
     return factory, time_taken
