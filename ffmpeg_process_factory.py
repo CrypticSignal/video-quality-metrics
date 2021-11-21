@@ -1,8 +1,6 @@
 import subprocess
 
-from tqdm import tqdm
-
-from utils import line, Logger, VideoInfoProvider
+from utils import line, Logger, show_progress_bar, VideoInfoProvider
 
 log = Logger("factory")
 
@@ -122,33 +120,15 @@ class FfmpegProcess:
             line()
             log.debug(f'Running the following command:\n{" ".join(self._arguments)}')
             line()
-    
+
     def run(self, video_path, duration):
         self._video_path = video_path
         self._duration = duration
-        
+
         video_info = VideoInfoProvider(self._video_path)
         self._total_frames = int((video_info.get_framerate_float() * self._duration) + 1)
-        previous_frame_number = 0
 
+        # Start the FFmpeg process.
         self._process = subprocess.Popen(self._arguments, stdout=subprocess.PIPE)
-
-        progress_bar = tqdm(
-            total=self._total_frames, 
-            unit=" frames", 
-            dynamic_ncols=True,
-        )
-
-        progress_bar.clear()
-
-        try:
-            while self._process.poll() is None:
-                output = self._process.stdout.readline().decode("utf-8")
-                if "frame=" in output:
-                    frame_number = int(output[6:])
-                    frame_number_increase = frame_number - previous_frame_number
-                    progress_bar.update(frame_number_increase)
-                    previous_frame_number = frame_number
-
-        except KeyboardInterrupt:
-            self._process.kill()              
+        # Use tqdm to show a progress bar.
+        show_progress_bar(self._process, self._total_frames)
