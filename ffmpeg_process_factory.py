@@ -1,8 +1,8 @@
-import math
-import os
 import subprocess
 
-from utils import Logger, line
+from tqdm import tqdm
+
+from utils import line, Logger, VideoInfoProvider
 
 log = Logger('factory')
 
@@ -91,35 +91,33 @@ class FfmpegProcess:
             line()
             log.debug(f'Running the following command:\n{" ".join(self._arguments)}')
             line()
+    
+    def run(self, video_path, duration):
+        self._video_path = video_path
+        self._duration = duration
+        
+        video_info = VideoInfoProvider(self._video_path)
+        self._total_frames = int((video_info.get_framerate_float() * self._duration) + 1)
+        previous_frame_number = 0
 
-    def run(self, duration):
-        fps = 0
-        percentage = 0
-        speed = 0
-        secs = 0
-        process = subprocess.Popen(self._arguments, stdout=subprocess.PIPE)
-        while True:
-            # If the process has completed
-            if process.poll() is not None:
-                width, height = os.get_terminal_size()
-                # # Clear the progress, speed and ETA
-                print(' ' * (width - 1) + '\r', end='')
-                break
-            else:
-                output = process.stdout.readline().decode('utf-8')
-                if 'out_time_ms' in output:
-                    microseconds = int(output.strip()[12:])
-                    secs = microseconds / 1_000_000
-                    percentage = (secs / duration) * 100
-                elif "speed" in output:
-                    speed = output.strip()[6:]
-                    speed = 0 if ' ' in speed or 'N/A' in speed else float(speed[:-1])
-                    try:
-                        eta = (duration - secs) / speed
-                    except ZeroDivisionError:
-                        continue
-                    else:
-                        minutes = math.floor(eta / 60)
-                        seconds = f'{round(eta % 60):02d}'
-                        print(f'Progress: {round(percentage, 1)}% | Speed: {speed}x | ETA: {minutes}:{seconds} [M:S]', end='\r')
-                   
+        self._process = subprocess.Popen(self._arguments, stdout=subprocess.PIPE)
+
+        progress_bar = tqdm(
+            total=self._total_frames, 
+            unit=" frames", 
+            dynamic_ncols=True,
+        )
+
+        progress_bar.clear()
+
+        try:
+            while self._process.poll() is None:
+                output = self._process.stdout.readline().decode("utf-8")
+                if "frame=" in output:
+                    frame_number = int(output[6:])
+                    frame_number_increase = frame_number - previous_frame_number
+                    progress_bar.update(frame_number_increase)
+                    previous_frame_number = frame_number
+
+        except KeyboardInterrupt:
+            self._process.kill()              
