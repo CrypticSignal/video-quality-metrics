@@ -8,6 +8,7 @@ from time import time
 
 from ffmpeg import probe
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 
 class Logger:
@@ -70,7 +71,7 @@ class VideoInfoProvider:
         return r_frame_rate
 
     def get_framerate_float(self):
-        numerator, denominator = self.get_framerate_fraction().split('/')
+        numerator, denominator = self.get_framerate_fraction().split("/")
         return int(numerator) / int(denominator)
 
     def get_duration(self):
@@ -160,6 +161,31 @@ def plot_graph(
 
     plt.savefig(save_path)
     plt.clf()
+
+
+def show_progress_bar(ffmpeg_process, total_frames):
+    progress_bar = tqdm(
+            total=total_frames,
+            unit=" frames",
+            dynamic_ncols=True,
+    )
+
+    progress_bar.clear()
+    previous_frame_number = 0
+
+    try:
+        while ffmpeg_process.poll() is None:
+            line = ffmpeg_process.stdout.readline().decode("utf-8")
+            if "frame=" in line:
+                frame_number = int(line[6:])
+                frame_number_increase = frame_number - previous_frame_number
+                progress_bar.update(frame_number_increase)
+                previous_frame_number = frame_number
+    except KeyboardInterrupt:
+        progress_bar.close()
+        ffmpeg_process.kill()
+        log.info("[KeyboardInterrupt] FFmpeg process killed. Exiting Video Quality Metrics.")
+        sys.exit(0)
 
 
 def write_table_info(table_path, video_filename, original_bitrate, args, crf_or_preset):
