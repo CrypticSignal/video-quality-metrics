@@ -67,7 +67,7 @@ class VideoInfoProvider:
 
     def get_framerate_float(self):
         numerator, denominator = self.get_framerate_fraction().split('/')
-        return round((int(numerator) / int(denominator)), 3)
+        return int(numerator) / int(denominator)
 
     def get_duration(self):
         return float(probe(self._video_path)['format']['duration'])
@@ -111,7 +111,8 @@ def is_list(argument_object):
 
 
 def line():
-    log.info('--------------------------------------------------------------------------------------------------------')
+    width, height = os.get_terminal_size()
+    log.info("-" * width)
 
 
 def plot_graph(title, x_label, y_label, x_values, y_values, mean_y_value, save_path, bar_graph=False):
