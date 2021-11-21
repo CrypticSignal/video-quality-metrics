@@ -58,7 +58,7 @@ def run_libvmaf(
             end_of_computing_message += f" achieved with preset {crf_or_preset}"
 
     line()
-    print(f"Calculating the VMAF{end_of_computing_message}...")
+    log.info(f"Calculating the VMAF{end_of_computing_message}...")
 
     process.run(original_video_path, duration)
     log.info("Done!")
