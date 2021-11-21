@@ -20,8 +20,8 @@ def encode_video(video_path, args, crf, preset, output_path, message, duration):
     log.info(f'Converting the video using {message}...')
     timer = Timer()
     timer.start()
-    process.run(duration)
+    process.run(video_path, duration)
     time_taken = timer.stop(args.decimal_places)
-    log.info(f'Done!')
+    log.info("Done!")
 
     return factory, time_taken
