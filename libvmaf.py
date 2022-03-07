@@ -28,7 +28,7 @@ def run_libvmaf(
     phone_model_string = ":model='enable_transform=true'" if args.phone_model else ""
 
     vmaf_options = f"""
-    model='path={model_file_path}:log_fmt=json:log_path={json_file_path}:n_subsample={n_subsample}
+    model=path={model_file_path}:log_fmt=json:log_path={json_file_path}:n_subsample={n_subsample}
     :n_threads={args.n_threads}{psnr_string}{ssim_string}{phone_model_string}
     """
 
