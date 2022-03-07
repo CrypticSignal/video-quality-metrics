@@ -4,7 +4,7 @@ from utils import line, Logger
 log = Logger("libvmaf")
 
 # Change this if you want to use a different VMAF model file.
-vmaf_model_file_path = "vmaf_models/vmaf_v0.6.1.json"
+model_file_path = "vmaf_models/vmaf_v0.6.1.json"
 
 
 def run_libvmaf(
@@ -22,17 +22,15 @@ def run_libvmaf(
         if character in json_file_path:
             json_file_path = json_file_path.replace(character, f"\{character}")
 
-    vmaf_options = {
-        "log_fmt": "json",
-        "log_path": json_file_path,
-        "model_path": vmaf_model_file_path,
-        "n_subsample": "1" if not args.subsample else args.subsample,
-        "phone_model": "1" if args.phone_model else "0",
-        "psnr": "1" if args.calculate_psnr else "0",
-        "ssim": "1" if args.calculate_ssim else "0",
-        "n_threads": args.n_threads,
-    }
-    vmaf_options = ":".join(f"{key}={value}" for key, value in vmaf_options.items())
+    n_subsample = "1" if not args.subsample else args.subsample
+    psnr_string = ":feature='name=psnr'" if args.calculate_psnr else ""
+    ssim_string = ":feature='name=float_ssim'" if args.calculate_ssim else ""
+    phone_model_string = ":model='enable_transform=true'" if args.phone_model else ""
+
+    vmaf_options = f"""
+    model='path={model_file_path}:log_fmt=json:log_path={json_file_path}:n_subsample={n_subsample}
+    :n_threads={args.n_threads}{psnr_string}{ssim_string}{phone_model_string}
+    """
 
     libvmaf_arguments = LibVmafArguments(
         fps, transcode_output_path, original_video_path, vmaf_options
