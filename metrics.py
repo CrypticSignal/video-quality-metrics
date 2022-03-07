@@ -51,8 +51,13 @@ def get_metrics_save_table(
 
     if args.calculate_ssim:
         ssim_string = "/SSIM"
+
+        for metric in file_contents["frames"][0]["metrics"]:
+            if "ssim" in metric:
+                metric_name = metric
+        
         # Get the SSIM score of each frame from the JSON file created by libvmaf.
-        ssim_scores = [ssim["metrics"]["ssim"] for ssim in file_contents["frames"]]
+        ssim_scores = [frame["metrics"][metric_name] for frame in file_contents["frames"]]
 
         mean_ssim = force_decimal_places(np.mean(ssim_scores), decimal_places)
         min_ssim = force_decimal_places(min(ssim_scores), decimal_places)
@@ -74,8 +79,13 @@ def get_metrics_save_table(
 
     if args.calculate_psnr:
         psnr_string = "/PSNR"
+
+        for metric in file_contents["frames"][0]["metrics"]:
+            if "psnr" in metric:
+                metric_name = metric
+
         # Get the PSNR score of each frame from the JSON file created by libvmaf.
-        psnr_scores = [psnr["metrics"]["psnr"] for psnr in file_contents["frames"]]
+        psnr_scores = [frame["metrics"][metric_name] for frame in file_contents["frames"]]
 
         mean_psnr = force_decimal_places(np.mean(psnr_scores), decimal_places)
         min_psnr = force_decimal_places(min(psnr_scores), decimal_places)
