@@ -1,4 +1,5 @@
 # Video Quality Metrics (VQM)
+
 VQM is a command line program that has two main features. These features are outlined in [**Section Two: Features**](https://github.com/CrypticSignal/video-quality-metrics#section-two-features), and they are referred to as **[1]** and **[2]**, respectively.
 
 **What kind of data does this program produce?**
@@ -8,6 +9,7 @@ This program provides you with two types of data. Graphs (saved as PNG files) an
 **What kind of graphs are created?**
 
 When using feature **[2]**, two types of graphs are created:
+
 - A graph where the average VMAF is plotted against the presets/CRF values. If one opts to compare CRF values, the following type of graph will produced:
 
 ![CRF vs VMAF graph example](https://github.com/CrypticSignal/video-quality-metrics/blob/master/Example%20Graphs/CRF%20vs%20VMAF.png)
@@ -16,21 +18,24 @@ When using feature **[2]**, two types of graphs are created:
 
 ![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/Example%20Graphs/VMAF.png)
 
-*Example SSIM and PSNR graphs can be found in the [Example Graphs folder](https://github.com/BassThatHertz/video-quality-metrics/tree/master/Example%20Graphs).*
+_Example SSIM and PSNR graphs can be found in the [Example Graphs folder](https://github.com/BassThatHertz/video-quality-metrics/tree/master/Example%20Graphs)._
 
 **What data is shown in the table?**
+
 - Filesize (MB)
 - Bitrate (Mbps)
 - Filesize compared to the original video (as a percentage)
 - [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) values. VMAF is a perceptual video quality assessment algorithm developed by Netflix.
-- [Optional] Structural Similarity Index (SSIM). *You must use the `-ssim` argument.*
-- [Optional] Peak Signal-to-Noise-Ratio (PSNR). *You must use the `-psnr` argument.*
+- [Optional] Structural Similarity Index (SSIM). _You must use the `-ssim` argument._
+- [Optional] Peak Signal-to-Noise-Ratio (PSNR). _You must use the `-psnr` argument._
 
 If feature **[2]** is used, in addition to the above, the following colums are present:
+
 - Preset/CRF value
 - Time taken to transcode the video (in seconds)
 
 You can find an example table below. Please note that when feature **[1]** is used, the first two columns will not exist as they are not applicable.
+
 ```
 +-----------+-------------------+----------+-----------+----------------------+
 |   Preset  | Encoding Time (s) |   Size   |  Bitrate  |         VMAF         |
@@ -52,6 +57,7 @@ CRF 23 was used.
 Filter(s) used: None
 n_subsample: 1
 ```
+
 The following command was used to produce such a table:
 
 `python main.py -ovp aqp60.mkv -p veryslow slower slow medium fast faster veryfast superfast ultrafast`
@@ -60,37 +66,38 @@ The following command was used to produce such a table:
 
 **[1]:**
 
-You already have a transcoded video (and the original) and you want the quality of the transcoded version to be calculated using the VMAF and (optionally) the SSIM and PSNR metrics. The values of the aforementioned quality metrics are saved in a table, in a file named *Table.txt*. VMAF/SSIM/PSNR graphs are created, which show the variation of the VMAF/SSIM/PSNR throughout the video.
+You already have a transcoded video (and the original) and you want the quality of the transcoded version to be calculated using the VMAF and (optionally) the SSIM and PSNR metrics. The values of the aforementioned quality metrics are saved in a table, in a file named _Table.txt_. VMAF/SSIM/PSNR graphs are created, which show the variation of the VMAF/SSIM/PSNR throughout the video.
 
 Example: `python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
 
 **[2]:**
 
-Transcode a video using the x264 or x265 encoder and see the VMAF/SSIM/PSNR values that you get with the specified presets or CRF values. There are two modes; CRF comparison mode and presets comparison mode. You must specify multiple CRF values OR presets and this program will automatically transcode the video with each preset/CRF value, and the quality of each transcode is calculated using the VMAF and (optionally) the SSIM and PSNR metrics. 
+Transcode a video using the x264 or x265 encoder and see the VMAF/SSIM/PSNR values that you get with the specified presets or CRF values. There are two modes; CRF comparison mode and presets comparison mode. You must specify multiple CRF values OR presets and this program will automatically transcode the video with each preset/CRF value, and the quality of each transcode is calculated using the VMAF and (optionally) the SSIM and PSNR metrics.
 
 **[2] CRF Comparison Mode Example:**
 
 `python main.py -ovp original.mp4 -crf 18 19 20 -p veryfast -ssim -psnr`
 
-*You must specify the CRF values that you want to compare and (optionally) **one** preset. If you do not specify a preset, the `medium` preset will be used.*
+_You must specify the CRF values that you want to compare and (optionally) **one** preset. If you do not specify a preset, the `medium` preset will be used._
 
 **[2] Presets Comparison Mode Example:**
 
 `python main.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
 
-*You must specify the presets that you want to compare and (optionally) **one** CRF value. If you do specify a CRF value, a CRF of 23 will be used.*
+_You must specify the presets that you want to compare and (optionally) **one** CRF value. If you do specify a CRF value, a CRF of 23 will be used._
 
 **[2] Overview Mode:**
 
-A recent addition to this program is "overview mode", which can be used with feature [2] by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds. 
-  
+A recent addition to this program is "overview mode", which can be used with feature [2] by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
+
 Example: `python main.py -ovp original.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
 
 In the example above, we're grabbing a two-second-long clip (`--clip-length 2`) every minute (`--interval 60`) in the video. These 2-second long clips are concatenated to make the overview video. A 1-hour long video is turned into an overview video that is 1 minute and 58 seconds long. The benefit of overview mode should now be clear - transcoding and computing the quality metrics of a <2 minutes long video is **much** quicker than doing so with an hour long video.
 
-*An alternative method of reducing the execution time of this program is by only using the first x seconds of the original video (you can do this with the `-t` argument), but **Overview Mode** provides a better representation of the whole video.*
+_An alternative method of reducing the execution time of this program is by only using the first x seconds of the original video (you can do this with the `-t` argument), but **Overview Mode** provides a better representation of the whole video._
 
 # Requirements
+
 1. Python **3.6+**
 2. `pip install -r requirements.txt`
 3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.1.1 (or above) of the libvmaf filter, and depending on the encoders that you wish to test, libx264, libx265 and libaom. You can check whether your build of FFmpeg has libvmaf/libx264/libx265/libaom by entering `ffmpeg -buildconf` in the terminal and looking for `--enable-libvmaf`, `--enable-libx265`, `--enable-libx264` and `--enable-libaom` under "configuration:".
@@ -104,7 +111,9 @@ FFmpeg builds that support all features of VQM:
 **Linux (kernels 3.2.0+):** https://johnvansickle.com/ffmpeg/. Download the **git** build. Installation instructions, as well as how to add FFmpeg and FFprobe to your PATH, can be found [here](https://www.johnvansickle.com/ffmpeg/faq/).
 
 # Usage
+
 You can find the output of `python main.py -h` below:
+
 ```
 usage: main.py [-h] [--av1-cpu-used <1-8>] [-cl <1-60>] [-crf <0-51> [<0-51> ...]] [-dp DECIMAL_PLACES] [-e {x264,x265,libaom-av1}] [-i <1-600>] [-subsample SUBSAMPLE]
                [--n-threads N_THREADS] [-ntm] [-o OUTPUT_FOLDER] -ovp ORIGINAL_VIDEO_PATH [-p <preset/s> [<preset/s> ...]] [--phone-model] [-psnr] [-sc] [-ssim]
@@ -168,6 +177,7 @@ Optional Metrics:
 ```
 
 # About the model files
+
 Two model files are provided, `vmaf_v0.6.1.json` and `vmaf_4k_v0.6.1.json`. There is also the phone model that can be enabled by using the `-pm` argument.
 
 This program uses the `vmaf_v0.6.1.json` model file by default, which is "based on the assumption that the viewers sit in front of a 1080p display in a living room-like environment with the viewing distance of 3x the screen height (3H)."
@@ -179,4 +189,5 @@ The 4K model (`vmaf_4k_v0.6.1.json`) "predicts the subjective quality of video d
 The source of the quoted text, plus additional information about VMAF (such as the correct way to calculate VMAF), can be found [here](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12).
 
 - If you are transcoding a video that will be viewed on a mobile phone, you can add the `-pm` argument which will enable the [phone model](https://github.com/Netflix/vmaf/blob/master/resource/doc/models.md/#predict-quality-on-a-cellular-phone-screen).
-- If you are transcoding a video that will be viewed on a 4K display, the default model (`vmaf_v0.6.1.json`) is fine if you are only interested in relative VMAF scores, i.e. the score differences between different presets/CRF values, but if you are interested in absolute scores, it may be better to use the 4K model file which was predicts the subjective quality of video displayed on a 4K screen at a distance of 1.5x the height of the screen. To use the 4K model, replace the value of the `vmaf_model_file_path` variable in libvmaf.py with `'vmaf_models/vmaf_4k_v0.6.1.json'`.
+
+- If you are transcoding a video that will be viewed on a 4K display, the default model (`vmaf_v0.6.1.json`) is fine if you are only interested in relative VMAF scores, i.e. the score differences between different presets/CRF values, but if you are interested in absolute scores, it may be better to use the 4K model file which predicts the subjective quality of video displayed on a 4K screen at a distance of 1.5x the height of the screen. To use the 4K model, replace the value of the `model_file_path` variable in libvmaf.py with `'vmaf_models/vmaf_4k_v0.6.1.json'`.
