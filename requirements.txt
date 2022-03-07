@@ -2,3 +2,4 @@ ffmpeg-python==0.2.0
 matplotlib==3.3.0
 numpy==1.21.3
 prettytable==0.7.2
+tqdm
