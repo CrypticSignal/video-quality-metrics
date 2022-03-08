@@ -24,18 +24,18 @@ def run_libvmaf(
 
     n_subsample = "1" if not args.subsample else args.subsample
 
-    model_params = [
+    model_params = filter(None, [
         f"path={model_file_path}",
         "enable_transform=true" if args.phone_model else ""
-    ]
-    model_string = f"model='{'|'.join(filter(None, model_params))}'"
+    ])
+    model_string = f"model='{'|'.join(model_params)}'"
 
-    features = [
+    features = filter(None, [
         "name=psnr" if args.calculate_psnr else "",
         "name=float_ssim" if args.calculate_ssim else "",
         "name=float_ms_ssim" if args.calculate_msssim else ""
-    ]
-    feature_string = f":feature='{'|'.join(filter(None, features))}'"
+    ])
+    feature_string = f":feature='{'|'.join(features)}'"
 
     vmaf_options = f"""
     {model_string}:log_fmt=json:log_path='{json_file_path}':n_subsample={n_subsample}:n_threads={args.n_threads}{feature_string}
