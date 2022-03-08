@@ -23,13 +23,22 @@ def run_libvmaf(
             json_file_path = json_file_path.replace(character, f"\{character}")
 
     n_subsample = "1" if not args.subsample else args.subsample
-    psnr_string = ":feature='name=psnr'" if args.calculate_psnr else ""
-    ssim_string = ":feature='name=float_ssim'" if args.calculate_ssim else ""
-    phone_model_string = ":model='enable_transform=true'" if args.phone_model else ""
+
+    model_params = [
+        f"path={model_file_path}",
+        "enable_transform=true" if args.phone_model else ""
+    ]
+    model_string = f"model='{'|'.join(filter(None, model_params))}'"
+
+    features = [
+        "name=psnr" if args.calculate_psnr else "",
+        "name=float_ssim" if args.calculate_ssim else "",
+        "name=float_ms_ssim" if args.calculate_msssim else ""
+    ]
+    feature_string = f":feature='{'|'.join(filter(None, features))}'"
 
     vmaf_options = f"""
-    model=path={model_file_path}:log_fmt=json:log_path={json_file_path}:n_subsample={n_subsample}
-    :n_threads={args.n_threads}{psnr_string}{ssim_string}{phone_model_string}
+    {model_string}:log_fmt=json:log_path='{json_file_path}':n_subsample={n_subsample}:n_threads={args.n_threads}{feature_string}
     """
 
     libvmaf_arguments = LibVmafArguments(
