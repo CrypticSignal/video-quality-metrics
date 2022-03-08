@@ -171,6 +171,12 @@ optional_metrics_args.add_argument(
     action="store_true",
     help="Enable SSIM calculation in addition to VMAF",
 )
+optional_metrics_args.add_argument(
+    "-msssim",
+    "--calculate-msssim",
+    action="store_true",
+    help="Enable MS-SSIM calculation in addition to VMAF",
+)
 
 # Use only the first x seconds of the original video.
 general_args.add_argument(

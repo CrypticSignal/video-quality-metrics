@@ -1,5 +1,5 @@
 from ffmpeg_process_factory import LibVmafArguments
-from utils import line, Logger
+from utils import line, Logger, get_metrics_list
 
 log = Logger("libvmaf")
 
@@ -23,13 +23,22 @@ def run_libvmaf(
             json_file_path = json_file_path.replace(character, f"\{character}")
 
     n_subsample = "1" if not args.subsample else args.subsample
-    psnr_string = ":feature='name=psnr'" if args.calculate_psnr else ""
-    ssim_string = ":feature='name=float_ssim'" if args.calculate_ssim else ""
-    phone_model_string = ":model='enable_transform=true'" if args.phone_model else ""
+
+    model_params = filter(None, [
+        f"path={model_file_path}",
+        "enable_transform=true" if args.phone_model else ""
+    ])
+    model_string = f"model='{'|'.join(model_params)}'"
+
+    features = filter(None, [
+        "name=psnr" if args.calculate_psnr else "",
+        "name=float_ssim" if args.calculate_ssim else "",
+        "name=float_ms_ssim" if args.calculate_msssim else ""
+    ])
+    feature_string = f":feature='{'|'.join(features)}'"
 
     vmaf_options = f"""
-    model=path={model_file_path}:log_fmt=json:log_path={json_file_path}:n_subsample={n_subsample}
-    :n_threads={args.n_threads}{psnr_string}{ssim_string}{phone_model_string}
+    {model_string}:log_fmt=json:log_path='{json_file_path}':n_subsample={n_subsample}:n_threads={args.n_threads}{feature_string}
     """
 
     libvmaf_arguments = LibVmafArguments(
@@ -40,23 +49,21 @@ def run_libvmaf(
 
     process = factory.create_process(libvmaf_arguments, args)
 
-    if args.calculate_psnr and args.calculate_ssim:
-        end_of_computing_message = ", PSNR and SSIM"
-    elif args.calculate_psnr:
-        end_of_computing_message = " and PSNR"
-    elif args.calculate_ssim:
-        end_of_computing_message = " and SSIM"
-    else:
-        end_of_computing_message = ""
+    metrics_list = get_metrics_list(args)
 
+    metric_types = metrics_list[0]
+    if len(metrics_list) > 1:
+        metric_types = f"{', '.join(metrics_list[:-1])} and {metrics_list[-1]}"
+
+    message_transcoding_mode = ""
     if not args.no_transcoding_mode:
         if isinstance(args.crf, list) and len(args.crf) > 1:
-            end_of_computing_message += f" achieved with CRF {crf_or_preset}"
+            message_transcoding_mode += f" achieved with CRF {crf_or_preset}"
         else:
-            end_of_computing_message += f" achieved with preset {crf_or_preset}"
+            message_transcoding_mode += f" achieved with preset {crf_or_preset}"
 
     line()
-    log.info(f"Calculating the VMAF{end_of_computing_message}...")
+    log.info(f"Calculating the {metric_types}{message_transcoding_mode}...")
 
     process.run(original_video_path, duration)
     log.info("Done!")

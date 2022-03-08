@@ -4,7 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils import force_decimal_places, line, Logger, plot_graph
+from utils import force_decimal_places, line, Logger, plot_graph, get_metrics_list
 
 log = Logger("save_metrics")
 
@@ -23,95 +23,61 @@ def get_metrics_save_table(
     with open(json_file_path, "r") as f:
         file_contents = json.load(f)
 
-    # Get the VMAF score of each frame from the JSON file created by libvmaf.
-    vmaf_scores = [frame["metrics"]["vmaf"] for frame in file_contents["frames"]]
+    frames = file_contents["frames"]
+    frame_numbers = [frame["frameNum"] for frame in frames]
 
-    # Calculate the mean, minimum and standard deviation.
-    mean_vmaf = force_decimal_places(np.mean(vmaf_scores), decimal_places)
-    min_vmaf = force_decimal_places(min(vmaf_scores), decimal_places)
-    vmaf_std = force_decimal_places(np.std(vmaf_scores), decimal_places)
+    # Maps the metric type to the corresponding JSON metric key.
+    metric_lookup = {
+        "VMAF": "vmaf",
+        "PSNR": "psnr_y",
+        "SSIM": "float_ssim",
+        "MS-SSIM": "float_ms_ssim"
+    }
 
-    frame_numbers = [frame["frameNum"] for frame in file_contents["frames"]]
+    # Only used for accessing the VMAF mean score to return at the end of this method.
+    collected_scores = {}
+    # Process metrics captured for each requested metric type.
+    metrics_list = get_metrics_list(args)
+    for metric_type in metrics_list:
+        metric_key = metric_lookup[metric_type]
+        if frames[0]["metrics"][metric_key]:
+            # Get the <metric_type> score of each frame from the JSON file created by libvmaf.
+            metric_scores = [frame["metrics"][metric_key] for frame in frames]
 
-    plot_graph(
-        f"VMAF\nn_subsample: {args.subsample}",
-        "Frame Number",
-        "VMAF",
-        frame_numbers,
-        vmaf_scores,
-        mean_vmaf,
-        os.path.join(output_folder, "VMAF"),
-    )
+            # Calculate the mean, minimum and standard deviation scores across all frames.
+            mean_score = force_decimal_places(np.mean(metric_scores), decimal_places)
+            min_score = force_decimal_places(min(metric_scores), decimal_places)
+            std_score = force_decimal_places(np.std(metric_scores), decimal_places)
 
-    # Add the VMAF values to the table.
-    data_for_current_row.append(f"{min_vmaf} | {vmaf_std} | {mean_vmaf}")
+            collected_scores[metric_type] = {
+                "min": min_score,
+                "std": std_score,
+                "mean": mean_score
+            }
 
-    ssim_string = ""
-    psnr_string = ""
+            log.info(f"Creating {metric_type} graph...")
+            plot_graph(
+                f"{metric_type}\nn_subsample: {args.subsample}",
+                "Frame Number",
+                metric_type,
+                frame_numbers,
+                metric_scores,
+                mean_score,
+                os.path.join(output_folder, metric_type),
+            )
 
-    if args.calculate_ssim:
-        ssim_string = "/SSIM"
-
-        for metric in file_contents["frames"][0]["metrics"]:
-            if "ssim" in metric:
-                metric_name = metric
-        
-        # Get the SSIM score of each frame from the JSON file created by libvmaf.
-        ssim_scores = [frame["metrics"][metric_name] for frame in file_contents["frames"]]
-
-        mean_ssim = force_decimal_places(np.mean(ssim_scores), decimal_places)
-        min_ssim = force_decimal_places(min(ssim_scores), decimal_places)
-        ssim_std = force_decimal_places(np.std(ssim_scores), decimal_places)  # Standard deviation.
-
-        log.info(f"Creating SSIM graph...")
-        plot_graph(
-            f"SSIM\nn_subsample: {args.subsample}",
-            "Frame Number",
-            "SSIM",
-            frame_numbers,
-            ssim_scores,
-            mean_ssim,
-            os.path.join(output_folder, "SSIM"),
-        )
-
-        # Add the SSIM values to the table.
-        data_for_current_row.append(f"{min_ssim} | {ssim_std} | {mean_ssim}")
-
-    if args.calculate_psnr:
-        psnr_string = "/PSNR"
-
-        for metric in file_contents["frames"][0]["metrics"]:
-            if "psnr" in metric:
-                metric_name = metric
-
-        # Get the PSNR score of each frame from the JSON file created by libvmaf.
-        psnr_scores = [frame["metrics"][metric_name] for frame in file_contents["frames"]]
-
-        mean_psnr = force_decimal_places(np.mean(psnr_scores), decimal_places)
-        min_psnr = force_decimal_places(min(psnr_scores), decimal_places)
-        psnr_std = force_decimal_places(np.std(psnr_scores), decimal_places)  # Standard deviation.
-
-        log.info(f"Creating PSNR graph...")
-        plot_graph(
-            f"PSNR\nn_subsample: {args.subsample}",
-            "Frame Number",
-            "PSNR",
-            frame_numbers,
-            psnr_scores,
-            mean_psnr,
-            os.path.join(output_folder, "PSNR"),
-        )
-
-        # Add the PSNR values to the table.
-        data_for_current_row.append(f"{min_psnr} | {psnr_std} | {mean_psnr}")
+            # Add the <metric_type> values to the table.
+            data_for_current_row.append(f"{min_score} | {std_score} | {mean_score}")
 
     if not args.no_transcoding_mode:
         data_for_current_row.insert(0, crf_or_preset)
         data_for_current_row.insert(1, time_taken)
 
     table.add_row(data_for_current_row)
+
+    collected_metric_types = '/'.join(metrics_list)
     table_title = (
-        f"VMAF{ssim_string}{psnr_string} values are in the format: Min | Standard Deviation | Mean"
+        f"{collected_metric_types} values are in the format: Min | Standard Deviation | Mean"
     )
 
     # Write the table to the Table.txt file.
@@ -121,4 +87,4 @@ def get_metrics_save_table(
 
     log.info(f"{comparison_table} has been updated.")
     line()
-    return float(mean_vmaf)
+    return float(collected_scores["VMAF"]["mean"])
