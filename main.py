@@ -22,6 +22,7 @@ from utils import (
     plot_graph,
     VideoInfoProvider,
     write_table_info,
+    get_metrics_list,
 )
 
 log = Logger("main.py")
@@ -88,14 +89,11 @@ if args.video_filters:
     line()
 
 table = PrettyTable()
-table_column_names = ["Encoding Time (s)", "Size", "Bitrate", "VMAF"]
+metrics_list = get_metrics_list(args)
+table_column_names = ["Encoding Time (s)", "Size", "Bitrate"] + metrics_list
 
 if args.no_transcoding_mode:
     del table_column_names[0]
-if args.calculate_ssim:
-    table_column_names.append("SSIM")
-if args.calculate_psnr:
-    table_column_names.append("PSNR")
 
 if args.interval is not None:
     output_folder = f"({filename})"

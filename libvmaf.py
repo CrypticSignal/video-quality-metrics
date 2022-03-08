@@ -1,5 +1,5 @@
 from ffmpeg_process_factory import LibVmafArguments
-from utils import line, Logger
+from utils import line, Logger, get_metrics_list
 
 log = Logger("libvmaf")
 
@@ -40,23 +40,21 @@ def run_libvmaf(
 
     process = factory.create_process(libvmaf_arguments, args)
 
-    if args.calculate_psnr and args.calculate_ssim:
-        end_of_computing_message = ", PSNR and SSIM"
-    elif args.calculate_psnr:
-        end_of_computing_message = " and PSNR"
-    elif args.calculate_ssim:
-        end_of_computing_message = " and SSIM"
-    else:
-        end_of_computing_message = ""
+    metrics_list = get_metrics_list(args)
 
+    metric_types = metrics_list[0]
+    if len(metrics_list) > 1:
+        metric_types = f"{', '.join(metrics_list[:-1])} and {metrics_list[-1]}"
+
+    message_transcoding_mode = ""
     if not args.no_transcoding_mode:
         if isinstance(args.crf, list) and len(args.crf) > 1:
-            end_of_computing_message += f" achieved with CRF {crf_or_preset}"
+            message_transcoding_mode += f" achieved with CRF {crf_or_preset}"
         else:
-            end_of_computing_message += f" achieved with preset {crf_or_preset}"
+            message_transcoding_mode += f" achieved with preset {crf_or_preset}"
 
     line()
-    log.info(f"Calculating the VMAF{end_of_computing_message}...")
+    log.info(f"Calculating the {metric_types}{message_transcoding_mode}...")
 
     process.run(original_video_path, duration)
     log.info("Done!")
