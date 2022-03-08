@@ -204,6 +204,7 @@ def get_metrics_list(args):
         "VMAF",
         "PSNR" if args.calculate_psnr else None,
         "SSIM" if args.calculate_ssim else None,
+        "MS-SSIM" if args.calculate_msssim else None
     ]
 
     return list(filter(None, metrics_list))

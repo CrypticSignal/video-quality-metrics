@@ -26,8 +26,9 @@ _Example SSIM and PSNR graphs can be found in the [Example Graphs folder](https:
 - Bitrate (Mbps)
 - Filesize compared to the original video (as a percentage)
 - [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) values. VMAF is a perceptual video quality assessment algorithm developed by Netflix.
-- [Optional] Structural Similarity Index (SSIM). _You must use the `-ssim` argument._
 - [Optional] Peak Signal-to-Noise-Ratio (PSNR). _You must use the `-psnr` argument._
+- [Optional] Structural Similarity Index (SSIM). _You must use the `-ssim` argument._
+- [Optional] Multi-Scale Structural Similarity Index (MS-SSIM). _You must use the `-msssim` argument._
 
 If feature **[2]** is used, in addition to the above, the following colums are present:
 
@@ -116,7 +117,7 @@ You can find the output of `python main.py -h` below:
 
 ```
 usage: main.py [-h] [--av1-cpu-used <1-8>] [-cl <1-60>] [-crf <0-51> [<0-51> ...]] [-dp DECIMAL_PLACES] [-e {x264,x265,libaom-av1}] [-i <1-600>] [-subsample SUBSAMPLE]
-               [--n-threads N_THREADS] [-ntm] [-o OUTPUT_FOLDER] -ovp ORIGINAL_VIDEO_PATH [-p <preset/s> [<preset/s> ...]] [--phone-model] [-psnr] [-sc] [-ssim]
+               [--n-threads N_THREADS] [-ntm] [-o OUTPUT_FOLDER] -ovp ORIGINAL_VIDEO_PATH [-p <preset/s> [<preset/s> ...]] [--phone-model] [-sc] [-psnr] [-ssim] [-msssim]
                [-t SECONDS] [-tvp TRANSCODED_VIDEO_PATH] [-vf VIDEO_FILTERS]
 
 optional arguments:
@@ -174,6 +175,8 @@ Optional Metrics:
                         Enable PSNR calculation in addition to VMAF (default: False)
   -ssim, --calculate-ssim
                         Enable SSIM calculation in addition to VMAF (default: False)
+  -msssim, --calculate-msssim
+                        Enable MS-SSIM calculation in addition to VMAF (default: False)
 ```
 
 # About the model files

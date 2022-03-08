@@ -31,6 +31,7 @@ def get_metrics_save_table(
         "VMAF": "vmaf",
         "PSNR": "psnr_y",
         "SSIM": "float_ssim",
+        "MS-SSIM": "float_ms_ssim"
     }
 
     # Only used for accessing the VMAF mean score to return at the end of this method.
