@@ -12,11 +12,11 @@ When using feature **[2]**, two types of graphs are created:
 
 - A graph where the average VMAF is plotted against the presets/CRF values. If one opts to compare CRF values, the following type of graph will produced:
 
-![CRF vs VMAF graph example](https://github.com/CrypticSignal/video-quality-metrics/blob/master/Example%20Graphs/CRF%20vs%20VMAF.png)
+![CRF vs VMAF graph example](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/CRF%20vs%20VMAF.png)
 
 - A graph for each preset/CRF value, showing the variation of the VMAF/SSIM/PSNR throughout the video. An example is shown below.
 
-![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/Example%20Graphs/VMAF.png)
+![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/example_graphs/VMAF.png)
 
 _Example SSIM and PSNR graphs can be found in the [example_graphs folder](https://github.com/BassThatHertz/video-quality-metrics/tree/master/example_graphs)._
 
