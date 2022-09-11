@@ -101,19 +101,27 @@ _An alternative method of reducing the execution time of this program is by only
 
 1. Python **3.6+**
 2. `pip install -r requirements.txt`
-3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.1.1 (or above) of the libvmaf filter, and depending on the encoders that you wish to test, libx264, libx265 and libaom. You can check whether your build of FFmpeg has libvmaf/libx264/libx265/libaom by entering `ffmpeg -buildconf` in the terminal and looking for `--enable-libvmaf`, `--enable-libx265`, `--enable-libx264` and `--enable-libaom` under "configuration:".
+3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.1.1 (or above) of the libvmaf filter. Depending on the encoder(s) that you wish to test, FFmpeg must also be built with libx264, libx265 and libaom.
 
-FFmpeg builds that support all features of VQM:
+You can check whether your build of FFmpeg has libvmaf/libx264/libx265/libaom with `ffmpeg -buildconf`.
+
+Look for `--enable-libvmaf`, `--enable-libx265`, `--enable-libx264` and `--enable-libaom`.
+
+# Recommended FFmpeg Builds
 
 **Windows:** https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z
 
-**macOS:** https://evermeet.cx/ffmpeg/ - download both ffmpeg and ffprobe and add the binaries to your PATH.
+**macOS:** https://evermeet.cx/ffmpeg - download both ffmpeg and ffprobe and add the binaries to your PATH.
 
-**Linux (kernels 3.2.0+):** https://johnvansickle.com/ffmpeg/. Download the **git** build. Installation instructions, as well as how to add FFmpeg and FFprobe to your PATH, can be found [here](https://www.johnvansickle.com/ffmpeg/faq/).
+Alternatively, you can install FFmpeg using Homebrew - `brew install ffmpeg`
+
+**Linux (kernels 3.2.0+):** https://johnvansickle.com/ffmpeg.
+
+Download the _git master_ build. Installation instructions, as well as how to add FFmpeg and FFprobe to your PATH, can be found [here](https://www.johnvansickle.com/ffmpeg/faq/).
 
 # Usage
 
-You can find the output of `python main.py -h` below:
+You can check the available arguments with `python main.py -h`:
 
 ```
 usage: main.py [-h] [--av1-cpu-used <1-8>] [-cl <1-60>] [-crf <0-51> [<0-51> ...]] [-dp DECIMAL_PLACES] [-e {x264,x265,libaom-av1}] [-i <1-600>] [-subsample SUBSAMPLE]
