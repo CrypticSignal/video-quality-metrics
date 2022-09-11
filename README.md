@@ -1,26 +1,30 @@
 # Video Quality Metrics (VQM)
 
-VQM is a command line program that has two main features. These features are outlined in [**Section Two: Features**](https://github.com/CrypticSignal/video-quality-metrics#section-two-features), and they are referred to as **[1]** and **[2]**, respectively.
+VQM is a command line program that has 2 main features.
 
-**What kind of data does this program produce?**
+1. It can calculate the VMAF, SSIM and PSNR of a transcoded video as long as you have the original video as well. Example:
 
-This program provides you with two types of data. Graphs (saved as PNG files) and a table (saved in a .txt file) showing various information such as the average [VMAF](https://github.com/Netflix/vmaf) score. VMAF is a perceptual video quality assessment algorithm developed by Netflix.
+   `python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
 
-**What kind of graphs are created?**
+2. It can transcode a video using the x264 (H.264), x265 (H.265) or libaom (AV1) encoder with specified presets (if using x264 or x265) or CRF values.
 
-When using feature **[2]**, two types of graphs are created:
+   When using this feature, VQM will transcode the video with each preset/CRF value and calculate the VMAF/SSIM/PSNR of each transcode. A table will be created as well as graphs, so you can see how the values of the quality metrics change depending on the preset/CRF value.
 
-- A graph where the average VMAF is plotted against the presets/CRF values. If one opts to compare CRF values, the following type of graph will produced:
+You can find more details about feature 2 as well as example commands, under the [Feature 2](#Feature%202) section.
 
-![CRF vs VMAF graph example](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/CRF%20vs%20VMAF.png)
+# Table of Contents
 
-- A graph for each preset/CRF value, showing the variation of the VMAF/SSIM/PSNR throughout the video. An example is shown below.
+- [Example Table](#Example%20Table)
+- [Example Graphs](#Example%20Table)
+- [Feature 2](#Feature%202)
+- [Available Arguments](#Available%20Arguments)
+- [Requirements](#Requirements)
+- [Recommended FFmpeg Builds](#recommended-ffmpeg-builds)
+- [About the model files](#about-the-model-files)
 
-![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/example_graphs/VMAF.png)
+# Example Table
 
-_Example SSIM and PSNR graphs can be found in the [example_graphs folder](https://github.com/BassThatHertz/video-quality-metrics/tree/master/example_graphs)._
-
-**What data is shown in the table?**
+VQM creates a table in a file named `Table.txt`, and it contains the following:
 
 - Filesize (MB)
 - Bitrate (Mbps)
@@ -63,31 +67,37 @@ The following command was used to produce such a table:
 
 `python main.py -ovp aqp60.mkv -p veryslow slower slow medium fast faster veryfast superfast ultrafast`
 
-# Section Two: Features
+# Example Graphs
 
-**[1]:**
+When using feature **[2]**, two types of graphs are created:
 
-You already have a transcoded video (and the original) and you want the quality of the transcoded version to be calculated using the VMAF and (optionally) the SSIM and PSNR metrics. The values of the aforementioned quality metrics are saved in a table, in a file named _Table.txt_. VMAF/SSIM/PSNR graphs are created, which show the variation of the VMAF/SSIM/PSNR throughout the video.
+- A graph where the average VMAF is plotted against the presets/CRF values. If one opts to compare CRF values, the following type of graph will produced:
 
-Example: `python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
+![CRF vs VMAF graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/CRF%20vs%20VMAF.png)
 
-**[2]:**
+- A graph for each preset/CRF value, showing the variation of the VMAF/SSIM/PSNR throughout the video. An example is shown below.
 
-Transcode a video using the x264 or x265 encoder and see the VMAF/SSIM/PSNR values that you get with the specified presets or CRF values. There are two modes; CRF comparison mode and presets comparison mode. You must specify multiple CRF values OR presets and this program will automatically transcode the video with each preset/CRF value, and the quality of each transcode is calculated using the VMAF and (optionally) the SSIM and PSNR metrics.
+![VMAF variation graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/example_graphs/VMAF.png)
 
-**[2] CRF Comparison Mode Example:**
+_Example SSIM and PSNR graphs can be found in the [example_graphs folder](https://github.com/BassThatHertz/video-quality-metrics/tree/master/example_graphs)._
+
+# Feature 2
+
+There are two modes; CRF comparison mode and presets comparison mode. You must specify multiple CRF values OR presets and this program will automatically transcode the video with each preset/CRF value, and the quality of each transcode is calculated using the VMAF and (optionally) the SSIM and PSNR metrics.
+
+**CRF comparison mode example:**
 
 `python main.py -ovp original.mp4 -crf 18 19 20 -p veryfast -ssim -psnr`
 
 _You must specify the CRF values that you want to compare and (optionally) **one** preset. If you do not specify a preset, the `medium` preset will be used._
 
-**[2] Presets Comparison Mode Example:**
+**Presets comparison mode example:**
 
 `python main.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
 
 _You must specify the presets that you want to compare and (optionally) **one** CRF value. If you do specify a CRF value, a CRF of 23 will be used._
 
-**[2] Overview Mode:**
+**Overview Mode:**
 
 A recent addition to this program is "overview mode", which can be used with feature [2] by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
 
@@ -97,29 +107,7 @@ In the example above, we're grabbing a two-second-long clip (`--clip-length 2`) 
 
 _An alternative method of reducing the execution time of this program is by only using the first x seconds of the original video (you can do this with the `-t` argument), but **Overview Mode** provides a better representation of the whole video._
 
-# Requirements
-
-1. Python **3.6+**
-2. `pip install -r requirements.txt`
-3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.1.1 (or above) of the libvmaf filter. Depending on the encoder(s) that you wish to test, FFmpeg must also be built with libx264, libx265 and libaom.
-
-You can check whether your build of FFmpeg has libvmaf/libx264/libx265/libaom with `ffmpeg -buildconf`.
-
-Look for `--enable-libvmaf`, `--enable-libx265`, `--enable-libx264` and `--enable-libaom`.
-
-# Recommended FFmpeg Builds
-
-**Windows:** https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z
-
-**macOS:** https://evermeet.cx/ffmpeg - download both ffmpeg and ffprobe and add the binaries to your PATH.
-
-Alternatively, you can install FFmpeg using Homebrew - `brew install ffmpeg`
-
-**Linux (kernels 3.2.0+):** https://johnvansickle.com/ffmpeg.
-
-Download the _git master_ build. Installation instructions, as well as how to add FFmpeg and FFprobe to your PATH, can be found [here](https://www.johnvansickle.com/ffmpeg/faq/).
-
-# Usage
+# Available Arguments
 
 You can check the available arguments with `python main.py -h`:
 
@@ -186,6 +174,28 @@ Optional Metrics:
   -msssim, --calculate-msssim
                         Enable MS-SSIM calculation in addition to VMAF (default: False)
 ```
+
+# Requirements
+
+1. Python **3.6+**
+2. `pip install -r requirements.txt`
+3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.1.1 (or above) of the libvmaf filter. Depending on the encoder(s) that you wish to test, FFmpeg must also be built with libx264, libx265 and libaom.
+
+You can check whether your build of FFmpeg has libvmaf/libx264/libx265/libaom with `ffmpeg -buildconf`.
+
+Look for `--enable-libvmaf`, `--enable-libx265`, `--enable-libx264` and `--enable-libaom`.
+
+# Recommended FFmpeg Builds
+
+**Windows:** https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z
+
+**macOS:** https://evermeet.cx/ffmpeg - download both ffmpeg and ffprobe and add the binaries to your PATH.
+
+Alternatively, you can install FFmpeg using Homebrew - `brew install ffmpeg`
+
+**Linux (kernels 3.2.0+):** https://johnvansickle.com/ffmpeg.
+
+Download the _git master_ build. Installation instructions, as well as how to add FFmpeg and FFprobe to your PATH, can be found [here](https://www.johnvansickle.com/ffmpeg/faq/).
 
 # About the model files
 
