@@ -18,7 +18,7 @@ When using feature **[2]**, two types of graphs are created:
 
 ![Example Graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/Example%20Graphs/VMAF.png)
 
-_Example SSIM and PSNR graphs can be found in the [Example Graphs folder](https://github.com/BassThatHertz/video-quality-metrics/tree/master/Example%20Graphs)._
+_Example SSIM and PSNR graphs can be found in the [example_graphs folder](https://github.com/BassThatHertz/video-quality-metrics/tree/master/example_graphs)._
 
 **What data is shown in the table?**
 
