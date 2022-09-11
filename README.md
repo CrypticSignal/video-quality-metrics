@@ -10,15 +10,15 @@ VQM is a command line program that has 2 main features.
 
    When using this feature, VQM will transcode the video with each preset/CRF value and calculate the VMAF/SSIM/PSNR of each transcode. A table will be created as well as graphs, so you can see how the values of the quality metrics change depending on the preset/CRF value.
 
-You can find more details about feature 2 as well as example commands, under the [Feature 2](#Feature%202) section.
+You can find more details about feature 2 as well as example commands, under the [Feature 2](#feature-2) section.
 
 # Table of Contents
 
-- [Example Table](#Example%20Table)
-- [Example Graphs](#Example%20Table)
-- [Feature 2](#Feature%202)
-- [Available Arguments](#Available%20Arguments)
-- [Requirements](#Requirements)
+- [Example Table](#example-table)
+- [Example Graphs](#example-graphs)
+- [Feature 2](#feature-2)
+- [Available Arguments](#available-arguments)
+- [Requirements](#requirements)
 - [Recommended FFmpeg Builds](#recommended-ffmpeg-builds)
 - [About the model files](#about-the-model-files)
 
