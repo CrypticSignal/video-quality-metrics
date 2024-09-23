@@ -33,8 +33,8 @@ if len(sys.argv) == 1:
     line()
 
 args = parser.parse_args()
-original_video_path = args.original_video_path
-filename = Path(original_video_path).name
+input_video = args.input_video
+filename = Path(input_video).name
 video_encoder = args.video_encoder
 
 args_validator = ArgumentsValidator()
@@ -57,7 +57,7 @@ def create_output_folder_initialise_table(crf_or_preset):
     # Set the names of the columns
     table.field_names = table_column_names
 
-    output_ext = Path(args.original_video_path).suffix
+    output_ext = Path(args.input_video).suffix
     # The M4V container does not support the H.265 codec.
     if output_ext == ".m4v" and args.video_encoder == "x265":
         output_ext = ".mp4"
@@ -66,7 +66,7 @@ def create_output_folder_initialise_table(crf_or_preset):
 
 
 # Use the VideoInfoProvider class to get the framerate, bitrate and duration.
-provider = VideoInfoProvider(args.original_video_path)
+provider = VideoInfoProvider(args.input_video)
 duration = provider.get_duration()
 fps = provider.get_framerate_fraction()
 fps_float = provider.get_framerate_float()
@@ -99,10 +99,10 @@ if args.interval is not None:
     output_folder = f"({filename})"
     clip_length = str(args.clip_length)
     result, concatenated_video = create_movie_overview(
-        original_video_path, output_folder, args.interval, clip_length
+        input_video, output_folder, args.interval, clip_length
     )
     if result:
-        original_video_path = concatenated_video
+        input_video = concatenated_video
     else:
         exit_program("Something went wrong when trying to create the overview video.")
 
@@ -133,7 +133,7 @@ if not args.no_transcoding_mode:
 
         # The user only wants to transcode the first x seconds of the video.
         if args.encode_length:
-            original_video_path = cut_video(
+            input_video = cut_video(
                 filename, args, output_ext, prev_output_folder, comparison_table
             )
 
@@ -146,7 +146,7 @@ if not args.no_transcoding_mode:
 
             # Encode the video.
             factory, time_taken = encode_video(
-                original_video_path,
+                input_video,
                 args,
                 crf,
                 preset,
@@ -168,7 +168,7 @@ if not args.no_transcoding_mode:
                 args,
                 json_file_path,
                 fps,
-                original_video_path,
+                input_video,
                 factory,
                 duration,
                 crf,
@@ -219,7 +219,7 @@ if not args.no_transcoding_mode:
 
         # The -t/--encode-length argument was specified.
         if args.encode_length:
-            original_video_path = cut_video(
+            input_video = cut_video(
                 filename, args, output_ext, prev_output_folder, comparison_table
             )
 
@@ -232,7 +232,7 @@ if not args.no_transcoding_mode:
 
             # Encode the video.
             factory, time_taken = encode_video(
-                original_video_path,
+                input_video,
                 args,
                 crf,
                 preset,
@@ -254,7 +254,7 @@ if not args.no_transcoding_mode:
                 args,
                 json_file_path,
                 fps,
-                original_video_path,
+                input_video,
                 factory,
                 duration,
                 preset,
@@ -277,7 +277,7 @@ if not args.no_transcoding_mode:
             mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
 
             write_table_info(
-                comparison_table, original_video_path, original_bitrate, args, f"CRF {crf}"
+                comparison_table, input_video, original_bitrate, args, f"CRF {crf}"
             )
 
         # Plot a bar graph showing the average VMAF score of each preset.
@@ -312,7 +312,7 @@ else:
         args,
         json_file_path,
         fps,
-        original_video_path,
+        input_video,
         factory,
         duration,
     )

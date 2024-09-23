@@ -4,7 +4,7 @@ VQM is a command line program that has 2 main features.
 
 1. It can calculate the VMAF, SSIM and PSNR of a transcoded video as long as you have the original video as well. Example:
 
-   `python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4 -ssim -psnr`
+   `python main.py -ntm -iv original.mp4 -tv transcoded.mp4 -ssim -psnr`
 
 2. It can transcode a video using the x264 (H.264), x265 (H.265) or libaom (AV1) encoder with specified presets (if using x264 or x265) or CRF values.
 
@@ -65,7 +65,7 @@ n_subsample: 1
 
 The following command was used to produce such a table:
 
-`python main.py -ovp aqp60.mkv -p veryslow slower slow medium fast faster veryfast superfast ultrafast`
+`python main.py -iv aqp60.mkv -p veryslow slower slow medium fast faster veryfast superfast ultrafast`
 
 # Example Graphs
 
@@ -87,13 +87,13 @@ There are two modes; CRF comparison mode and presets comparison mode. You must s
 
 **CRF comparison mode example:**
 
-`python main.py -ovp original.mp4 -crf 18 19 20 -p veryfast -ssim -psnr`
+`python main.py -iv original.mp4 -crf 18 19 20 -p veryfast -ssim -psnr`
 
 _You must specify the CRF values that you want to compare and (optionally) **one** preset. If you do not specify a preset, the `medium` preset will be used._
 
 **Presets comparison mode example:**
 
-`python main.py -ovp original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
+`python main.py -iv original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
 
 _You must specify the presets that you want to compare and (optionally) **one** CRF value. If you do specify a CRF value, a CRF of 23 will be used._
 
@@ -101,7 +101,7 @@ _You must specify the presets that you want to compare and (optionally) **one** 
 
 A recent addition to this program is "overview mode", which can be used with feature [2] by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
 
-Example: `python main.py -ovp original.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
+Example: `python main.py -iv original.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
 
 In the example above, we're grabbing a two-second-long clip (`--clip-length 2`) every minute (`--interval 60`) in the video. These 2-second long clips are concatenated to make the overview video. A 1-hour long video is turned into an overview video that is 1 minute and 58 seconds long. The benefit of overview mode should now be clear - transcoding and computing the quality metrics of a <2 minutes long video is **much** quicker than doing so with an hour long video.
 
@@ -113,8 +113,8 @@ You can check the available arguments with `python main.py -h`:
 
 ```
 usage: main.py [-h] [--av1-cpu-used <1-8>] [-cl <1-60>] [-crf <0-51> [<0-51> ...]] [-dp DECIMAL_PLACES] [-e {x264,x265,libaom-av1}] [-i <1-600>] [-subsample SUBSAMPLE]
-               [--n-threads N_THREADS] [-ntm] [-o OUTPUT_FOLDER] -ovp ORIGINAL_VIDEO_PATH [-p <preset/s> [<preset/s> ...]] [--phone-model] [-sc] [-psnr] [-ssim] [-msssim]
-               [-t SECONDS] [-tvp TRANSCODED_VIDEO_PATH] [-vf VIDEO_FILTERS]
+               [--n-threads N_THREADS] [-ntm] [-o OUTPUT_FOLDER] -iv INPUT_VIDEO [-p <preset/s> [<preset/s> ...]] [--phone-model] [-sc] [-psnr] [-ssim] [-msssim]
+               [-t SECONDS] [-tv TRANSCODED_VIDEO_PATH] [-vf VIDEO_FILTERS]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -149,20 +149,20 @@ General Arguments:
                         The number of decimal places to use for the data in the table (default: 2)
   -ntm, --no-transcoding-mode
                         Enable "no transcoding mode", which allows you to calculate the VMAF/SSIM/PSNR for a video that you have already transcoded. The original and
-                        transcoded video paths must be specified using the -ovp and -tvp arguments, respectively. Example: python main.py -ntm -ovp original.mp4 -tvp
+                        transcoded video paths must be specified using the -iv and -tv arguments, respectively. Example: python main.py -ntm -iv original.mp4 -tv
                         transcoded.mp4 (default: False)
   -o OUTPUT_FOLDER, --output-folder OUTPUT_FOLDER
                         Use this argument if you want a specific name for the output folder. If you want the name of the output folder to contain a space, the string must
                         be surrounded in double quotes (default: None)
-  -ovp ORIGINAL_VIDEO_PATH, --original-video-path ORIGINAL_VIDEO_PATH
-                        Enter the path of the original video. A relative or absolute path can be specified. If the path contains a space, it must be surrounded in double
+  -iv INPUT_VIDEO, --input-video INPUT_VIDEO
+                        Input video. Can be a relative or absolute path, or an URL. If the path contains a space, it must be surrounded in double
                         quotes (default: None)
   -sc, --show-commands  Show the FFmpeg commands that are being run. (default: False)
   -t SECONDS, --encode-length SECONDS
                         Create a lossless version of the original video that is just the first x seconds of the video. This cut version of the original video is what will
                         be transcoded and used as the reference video. You cannot use this option in conjunction with the -i or -cl arguments (default: None)
-  -tvp TRANSCODED_VIDEO_PATH, --transcoded-video-path TRANSCODED_VIDEO_PATH
-                        The path of the transcoded video (only applicable when using the -ntm mode) (default: None)
+  -tv TRANSCODED_VIDEO, --transcoded-video TRANSCODED_VIDEO
+                        Transcoded video. Can be a relative or absolute path, or an URL. Only applicable when using the -ntm mode.
   -vf VIDEO_FILTERS, --video-filters VIDEO_FILTERS
                         Add FFmpeg video filter(s). Each filter must be separated by a comma. Example: -vf bwdif=mode=0,crop=1920:800:0:140 (default: None)
 

@@ -100,8 +100,8 @@ general_args.add_argument(
     action="store_true",
     help='Enable "no transcoding mode", which allows you to '
     "calculate the VMAF/SSIM/PSNR for a video that you have already transcoded. "
-    "The original and transcoded video paths must be specified using the -ovp and -tvp arguments, respectively. "
-    "Example: python main.py -ntm -ovp original.mp4 -tvp transcoded.mp4",
+    "The original and transcoded video paths must be specified using the -iv and -tv arguments, respectively. "
+    "Example: python main.py -ntm -iv original.mp4 -tv transcoded.mp4",
 )
 
 general_args.add_argument(
@@ -112,14 +112,13 @@ general_args.add_argument(
     "If you want the name of the output folder to contain a space, the string must be surrounded in double quotes",
 )
 
-# Original Video Path
+# Input Video
 general_args.add_argument(
-    "-ovp",
-    "--original-video-path",
+    "-iv",
+    "--input-video",
     type=str,
     required=True,
-    help="Enter the path of the original "
-    "video. A relative or absolute path can be specified. "
+    help="Input video. Can be a relative or absolute path, or a URL. "
     "If the path contains a space, it must be surrounded in double quotes",
 )
 
@@ -189,11 +188,12 @@ general_args.add_argument(
     "You cannot use this option in conjunction with the -i or -cl arguments",
 )
 
-# Transcoded video path (only applicable when using the -ntm mode).
+# Transcoded Video (only applicable when using the -ntm mode).
 general_args.add_argument(
-    "-tvp",
-    "--transcoded-video-path",
-    help="The path of the transcoded video (only applicable when using the -ntm mode)",
+    "-tv",
+    "--transcoded-video",
+    help="Transcoded video. Can be a relative or absolute path, or an URL. "
+    "Only applicable when using the -ntm mode.",
 )
 
 # FFmpeg Video Filter(s)
