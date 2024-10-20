@@ -114,7 +114,7 @@ You can check the available arguments with `python main.py -h`:
 ```
 usage: main.py [-h] [--av1-cpu-used <1-8>] [-cl <1-60>] [-crf <0-51> [<0-51> ...]] [-dp DECIMAL_PLACES] [-e {x264,x265,libaom-av1}] [-i <1-600>] [-subsample SUBSAMPLE]
                [--n-threads N_THREADS] [-ntm] [-o OUTPUT_FOLDER] -iv INPUT_VIDEO [-p <preset/s> [<preset/s> ...]] [--phone-model] [-sc] [-psnr] [-ssim] [-msssim]
-               [-t SECONDS] [-tv TRANSCODED_VIDEO_PATH] [-vf VIDEO_FILTERS]
+               [-t SECONDS] [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS]
 
 optional arguments:
   -h, --help            show this help message and exit

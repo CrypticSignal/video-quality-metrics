@@ -305,7 +305,7 @@ else:
     if args.output_folder:
         output_folder = args.output_folder
     else:
-        output_folder = f"[VQM] {Path(args.transcoded_video_path).name}"
+        output_folder = f"[VQM] {Path(args.transcoded_video).name}"
 
     os.makedirs(output_folder, exist_ok=True)
 
@@ -316,7 +316,7 @@ else:
 
     factory = FfmpegProcessFactory()
     run_libvmaf(
-        args.transcoded_video_path,
+        args.transcoded_video,
         args,
         json_file_path,
         fps,
@@ -324,10 +324,10 @@ else:
         factory,
     )
 
-    transcode_size = os.path.getsize(args.transcoded_video_path) / 1_000_000
+    transcode_size = os.path.getsize(args.transcoded_video) / 1_000_000
     size_rounded = force_decimal_places(transcode_size, args.decimal_places)
     transcoded_bitrate = provider.get_bitrate(
-        args.decimal_places, args.transcoded_video_path
+        args.decimal_places, args.transcoded_video
     )
     data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
 
