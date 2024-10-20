@@ -16,13 +16,12 @@ def encode_video(video_path, args, crf, preset, output_path, message, duration):
     arguments.video_filters(video_filters)
 
     factory = FfmpegProcessFactory()
-    process = factory.create_process(arguments, args)
+    process = factory.create_process(arguments)
 
     log.info(f"Converting the video using {message}...")
     timer = Timer()
     timer.start()
-    process.run(video_path, duration)
+    process.run()
     time_taken = timer.stop(args.decimal_places)
-    log.info("Done!")
 
     return factory, time_taken

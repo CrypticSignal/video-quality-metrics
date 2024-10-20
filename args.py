@@ -145,7 +145,9 @@ encoding_args.add_argument(
 )
 
 # Phone Model
-vmaf_args.add_argument("--phone-model", action="store_true", help="Enable VMAF phone model")
+vmaf_args.add_argument(
+    "--phone-model", action="store_true", help="Enable VMAF phone model"
+)
 
 # PSNR
 optional_metrics_args.add_argument(
@@ -155,14 +157,6 @@ optional_metrics_args.add_argument(
     help="Enable PSNR calculation in addition to VMAF",
 )
 
-# Show the commands being run.
-general_args.add_argument(
-    "-sc",
-    "--show-commands",
-    action="store_true",
-    help="Show the FFmpeg commands that are being run.",
-)
-
 # SSIM
 optional_metrics_args.add_argument(
     "-ssim",
@@ -170,6 +164,8 @@ optional_metrics_args.add_argument(
     action="store_true",
     help="Enable SSIM calculation in addition to VMAF",
 )
+
+# MS-SSIM
 optional_metrics_args.add_argument(
     "-msssim",
     "--calculate-msssim",

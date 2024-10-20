@@ -29,7 +29,9 @@ log = Logger("main.py")
 
 if len(sys.argv) == 1:
     line()
-    log.info('For more details about the available arguments, enter "python main.py -h"')
+    log.info(
+        'For more details about the available arguments, enter "python main.py -h"'
+    )
     line()
 
 args = parser.parse_args()
@@ -127,8 +129,8 @@ if not args.no_transcoding_mode:
         )
         line()
 
-        prev_output_folder, comparison_table, output_ext = create_output_folder_initialise_table(
-            "CRF"
+        prev_output_folder, comparison_table, output_ext = (
+            create_output_folder_initialise_table("CRF")
         )
 
         # The user only wants to transcode the first x seconds of the video.
@@ -142,7 +144,9 @@ if not args.no_transcoding_mode:
             line()
             output_folder = f"{prev_output_folder}/CRF {crf}"
             os.makedirs(output_folder, exist_ok=True)
-            transcode_output_path = os.path.join(output_folder, f"CRF {crf}{output_ext}")
+            transcode_output_path = os.path.join(
+                output_folder, f"CRF {crf}{output_ext}"
+            )
 
             # Encode the video.
             factory, time_taken = encode_video(
@@ -156,7 +160,9 @@ if not args.no_transcoding_mode:
             )
 
             transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-            transcoded_bitrate = provider.get_bitrate(args.decimal_places, transcode_output_path)
+            transcoded_bitrate = provider.get_bitrate(
+                args.decimal_places, transcode_output_path
+            )
             size_rounded = force_decimal_places(transcode_size, args.decimal_places)
             data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
 
@@ -170,7 +176,6 @@ if not args.no_transcoding_mode:
                 fps,
                 input_video,
                 factory,
-                duration,
                 crf,
             )
 
@@ -190,7 +195,9 @@ if not args.no_transcoding_mode:
 
             mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
 
-            write_table_info(comparison_table, filename, original_bitrate, args, f"Preset {preset}")
+            write_table_info(
+                comparison_table, filename, original_bitrate, args, f"Preset {preset}"
+            )
 
         # Plot a bar graph showing the average VMAF score of each CRF value.
         plot_graph(
@@ -213,8 +220,8 @@ if not args.no_transcoding_mode:
         log.info(f"Presets {presets_string} will be compared at a CRF of {crf}.")
         line()
 
-        prev_output_folder, comparison_table, output_ext = create_output_folder_initialise_table(
-            "Preset"
+        prev_output_folder, comparison_table, output_ext = (
+            create_output_folder_initialise_table("Preset")
         )
 
         # The -t/--encode-length argument was specified.
@@ -242,7 +249,9 @@ if not args.no_transcoding_mode:
             )
 
             transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-            transcoded_bitrate = provider.get_bitrate(args.decimal_places, transcode_output_path)
+            transcoded_bitrate = provider.get_bitrate(
+                args.decimal_places, transcode_output_path
+            )
             size_rounded = force_decimal_places(transcode_size, args.decimal_places)
             data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
 
@@ -256,7 +265,6 @@ if not args.no_transcoding_mode:
                 fps,
                 input_video,
                 factory,
-                duration,
                 preset,
             )
 
@@ -314,12 +322,13 @@ else:
         fps,
         input_video,
         factory,
-        duration,
     )
 
     transcode_size = os.path.getsize(args.transcoded_video_path) / 1_000_000
     size_rounded = force_decimal_places(transcode_size, args.decimal_places)
-    transcoded_bitrate = provider.get_bitrate(args.decimal_places, args.transcoded_video_path)
+    transcoded_bitrate = provider.get_bitrate(
+        args.decimal_places, args.transcoded_video_path
+    )
     data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
 
     get_metrics_save_table(
@@ -337,5 +346,7 @@ else:
         f.write(f"\nOriginal Bitrate: {original_bitrate}")
 
 
-output_directory = output_folder if args.no_transcoding_mode else Path(output_folder).parent
+output_directory = (
+    output_folder if args.no_transcoding_mode else Path(output_folder).parent
+)
 log.info(f'All done! Check out the contents of the "{output_directory}" directory.')

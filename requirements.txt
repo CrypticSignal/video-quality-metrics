@@ -1,6 +1,6 @@
+better-ffmpeg-progress
 ffmpeg-python==0.2.0
 matplotlib
 numpy
 prettytable==0.7.2
 requests
-tqdm

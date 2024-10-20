@@ -1,6 +1,6 @@
-import subprocess
+from utils import Logger
 
-from utils import line, Logger, show_progress_bar, VideoInfoProvider
+from better_ffmpeg_progress import FfmpegProcess
 
 log = Logger("factory")
 
@@ -99,7 +99,7 @@ class LibVmafArguments:
 
 
 class FfmpegProcessFactory:
-    def create_process(self, arguments, args):
+    def create_process(self, arguments):
         _process_base_arguments = [
             "ffmpeg",
             "-progress",
@@ -109,26 +109,14 @@ class FfmpegProcessFactory:
             "warning",
             "-y",
         ]
-        process = FfmpegProcess(_process_base_arguments + arguments.get_arguments(), args)
+        process = NewFfmpegProcess(_process_base_arguments + arguments.get_arguments())
         return process
 
 
-class FfmpegProcess:
-    def __init__(self, arguments, args):
+class NewFfmpegProcess:
+    def __init__(self, arguments):
         self._arguments = arguments
-        if args.show_commands:
-            line()
-            log.debug(f'Running the following command:\n{" ".join(self._arguments)}')
-            line()
 
-    def run(self, video_path, duration):
-        self._video_path = video_path
-        self._duration = duration
-
-        video_info = VideoInfoProvider(self._video_path)
-        self._total_frames = int((video_info.get_framerate_float() * self._duration) + 1)
-
-        # Start the FFmpeg process.
-        self._process = subprocess.Popen(self._arguments, stdout=subprocess.PIPE)
-        # Use tqdm to show a progress bar.
-        show_progress_bar(self._process, self._total_frames)
+    def run(self):
+        process = FfmpegProcess(self._arguments)
+        process.run(progress_bar_description="")

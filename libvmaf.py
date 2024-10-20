@@ -14,7 +14,6 @@ def run_libvmaf(
     fps,
     original_video_path,
     factory,
-    duration,
     crf_or_preset=None,
 ):
     characters_to_escape = ["'", ":", ",", "[", "]"]
@@ -24,17 +23,23 @@ def run_libvmaf(
 
     n_subsample = "1" if not args.subsample else args.subsample
 
-    model_params = filter(None, [
-        f"path={model_file_path}",
-        "enable_transform=true" if args.phone_model else ""
-    ])
+    model_params = filter(
+        None,
+        [
+            f"path={model_file_path}",
+            "enable_transform=true" if args.phone_model else "",
+        ],
+    )
     model_string = f"model='{'|'.join(model_params)}'"
 
-    features = filter(None, [
-        "name=psnr" if args.calculate_psnr else "",
-        "name=float_ssim" if args.calculate_ssim else "",
-        "name=float_ms_ssim" if args.calculate_msssim else ""
-    ])
+    features = filter(
+        None,
+        [
+            "name=psnr" if args.calculate_psnr else "",
+            "name=float_ssim" if args.calculate_ssim else "",
+            "name=float_ms_ssim" if args.calculate_msssim else "",
+        ],
+    )
     feature_string = f":feature='{'|'.join(features)}'"
 
     vmaf_options = f"""
@@ -47,7 +52,7 @@ def run_libvmaf(
     video_filters = args.video_filters if args.video_filters else None
     libvmaf_arguments.video_filters(video_filters)
 
-    process = factory.create_process(libvmaf_arguments, args)
+    process = factory.create_process(libvmaf_arguments)
 
     metrics_list = get_metrics_list(args)
 
@@ -65,5 +70,4 @@ def run_libvmaf(
     line()
     log.info(f"Calculating the {metric_types}{message_transcoding_mode}...")
 
-    process.run(original_video_path, duration)
-    log.info("Done!")
+    process.run()

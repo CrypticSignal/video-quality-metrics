@@ -157,7 +157,6 @@ General Arguments:
   -iv INPUT_VIDEO, --input-video INPUT_VIDEO
                         Input video. Can be a relative or absolute path, or an URL. If the path contains a space, it must be surrounded in double
                         quotes (default: None)
-  -sc, --show-commands  Show the FFmpeg commands that are being run. (default: False)
   -t SECONDS, --encode-length SECONDS
                         Create a lossless version of the original video that is just the first x seconds of the video. This cut version of the original video is what will
                         be transcoded and used as the reference video. You cannot use this option in conjunction with the -i or -cl arguments (default: None)
@@ -177,7 +176,7 @@ Optional Metrics:
 
 # Requirements
 
-1. Python **3.6+**
+1. Python **3.7+**
 2. `pip install -r requirements.txt`
 3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.1.1 (or above) of the libvmaf filter. Depending on the encoder(s) that you wish to test, FFmpeg must also be built with libx264, libx265 and libaom.
 

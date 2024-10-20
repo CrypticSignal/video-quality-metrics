@@ -8,7 +8,6 @@ from time import time
 
 from ffmpeg import probe
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 
 
 class Logger:
@@ -33,11 +32,15 @@ class Logger:
         self._logger.info(msg)
 
     def warning(self, msg):
-        self._file_handler.setFormatter(logging.Formatter("[%(name)s] [WARNING] %(message)s"))
+        self._file_handler.setFormatter(
+            logging.Formatter("[%(name)s] [WARNING] %(message)s")
+        )
         self._logger.warning(msg)
 
     def debug(self, msg):
-        self._file_handler.setFormatter(logging.Formatter("[%(name)s] [DEBUG] %(message)s"))
+        self._file_handler.setFormatter(
+            logging.Formatter("[%(name)s] [DEBUG] %(message)s")
+        )
         self._logger.debug(msg)
 
 
@@ -47,7 +50,9 @@ class Timer:
 
     def stop(self, decimal_places):
         time_to_convert = time() - self._start_time
-        time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
+        time_rounded = force_decimal_places(
+            round(time_to_convert, decimal_places), decimal_places
+        )
         return time_rounded
 
 
@@ -60,7 +65,9 @@ class VideoInfoProvider:
             bitrate = probe(video_path)["format"]["bit_rate"]
         else:
             bitrate = probe(self._video_path)["format"]["bit_rate"]
-        return f"{force_decimal_places((int(bitrate) / 1_000_000), decimal_places)} Mbps"
+        return (
+            f"{force_decimal_places((int(bitrate) / 1_000_000), decimal_places)} Mbps"
+        )
 
     def get_framerate_fraction(self):
         r_frame_rate = [
@@ -95,11 +102,15 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     log.info("Done!")
 
     time_message = (
-        f" for {args.encode_length} seconds" if int(args.encode_length) > 1 else "for 1 second"
+        f" for {args.encode_length} seconds"
+        if int(args.encode_length) > 1
+        else "for 1 second"
     )
 
     with open(comparison_table, "w") as f:
-        f.write(f"You chose to encode {filename}{time_message} using {args.video_encoder}.")
+        f.write(
+            f"You chose to encode {filename}{time_message} using {args.video_encoder}."
+        )
 
     return output_file_path
 
@@ -125,14 +136,20 @@ def line():
 
 
 def plot_graph(
-    title, x_label, y_label, x_values, y_values, mean_y_value, save_path, bar_graph=False
+    title,
+    x_label,
+    y_label,
+    x_values,
+    y_values,
+    mean_y_value,
+    save_path,
+    bar_graph=False,
 ):
     plt.suptitle(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     if bar_graph:
         xlocs = x_values
-        rotation = 0
         # If the X values are strings, presets comparison mode was used. Otherwise, CRF comparison mode was used.
         # xlocs is a list which defines the locations of the xticks.
         if isinstance(x_values[0], str):
@@ -163,31 +180,6 @@ def plot_graph(
     plt.clf()
 
 
-def show_progress_bar(ffmpeg_process, total_frames):
-    progress_bar = tqdm(
-            total=total_frames,
-            unit=" frames",
-            dynamic_ncols=True,
-    )
-
-    progress_bar.clear()
-    previous_frame_number = 0
-
-    try:
-        while ffmpeg_process.poll() is None:
-            line = ffmpeg_process.stdout.readline().decode("utf-8")
-            if "frame=" in line:
-                frame_number = int(line[6:])
-                frame_number_increase = frame_number - previous_frame_number
-                progress_bar.update(frame_number_increase)
-                previous_frame_number = frame_number
-    except KeyboardInterrupt:
-        progress_bar.close()
-        ffmpeg_process.kill()
-        log.info("[KeyboardInterrupt] FFmpeg process killed. Exiting Video Quality Metrics.")
-        sys.exit(0)
-
-
 def write_table_info(table_path, video_filename, original_bitrate, args, crf_or_preset):
     with open(table_path, "a") as f:
         f.write(
@@ -199,12 +191,13 @@ def write_table_info(table_path, video_filename, original_bitrate, args, crf_or_
             f"n_subsample: {args.subsample}"
         )
 
+
 def get_metrics_list(args):
     metrics_list = [
         "VMAF",
         "PSNR" if args.calculate_psnr else None,
         "SSIM" if args.calculate_ssim else None,
-        "MS-SSIM" if args.calculate_msssim else None
+        "MS-SSIM" if args.calculate_msssim else None,
     ]
 
     return list(filter(None, metrics_list))
