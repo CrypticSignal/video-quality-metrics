@@ -1,22 +1,25 @@
 # Video Quality Metrics (VQM)
 
-VQM is a command line program that has 2 main features.
+VQM is a command line program that has 2 main modes:
 
-1. It can calculate the VMAF, SSIM and PSNR of a transcoded video as long as you have the original video as well. Example:
+**[1] Transcoding Mode**
 
-   `python main.py -ntm -iv original.mp4 -tv transcoded.mp4 -ssim -psnr`
+Details about **Transcoding Mode**, as well as example commands, can be found in the [Transcoding Mode](#transcoding-mode) section.
 
-2. It can transcode a video using the x264 (H.264), x265 (H.265) or libaom (AV1) encoder with specified presets (if using x264 or x265) or CRF values.
+**[2] No Transcoding Mode (`-ntm`)** 
 
-   When using this feature, VQM will transcode the video with each preset/CRF value and calculate the VMAF/SSIM/PSNR of each transcode. A table will be created as well as graphs, so you can see how the values of the quality metrics change depending on the preset/CRF value.
+VQM will calculate the VMAF (and optionally) the SSIM and PSNR of a transcoded video as long as you have the original video as well. To calculate SSIM and PSNR in addition to VMAF, you must use the `-ssim` and `-psnr` arguments.
 
-You can find more details about feature 2 as well as example commands, under the [Feature 2](#feature-2) section.
+Here is an example:
+
+`python main.py -ntm -iv example_video/original.mp4 -tv example_video/transcoded.mp4 -ssim -psnr`
 
 # Table of Contents
 
 - [Example Table](#example-table)
 - [Example Graphs](#example-graphs)
-- [Feature 2](#feature-2)
+- [Transcoding Mode](#transcoding-mode)
+- [Overview Mode](#overview-mode)
 - [Available Arguments](#available-arguments)
 - [Requirements](#requirements)
 - [Recommended FFmpeg Builds](#recommended-ffmpeg-builds)
@@ -25,51 +28,42 @@ You can find more details about feature 2 as well as example commands, under the
 # Example Table
 
 VQM creates a table in a file named `Table.txt`, and it contains the following:
-
+- Preset/CRF value
+- Time taken to transcode the video (in seconds)
 - Filesize (MB)
 - Bitrate (Mbps)
-- Filesize compared to the original video (as a percentage)
 - [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) values. VMAF is a perceptual video quality assessment algorithm developed by Netflix.
 - [Optional] Peak Signal-to-Noise-Ratio (PSNR). _You must use the `-psnr` argument._
 - [Optional] Structural Similarity Index (SSIM). _You must use the `-ssim` argument._
 - [Optional] Multi-Scale Structural Similarity Index (MS-SSIM). _You must use the `-msssim` argument._
-
-If feature **[2]** is used, in addition to the above, the following colums are present:
-
-- Preset/CRF value
-- Time taken to transcode the video (in seconds)
-
-You can find an example table below. Please note that when feature **[1]** is used, the first two columns will not exist as they are not applicable.
-
 ```
+VMAF values are in the format: Min | Standard Deviation | Mean
 +-----------+-------------------+----------+-----------+----------------------+
 |   Preset  | Encoding Time (s) |   Size   |  Bitrate  |         VMAF         |
 +-----------+-------------------+----------+-----------+----------------------+
-|  veryslow |       68.12       | 18.70 MB | 2.48 Mbps | 89.75 | 2.51 | 97.62 |
-|   slower  |       32.57       | 20.43 MB | 2.71 Mbps | 89.54 | 2.44 | 97.72 |
-|    slow   |       17.84       | 20.62 MB | 2.74 Mbps | 89.08 | 2.55 | 97.58 |
-|   medium  |       12.16       | 21.24 MB | 2.82 Mbps | 88.88 | 2.56 | 97.57 |
-|    fast   |       10.39       | 22.85 MB | 3.04 Mbps | 88.59 | 2.72 | 97.37 |
-|   faster  |        8.37       | 21.11 MB | 2.80 Mbps | 88.66 | 2.83 | 97.18 |
-|  veryfast |        5.78       | 17.71 MB | 2.35 Mbps | 84.75 | 4.00 | 95.18 |
-| superfast |        3.83       | 34.95 MB | 4.64 Mbps | 88.52 | 3.19 | 96.71 |
-| ultrafast |        2.34       | 49.38 MB | 6.56 Mbps | 90.03 | 2.11 | 98.24 |
+|    slow   |        2.78       | 4.23 MB  | 2.15 Mbps | 90.56 | 1.13 | 94.09 |
+|   medium  |        2.14       | 4.33 MB  | 2.20 Mbps | 90.65 | 1.07 | 93.95 |
+|    fast   |        1.89       | 4.87 MB  | 2.47 Mbps | 90.66 | 1.19 | 93.60 |
+|   faster  |        1.48       | 4.37 MB  | 2.22 Mbps | 90.08 | 1.18 | 93.11 |
+|  veryfast |        0.97       | 3.30 MB  | 1.67 Mbps | 86.75 | 1.78 | 90.02 |
+| superfast |        0.82       | 8.34 MB  | 4.23 Mbps | 90.90 | 1.13 | 93.70 |
 +-----------+-------------------+----------+-----------+----------------------+
-File Transcoded: aqp60.mkv
-Bitrate: 12.34 Mbps
+File Transcoded: example_video/original.mp4
+Bitrate: 3.78 Mbps
 Encoder used for the transcodes: x264
 CRF 23 was used.
 Filter(s) used: None
 n_subsample: 1
 ```
-
 The following command was used to produce such a table:
 
-`python main.py -iv aqp60.mkv -p veryslow slower slow medium fast faster veryfast superfast ultrafast`
+`python main.py -iv example_video/original.mp4 -p slow medium fast faster veryfast superfast`
+
+*If **No Transcoding Mode** is used, the first two columns will not exist as they are not applicable.*
 
 # Example Graphs
 
-When using feature **[2]**, two types of graphs are created:
+In **Transcoding Mode**, two types of graphs are created:
 
 - A graph where the average VMAF is plotted against the presets/CRF values. If one opts to compare CRF values, the following type of graph will produced:
 
@@ -77,29 +71,50 @@ When using feature **[2]**, two types of graphs are created:
 
 - A graph for each preset/CRF value, showing the variation of the VMAF/SSIM/PSNR throughout the video. An example is shown below.
 
-![VMAF variation graph](https://github.com/BassThatHertz/video-quality-metrics/blob/master/example_graphs/VMAF.png)
+![VMAF variation graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/VMAF.png)
 
-_Example SSIM and PSNR graphs can be found in the [example_graphs folder](https://github.com/BassThatHertz/video-quality-metrics/tree/master/example_graphs)._
+_Example SSIM and PSNR graphs can be found in the [example_graphs folder](https://github.com/CrypticSignal/video-quality-metrics/tree/master/example_graphs)._
 
-# Feature 2
+# Transcoding Mode
 
-There are two modes; CRF comparison mode and presets comparison mode. You must specify multiple CRF values OR presets and this program will automatically transcode the video with each preset/CRF value, and the quality of each transcode is calculated using the VMAF and (optionally) the SSIM and PSNR metrics.
+In this mode, you compare the VMAF (and optionally) the SSIM and PSNR with different presets **or** CRF values. You must specify multiple CRF values or presets and VQM will automatically transcode the video with each preset/CRF value. To calculate SSIM and PSNR, you must use the `-ssim` and `-psnr` arguments.
 
-**CRF comparison mode example:**
+Here is  an example of the table that is produced when comparing presets:
+```
+VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
++--------+-------------------+---------+-----------+----------------------+----------------------+--------------------+
+| Preset | Encoding Time (s) |   Size  |  Bitrate  |         VMAF         |         PSNR         |        SSIM        |
++--------+-------------------+---------+-----------+----------------------+----------------------+--------------------+
+|  slow  |        2.75       | 4.23 MB | 2.15 Mbps | 90.56 | 1.13 | 94.09 | 46.24 | 0.91 | 48.30 | 1.00 | 0.00 | 1.00 |
+| medium |        2.14       | 4.33 MB | 2.20 Mbps | 90.65 | 1.07 | 93.95 | 46.17 | 0.92 | 48.24 | 1.00 | 0.00 | 1.00 |
++--------+-------------------+---------+-----------+----------------------+----------------------+--------------------+
+```
+Command used:
 
-`python main.py -iv original.mp4 -crf 18 19 20 -p veryfast -ssim -psnr`
+`python main.py -iv example_video/original.mp4 -p slow medium -ssim -psnr`
 
-_You must specify the CRF values that you want to compare and (optionally) **one** preset. If you do not specify a preset, the `medium` preset will be used._
+_You specify the presets that you want to compare and (optionally) **one** CRF value. If you do not specify a CRF value, the CRF will be set to 23._
 
-**Presets comparison mode example:**
 
-`python main.py -iv original.mp4 -p medium fast faster -crf 18 -ssim -psnr`
+Here is  an example of the table that is produced when comparing CRF values:
+```
+VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
++-----+-------------------+---------+-----------+----------------------+----------------------+--------------------+
+| CRF | Encoding Time (s) |   Size  |  Bitrate  |         VMAF         |         PSNR         |        SSIM        |
++-----+-------------------+---------+-----------+----------------------+----------------------+--------------------+
+|  20 |        2.43       | 6.70 MB | 3.40 Mbps | 92.90 | 1.13 | 95.77 | 47.80 | 1.08 | 50.44 | 1.00 | 0.00 | 1.00 |
+|  23 |        2.13       | 4.33 MB | 2.20 Mbps | 90.65 | 1.07 | 93.95 | 46.17 | 0.92 | 48.24 | 1.00 | 0.00 | 1.00 |
++-----+-------------------+---------+-----------+----------------------+----------------------+--------------------+
+```
+Command used:
 
-_You must specify the presets that you want to compare and (optionally) **one** CRF value. If you do specify a CRF value, a CRF of 23 will be used._
+`python main.py -iv example_video/original.mp4 -crf 20 23 -ssim -psnr`
 
-**Overview Mode:**
+_You specify the CRF values that you want to compare and (optionally) **one** preset. If you do not specify a preset, the `medium` preset will be used._
 
-A recent addition to this program is "overview mode", which can be used with feature [2] by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
+# Overview Mode
+
+A recent addition to this program is "overview mode", which can be used with **Transcoding Mode** by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
 
 Example: `python main.py -iv original.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
 
