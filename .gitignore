@@ -6,6 +6,7 @@
 *.mkv
 *.mp4
 *.MTS
+*.webm
 *.wmv
 # Miscellaneous
 *.bat
