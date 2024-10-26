@@ -79,9 +79,19 @@ _Example SSIM and PSNR graphs can be found in the [example_graphs folder](https:
 
 In this mode, VQM will compare the VMAF (and optionally) the SSIM and PSNR achieved with different values of the chosen encoder parameter.
 
-You must specify an encoder (using the `-e` argument. If not specified, `libx264` will be used), a FFmpeg encoder parameter (e.g. `-preset`, `-crf`, `-quality`) and the values you want to compare with the `-v` argument. 
+You must specify an encoder (using the `-e` argument. If not specified, `libx264` will be used), a FFmpeg encoder parameter (e.g. `-preset`, `-crf`, `-quality`) and the values you want to compare (using the `-v` argument). 
 
-Example: `python main.py -i example_video/original.mp4 -e libx265 -preset slow medium`
+Examples: 
+
+```
+python main.py -i example_video/original.mp4 -e libx265 -p preset -v slow medium
+```
+```
+python main.py -i example_video/original.mp4 -e libx264 -p crf -v 22 23 24
+```
+```
+python main.py -i example_video/original.mp4 -e h264_amf -p quality -v balanced speed quality
+```
 
 VQM will automatically transcode the video with each value. To calculate SSIM and PSNR in addition to VMAF, you must include the `-ssim` and `-psnr` arguments.
 
