@@ -89,28 +89,28 @@ log = Logger("utils")
 
 
 def cut_video(filename, args, output_ext, output_folder, comparison_table):
-    cut_version_filename = f"{Path(filename).stem} [{args.encode_length}s]{output_ext}"
+    cut_version_filename = (
+        f"{Path(filename).stem} [{args.transcode_length}s]{output_ext}"
+    )
     # Output path for the cut video.
     output_file_path = os.path.join(output_folder, cut_version_filename)
     # The reference file will be the cut version of the video.
     # Create the cut version.
-    log.info(f"Cutting the video to a length of {args.encode_length} seconds...")
+    log.info(f"Cutting the video to a length of {args.transcode_length} seconds...")
     os.system(
-        f"ffmpeg -loglevel warning -y -i {args.original_video_path} -t {args.encode_length} "
+        f"ffmpeg -loglevel warning -y -i {args.original_video_path} -t {args.transcode_length} "
         f'-map 0 -c copy "{output_file_path}"'
     )
     log.info("Done!")
 
     time_message = (
-        f" for {args.encode_length} seconds"
-        if int(args.encode_length) > 1
+        f" for {args.transcode_length} seconds"
+        if int(args.transcode_length) > 1
         else "for 1 second"
     )
 
     with open(comparison_table, "w") as f:
-        f.write(
-            f"You chose to encode {filename}{time_message} using {args.video_encoder}."
-        )
+        f.write(f"You chose to encode {filename}{time_message} using {args.encoder}.")
 
     return output_file_path
 
@@ -126,12 +126,8 @@ def force_decimal_places(value, decimal_places):
     return f"{value:.{decimal_places}f}"
 
 
-def is_list(argument_object):
-    return isinstance(argument_object, list)
-
-
 def line():
-    width, height = os.get_terminal_size()
+    width, _ = os.get_terminal_size()
     log.info("-" * width)
 
 
@@ -180,13 +176,13 @@ def plot_graph(
     plt.clf()
 
 
-def write_table_info(table_path, video_filename, original_bitrate, args, crf_or_preset):
+def write_table_info(table_path, video_filename, original_bitrate, args):
     with open(table_path, "a") as f:
         f.write(
-            f"\nFile Transcoded: {video_filename}\n"
-            f"Bitrate: {original_bitrate}\n"
-            f"Encoder used for the transcodes: {args.video_encoder}\n"
-            f"{crf_or_preset} was used.\n"
+            f"\nOriginal File: {video_filename}\n"
+            f"Original Bitrate: {original_bitrate}\n"
+            "VQM transcoded the file with the following parameters:\n"
+            f"Encoder: {args.encoder}\n"
             f'Filter(s) used: {"None" if not args.video_filters else args.video_filters}\n'
             f"n_subsample: {args.subsample}"
         )

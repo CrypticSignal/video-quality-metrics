@@ -12,7 +12,7 @@ VQM will calculate the VMAF (and optionally) the SSIM and PSNR of a transcoded v
 
 Here is an example:
 
-`python main.py -ntm -iv example_video/original.mp4 -tv example_video/transcoded.mp4 -ssim -psnr`
+`python main.py -ntm -i example_video/original.mp4 -tv example_video/transcoded.mp4 -ssim -psnr`
 
 # Table of Contents
 
@@ -22,13 +22,13 @@ Here is an example:
 - [Overview Mode](#overview-mode)
 - [Available Arguments](#available-arguments)
 - [Requirements](#requirements)
-- [Recommended FFmpeg Builds](#recommended-ffmpeg-builds)
+- [FFmpeg Builds](#ffmpeg-builds)
 - [About the model files](#about-the-model-files)
 
 # Example Table
 
 VQM creates a table in a file named `Table.txt`, and it contains the following:
-- Preset/CRF value
+- Encoder parameter
 - Time taken to transcode the video (in seconds)
 - Filesize (MB)
 - Bitrate (Mbps)
@@ -48,16 +48,16 @@ VMAF values are in the format: Min | Standard Deviation | Mean
 |  veryfast |        0.97       | 3.30 MB  | 1.67 Mbps | 86.75 | 1.78 | 90.02 |
 | superfast |        0.82       | 8.34 MB  | 4.23 Mbps | 90.90 | 1.13 | 93.70 |
 +-----------+-------------------+----------+-----------+----------------------+
-File Transcoded: example_video/original.mp4
-Bitrate: 3.78 Mbps
-Encoder used for the transcodes: x264
-CRF 23 was used.
+Original File: example_video/original.mp4
+Original Bitrate: 3.78 Mbps
+VQM transcoded the file with the following parameters:
+Encoder: libx264
 Filter(s) used: None
 n_subsample: 1
 ```
 The following command was used to produce such a table:
 
-`python main.py -iv example_video/original.mp4 -p slow medium fast faster veryfast superfast`
+`python main.py -i example_video/original.mp4 -p slow medium fast faster veryfast superfast`
 
 *If **No Transcoding Mode** is used, the first two columns will not exist as they are not applicable.*
 
@@ -65,11 +65,11 @@ The following command was used to produce such a table:
 
 In **Transcoding Mode**, two types of graphs are created:
 
-- A graph where the average VMAF is plotted against the presets/CRF values. If one opts to compare CRF values, the following type of graph will produced:
+- A graph where the average VMAF is plotted against the value of the encoder parameter. If one opts to compare CRF values, the following type of graph will produced:
 
 ![CRF vs VMAF graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/CRF%20vs%20VMAF.png)
 
-- A graph for each preset/CRF value, showing the variation of the VMAF/SSIM/PSNR throughout the video. An example is shown below.
+- A graph for each encoder parameter value, showing the variation of the VMAF/SSIM/PSNR throughout the video. An example is shown below.
 
 ![VMAF variation graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/VMAF.png)
 
@@ -77,7 +77,13 @@ _Example SSIM and PSNR graphs can be found in the [example_graphs folder](https:
 
 # Transcoding Mode
 
-In this mode, you compare the VMAF (and optionally) the SSIM and PSNR with different presets **or** CRF values. You must specify multiple CRF values or presets and VQM will automatically transcode the video with each preset/CRF value. To calculate SSIM and PSNR, you must use the `-ssim` and `-psnr` arguments.
+In this mode, VQM will compare the VMAF (and optionally) the SSIM and PSNR achieved with different values of the chosen encoder parameter.
+
+You must specify an encoder (using the `-e` argument. If not specified, `libx264` will be used), a FFmpeg encoder parameter (e.g. `-preset`, `-crf`, `-quality`) and the values you want to compare with the `-v` argument. 
+
+Example: `python main.py -i example_video/original.mp4 -e libx265 -preset slow medium`
+
+VQM will automatically transcode the video with each value. To calculate SSIM and PSNR in addition to VMAF, you must include the `-ssim` and `-psnr` arguments.
 
 Here is  an example of the table that is produced when comparing presets:
 ```
@@ -89,12 +95,6 @@ VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
 | medium |        2.14       | 4.33 MB | 2.20 Mbps | 90.65 | 1.07 | 93.95 | 46.17 | 0.92 | 48.24 | 1.00 | 0.00 | 1.00 |
 +--------+-------------------+---------+-----------+----------------------+----------------------+--------------------+
 ```
-Command used:
-
-`python main.py -iv example_video/original.mp4 -p slow medium -ssim -psnr`
-
-_You specify the presets that you want to compare and (optionally) **one** CRF value. If you do not specify a CRF value, the CRF will be set to 23._
-
 
 Here is  an example of the table that is produced when comparing CRF values:
 ```
@@ -106,17 +106,12 @@ VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
 |  23 |        2.13       | 4.33 MB | 2.20 Mbps | 90.65 | 1.07 | 93.95 | 46.17 | 0.92 | 48.24 | 1.00 | 0.00 | 1.00 |
 +-----+-------------------+---------+-----------+----------------------+----------------------+--------------------+
 ```
-Command used:
-
-`python main.py -iv example_video/original.mp4 -crf 20 23 -ssim -psnr`
-
-_You specify the CRF values that you want to compare and (optionally) **one** preset. If you do not specify a preset, the `medium` preset will be used._
 
 # Overview Mode
 
 A recent addition to this program is "overview mode", which can be used with **Transcoding Mode** by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
 
-Example: `python main.py -iv original.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
+Example: `python main.py -i original.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
 
 In the example above, we're grabbing a two-second-long clip (`--clip-length 2`) every minute (`--interval 60`) in the video. These 2-second long clips are concatenated to make the overview video. A 1-hour long video is turned into an overview video that is 1 minute and 58 seconds long. The benefit of overview mode should now be clear - transcoding and computing the quality metrics of a <2 minutes long video is **much** quicker than doing so with an hour long video.
 
@@ -124,82 +119,88 @@ _An alternative method of reducing the execution time of this program is by only
 
 # Available Arguments
 
-You can check the available arguments with `python main.py -h`:
+You can see a list of the available arguments with `python main.py -h`:
 
 ```
-usage: main.py [-h] [--av1-cpu-used <1-8>] [-cl <1-60>] [-crf <0-51> [<0-51> ...]] [-dp DECIMAL_PLACES] [-e {x264,x265,libaom-av1}] [-i <1-600>] [-subsample SUBSAMPLE]
-               [--n-threads N_THREADS] [-ntm] [-o OUTPUT_FOLDER] -iv INPUT_VIDEO [-p <preset/s> [<preset/s> ...]] [--phone-model] [-sc] [-psnr] [-ssim] [-msssim]
-               [-t SECONDS] [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS]
+usage: main.py [-h] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-ntm] [-o OUTPUT_FOLDER] [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS] [--av1-cpu-used <1-8>] [-e ENCODER] [-p PARAMETER] [-v VALUES [VALUES ...]] [-cl <1-60>] [--interval <1-600>]
+               [--n-threads N_THREADS] [--phone-model] [-s <x>] [-psnr] [-ssim] [-msssim]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
 
-Encoding Arguments:
-  --av1-cpu-used <1-8>  Only applicable if the libaom-av1 (AV1) encoder is chosen. Set the quality/encoding speed tradeoff. Lower values mean slower encoding but better
-                        quality, and vice-versa (default: 5)
-  -crf <0-51> [<0-51> ...]
-                        Specify the CRF value(s) to use
-  -e {x264,x265,libaom-av1}, --video-encoder {x264,x265,libaom-av1}
-                        Specify whether to use the x264 (H.264), x265 (H.265) or libaom-av1 (AV1) encoder (default: x264)
-  -p <preset/s> [<preset/s> ...], --preset <preset/s> [<preset/s> ...]
-                        Specify the preset(s) to use (default: medium)
+General Arguments:
+  -dp, --decimal-places DECIMAL_PLACES
+                        The number of decimal places to use for the data in the table
+  -i, --input-video INPUT_VIDEO
+                        Input video. Can be a relative or absolute path, or a URL.
+                        If the path contains a space, it must be surrounded in double quotes.
+  -t, --transcode-length TRANSCODE_LENGTH
+                        Create a lossless version of the original video that is just the first x seconds of the video.
+                        This cut version of the original video is what will be transcoded and used as the reference video.
+                        You cannot use this option in conjunction with the --interval or -cl argument.
+  -ntm, --no-transcoding-mode
+                        Enable 'No Transcoding Mode', which allows you to calculate the VMAF/SSIM/PSNR for a video that you have already transcoded.
+                        The original and transcoded video paths must be specified using the -i and -tv arguments, respectively.
+                        Example: python main.py -ntm -i original.mp4 -tv transcoded.mp4
+  -o, --output-folder OUTPUT_FOLDER
+                        Use this argument if you want a specific name for the output folder. If you want the name of the output folder to contain a space, the string must be surrounded in double quotes
+  -tv, --transcoded-video TRANSCODED_VIDEO
+                        Transcoded video. Can be a relative or absolute path, or an URL. Only applicable when using the -ntm mode.
+  -vf, --video-filters VIDEO_FILTERS
+                        Add FFmpeg video filter(s). Each filter must be separated by a comma. Example: -vf bwdif=mode=0,crop=1920:800:0:140
 
-VMAF Arguments:
-  -subsample SUBSAMPLE  Set a value for libvmaf's n_subsample option if you only want the VMAF/SSIM/PSNR to be calculated for every nth frame. Without this argument,
-                        VMAF/SSIM/PSNR scores will be calculated for every frame (default: 1)
-  --n-threads N_THREADS
-                        Specify the number of threads to use when calculating VMAF
-  --phone-model         Enable VMAF phone model (default: False)
+Transcoding Arguments:
+  --av1-cpu-used <1-8>  Only applicable if the libaom-av1 (AV1) encoder is chosen. Set the quality/encoding speed tradeoff.
+                        Lower values mean slower encoding but better quality, and vice-versa
+  -e, --encoder ENCODER
+                        Specify an ffmpeg video encoder.
+                        Examples: libx265, h264_amf, libaom-av1
+  -p, --parameter PARAMETER
+                        The encoder parameter to compare, e.g. preset, crf, quality.
+                        Example: -p preset
+  -v, --values VALUES [VALUES ...]
+                        The values of the specified encoder parameter to compare. Must be used alongside the -p option. Examples:
+                        Compare presets: -p preset -v slow fast
+                        Compare CRF values: -p crf -v 22 23
+                        Compare h264_amf quality levels: -p quality -v balanced speed
 
 Overview Mode Arguments:
-  -cl <1-60>, --clip-length <1-60>
-                        When using Overview Mode, a X seconds long segment is taken from the original video every --interval seconds and these segments are concatenated to
-                        create the overview video. Specify a value for X (in the range 1-60) (default: 1)
-  -i <1-600>, --interval <1-600>
-                        To activate Overview Mode, this argument must be specified. Overview Mode creates a lossless overview video by grabbing a --clip-length long segment
-                        every X seconds from the original video. Specify a value for X (in the range 1-600) (default: None)
+  -cl, --clip-length <1-60>
+                        When using Overview Mode, a X seconds long segment is taken from the original video every --interval seconds and these segments are concatenated to create the overview video.
+                        Specify a value for X (in the range 1-60)
+  --interval <1-600>    To activate Overview Mode, this argument must be specified.
+                        Overview Mode creates a lossless overview video by grabbing a --clip-length long segment every X seconds from the original video.
+                        Specify a value for X (in the range 1-600)
 
-General Arguments:
-  -dp DECIMAL_PLACES, --decimal-places DECIMAL_PLACES
-                        The number of decimal places to use for the data in the table (default: 2)
-  -ntm, --no-transcoding-mode
-                        Enable "no transcoding mode", which allows you to calculate the VMAF/SSIM/PSNR for a video that you have already transcoded. The original and
-                        transcoded video paths must be specified using the -iv and -tv arguments, respectively. Example: python main.py -ntm -iv original.mp4 -tv
-                        transcoded.mp4 (default: False)
-  -o OUTPUT_FOLDER, --output-folder OUTPUT_FOLDER
-                        Use this argument if you want a specific name for the output folder. If you want the name of the output folder to contain a space, the string must
-                        be surrounded in double quotes (default: None)
-  -iv INPUT_VIDEO, --input-video INPUT_VIDEO
-                        Input video. Can be a relative or absolute path, or an URL. If the path contains a space, it must be surrounded in double
-                        quotes (default: None)
-  -t SECONDS, --encode-length SECONDS
-                        Create a lossless version of the original video that is just the first x seconds of the video. This cut version of the original video is what will
-                        be transcoded and used as the reference video. You cannot use this option in conjunction with the -i or -cl arguments (default: None)
-  -tv TRANSCODED_VIDEO, --transcoded-video TRANSCODED_VIDEO
-                        Transcoded video. Can be a relative or absolute path, or an URL. Only applicable when using the -ntm mode.
-  -vf VIDEO_FILTERS, --video-filters VIDEO_FILTERS
-                        Add FFmpeg video filter(s). Each filter must be separated by a comma. Example: -vf bwdif=mode=0,crop=1920:800:0:140 (default: None)
+VMAF Arguments:
+  --n-threads N_THREADS
+                        Specify the number of threads to use when calculating VMAF
+  --phone-model         Enable VMAF phone model
+  -s, --subsample <x>   Set a value for libvmaf's n_subsample option if you only want the VMAF/SSIM/PSNR to be calculated for every nth frame.
+                        Without this argument, VMAF/SSIM/PSNR scores will be calculated for every frame.
 
 Optional Metrics:
   -psnr, --calculate-psnr
-                        Enable PSNR calculation in addition to VMAF (default: False)
+                        Enable PSNR calculation in addition to VMAF
   -ssim, --calculate-ssim
-                        Enable SSIM calculation in addition to VMAF (default: False)
+                        Enable SSIM calculation in addition to VMAF
   -msssim, --calculate-msssim
-                        Enable MS-SSIM calculation in addition to VMAF (default: False)
+                        Enable MS-SSIM calculation in addition to VMAF
 ```
 
 # Requirements
 
-1. Python **3.7+**
+1. Python **3.7+** installed and in your PATH.
 2. `pip install -r requirements.txt`
-3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.1.1 (or above) of the libvmaf filter. Depending on the encoder(s) that you wish to test, FFmpeg must also be built with libx264, libx265 and libaom.
+3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.1.1 (or above) of the `libvmaf` filter. FFmpeg must also be built with support for the encoders you wish you test.
 
-You can check whether your build of FFmpeg has libvmaf/libx264/libx265/libaom with `ffmpeg -buildconf`.
+You can check which encoders your build of FFmpeg supports by running `ffmpeg -buildconf` in the terminal.
 
-Look for `--enable-libvmaf`, `--enable-libx265`, `--enable-libx264` and `--enable-libaom`.
+If `--enable-libvmaf` is not printed when running `ffmpeg -buildconf`, your build of FFmpeg is not sufficient as VQM needs the `libvmaf` filter.
 
-# Recommended FFmpeg Builds
+# FFmpeg Builds
+
+For convenience, below are links to FFmpeg builds that support the `libvmaf` filter. 
 
 **Windows:** https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z
 
@@ -223,6 +224,8 @@ The 4K model (`vmaf_4k_v0.6.1.json`) "predicts the subjective quality of video d
 
 The source of the quoted text, plus additional information about VMAF (such as the correct way to calculate VMAF), can be found [here](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12).
 
+**Notes:**
+
 - If you are transcoding a video that will be viewed on a mobile phone, you can add the `-pm` argument which will enable the [phone model](https://github.com/Netflix/vmaf/blob/master/resource/doc/models.md/#predict-quality-on-a-cellular-phone-screen).
 
-- If you are transcoding a video that will be viewed on a 4K display, the default model (`vmaf_v0.6.1.json`) is fine if you are only interested in relative VMAF scores, i.e. the score differences between different presets/CRF values, but if you are interested in absolute scores, it may be better to use the 4K model file which predicts the subjective quality of video displayed on a 4K screen at a distance of 1.5x the height of the screen. To use the 4K model, replace the value of the `model_file_path` variable in libvmaf.py with `'vmaf_models/vmaf_4k_v0.6.1.json'`.
+- If you are transcoding a video that will be viewed on a 4K display, the default model (`vmaf_v0.6.1.json`) is fine if you are only interested in relative VMAF scores, i.e. the score differences between different encoder parameter values, but if you are interested in absolute scores, it may be better to use the 4K model file which predicts the subjective quality of video displayed on a 4K screen at a distance of 1.5x the height of the screen. To use the 4K model, replace the value of the `model_file_path` variable in libvmaf.py with `'vmaf_models/vmaf_4k_v0.6.1.json'`.

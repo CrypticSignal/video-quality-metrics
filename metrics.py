@@ -1,7 +1,6 @@
 import json
 import os
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from utils import force_decimal_places, line, Logger, plot_graph, get_metrics_list
@@ -31,7 +30,7 @@ def get_metrics_save_table(
         "VMAF": "vmaf",
         "PSNR": "psnr_y",
         "SSIM": "float_ssim",
-        "MS-SSIM": "float_ms_ssim"
+        "MS-SSIM": "float_ms_ssim",
     }
 
     # Only used for accessing the VMAF mean score to return at the end of this method.
@@ -52,10 +51,9 @@ def get_metrics_save_table(
             collected_scores[metric_type] = {
                 "min": min_score,
                 "std": std_score,
-                "mean": mean_score
+                "mean": mean_score,
             }
 
-            log.info(f"Creating {metric_type} graph...")
             plot_graph(
                 f"{metric_type}\nn_subsample: {args.subsample}",
                 "Frame Number",
@@ -75,16 +73,16 @@ def get_metrics_save_table(
 
     table.add_row(data_for_current_row)
 
-    collected_metric_types = '/'.join(metrics_list)
-    table_title = (
-        f"{collected_metric_types} values are in the format: Min | Standard Deviation | Mean"
-    )
+    collected_metric_types = "/".join(metrics_list)
+    table_title = f"{collected_metric_types} values are in the format: Min | Standard Deviation | Mean"
 
     # Write the table to the Table.txt file.
     with open(comparison_table, "w") as f:
         f.write(f"{table_title}\n")
         f.write(table.get_string())
 
-    log.info(f"{comparison_table} has been updated.")
-    line()
+    if args.no_transcoding_mode:
+        line()
+        log.info(f"All done! Check out the '{output_folder}' folder.")
+
     return float(collected_scores["VMAF"]["mean"])

@@ -7,7 +7,7 @@ from prettytable import PrettyTable
 
 from args import parser
 from arguments_validator import ArgumentsValidator
-from encode_video import encode_video
+from transcode_video import transcode_video
 from ffmpeg_process_factory import FfmpegProcessFactory
 from libvmaf import run_libvmaf
 from metrics import get_metrics_save_table
@@ -16,7 +16,6 @@ from utils import (
     cut_video,
     exit_program,
     force_decimal_places,
-    is_list,
     line,
     Logger,
     plot_graph,
@@ -37,7 +36,7 @@ if len(sys.argv) == 1:
 args = parser.parse_args()
 input_video = args.input_video
 filename = Path(input_video).name
-video_encoder = args.video_encoder
+encoder = args.encoder
 
 args_validator = ArgumentsValidator()
 validation_result, validation_errors = args_validator.validate(args)
@@ -61,7 +60,7 @@ def create_output_folder_initialise_table(crf_or_preset):
 
     output_ext = Path(args.input_video).suffix
     # The M4V container does not support the H.265 codec.
-    if output_ext == ".m4v" and args.video_encoder == "x265":
+    if output_ext == ".m4v" and args.encoder == "libx265":
         output_ext = ".mp4"
 
     return output_folder, comparison_table, output_ext
@@ -90,13 +89,6 @@ if args.video_filters:
     log.info(args.video_filters)
     line()
 
-table = PrettyTable()
-metrics_list = get_metrics_list(args)
-table_column_names = ["Encoding Time (s)", "Size", "Bitrate"] + metrics_list
-
-if args.no_transcoding_mode:
-    del table_column_names[0]
-
 if args.interval is not None:
     output_folder = f"({filename})"
     clip_length = str(args.clip_length)
@@ -108,200 +100,15 @@ if args.interval is not None:
     else:
         exit_program("Something went wrong when trying to create the overview video.")
 
-# The -ntm argument was not specified.
-if not args.no_transcoding_mode:
-    vmaf_scores = []
-    if video_encoder == "x264":
-        crf = "23"
-    elif video_encoder == "x265":
-        crf = "28"
-    elif video_encoder == "libaom-av1":
-        crf = "32"
+table = PrettyTable()
+metrics_list = get_metrics_list(args)
+table_column_names = ["Encoding Time (s)", "Size", "Bitrate"] + metrics_list
 
-    # CRF comparison mode.
-    if is_list(args.crf) and len(args.crf) > 1:
-        log.info("CRF comparison mode activated.")
-        crf_values = args.crf
-        crf_values_string = ", ".join(str(crf) for crf in crf_values)
-        preset = args.preset[0] if is_list(args.preset) else args.preset
-        log.info(
-            f"CRF values {crf_values_string} will be compared and the {preset} preset will be used."
-        )
-        line()
+# No Transcoding Mode
+if args.no_transcoding_mode:
+    print("No Transcoding Mode activated.")
+    del table_column_names[0]
 
-        prev_output_folder, comparison_table, output_ext = (
-            create_output_folder_initialise_table("CRF")
-        )
-
-        # The user only wants to transcode the first x seconds of the video.
-        if args.encode_length:
-            input_video = cut_video(
-                filename, args, output_ext, prev_output_folder, comparison_table
-            )
-
-        for crf in crf_values:
-            log.info(f"| CRF {crf} |")
-            line()
-            output_folder = f"{prev_output_folder}/CRF {crf}"
-            os.makedirs(output_folder, exist_ok=True)
-            transcode_output_path = os.path.join(
-                output_folder, f"CRF {crf}{output_ext}"
-            )
-
-            # Encode the video.
-            factory, time_taken = encode_video(
-                input_video,
-                args,
-                crf,
-                preset,
-                transcode_output_path,
-                f"CRF {crf}",
-                duration,
-            )
-
-            transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-            transcoded_bitrate = provider.get_bitrate(
-                args.decimal_places, transcode_output_path
-            )
-            size_rounded = force_decimal_places(transcode_size, args.decimal_places)
-            data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
-
-            # Save the output of libvmaf to the following path.
-            json_file_path = f"{output_folder}/Metrics of each frame.json"
-            # Run the libvmaf filter.
-            run_libvmaf(
-                transcode_output_path,
-                args,
-                json_file_path,
-                fps,
-                input_video,
-                factory,
-                crf,
-            )
-
-            vmaf_scores.append(
-                get_metrics_save_table(
-                    comparison_table,
-                    json_file_path,
-                    args,
-                    args.decimal_places,
-                    data_for_current_row,
-                    table,
-                    output_folder,
-                    time_taken,
-                    crf,
-                )
-            )
-
-            mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
-
-            write_table_info(
-                comparison_table, filename, original_bitrate, args, f"Preset {preset}"
-            )
-
-        # Plot a bar graph showing the average VMAF score of each CRF value.
-        plot_graph(
-            "CRF vs VMAF",
-            "CRF",
-            "VMAF",
-            crf_values,
-            vmaf_scores,
-            mean_vmaf,
-            f"{prev_output_folder}/CRF vs VMAF",
-            bar_graph=True,
-        )
-
-    # Presets comparison mode.
-    elif is_list(args.preset):
-        log.info("Presets comparison mode activated.")
-        chosen_presets = args.preset
-        presets_string = ", ".join(chosen_presets)
-        crf = args.crf[0] if is_list(args.crf) else crf
-        log.info(f"Presets {presets_string} will be compared at a CRF of {crf}.")
-        line()
-
-        prev_output_folder, comparison_table, output_ext = (
-            create_output_folder_initialise_table("Preset")
-        )
-
-        # The -t/--encode-length argument was specified.
-        if args.encode_length:
-            input_video = cut_video(
-                filename, args, output_ext, prev_output_folder, comparison_table
-            )
-
-        for preset in chosen_presets:
-            log.info(f"| Preset {preset} |")
-            line()
-            output_folder = f"{prev_output_folder}/Preset {preset}"
-            os.makedirs(output_folder, exist_ok=True)
-            transcode_output_path = os.path.join(output_folder, f"{preset}{output_ext}")
-
-            # Encode the video.
-            factory, time_taken = encode_video(
-                input_video,
-                args,
-                crf,
-                preset,
-                transcode_output_path,
-                f"preset {preset}",
-                duration,
-            )
-
-            transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-            transcoded_bitrate = provider.get_bitrate(
-                args.decimal_places, transcode_output_path
-            )
-            size_rounded = force_decimal_places(transcode_size, args.decimal_places)
-            data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
-
-            # Save the output of libvmaf to the following path.
-            json_file_path = f"{output_folder}/Metrics of each frame.json"
-            # Run the libvmaf filter.
-            run_libvmaf(
-                transcode_output_path,
-                args,
-                json_file_path,
-                fps,
-                input_video,
-                factory,
-                preset,
-            )
-
-            vmaf_scores.append(
-                get_metrics_save_table(
-                    comparison_table,
-                    json_file_path,
-                    args,
-                    args.decimal_places,
-                    data_for_current_row,
-                    table,
-                    output_folder,
-                    time_taken,
-                    preset,
-                )
-            )
-
-            mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
-
-            write_table_info(
-                comparison_table, input_video, original_bitrate, args, f"CRF {crf}"
-            )
-
-        # Plot a bar graph showing the average VMAF score of each preset.
-        plot_graph(
-            "Preset vs VMAF",
-            "Preset",
-            "VMAF",
-            chosen_presets,
-            vmaf_scores,
-            mean_vmaf,
-            f"{prev_output_folder}/Preset vs VMAF",
-            bar_graph=True,
-        )
-
-# -ntm mode.
-else:
     if args.output_folder:
         output_folder = args.output_folder
     else:
@@ -315,6 +122,7 @@ else:
     json_file_path = f"{output_folder}/Metrics of each frame.json"
 
     factory = FfmpegProcessFactory()
+
     run_libvmaf(
         args.transcoded_video,
         args,
@@ -345,8 +153,93 @@ else:
     with open(table_path, "a") as f:
         f.write(f"\nOriginal Bitrate: {original_bitrate}")
 
+    sys.exit()
+
+# Transcoding Mode
+
+vmaf_scores = []
+
+log.info(f"Values of {args.encoder}'s '-{args.parameter}' parameter will be compared.")
+log.info(
+    f"The following values will be compared: {", ".join(str(value) for value in args.values)}"
+)
+
+prev_output_folder, comparison_table, output_ext = (
+    create_output_folder_initialise_table(args.parameter)
+)
+
+# The user only wants to transcode the first x seconds of the video.
+if args.transcode_length:
+    input_video = cut_video(
+        filename, args, output_ext, prev_output_folder, comparison_table
+    )
+
+for value in args.values:
+    output_folder = f"{prev_output_folder}/{args.parameter} {value}"
+    os.makedirs(output_folder, exist_ok=True)
+    transcode_output_path = os.path.join(output_folder, f"{value}{output_ext}")
+
+    # Transcode the video.
+    factory, time_taken = transcode_video(
+        input_video,
+        args,
+        value,
+        transcode_output_path,
+        f"'-{args.parameter} {value}'",
+    )
+
+    transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
+    transcoded_bitrate = provider.get_bitrate(
+        args.decimal_places, transcode_output_path
+    )
+    size_rounded = force_decimal_places(transcode_size, args.decimal_places)
+    data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
+
+    # Save the output of libvmaf to the following path.
+    json_file_path = f"{output_folder}/Metrics of each frame.json"
+    # Run the libvmaf filter.
+    run_libvmaf(
+        transcode_output_path,
+        args,
+        json_file_path,
+        fps,
+        input_video,
+        factory,
+        value,
+    )
+
+    vmaf_scores.append(
+        get_metrics_save_table(
+            comparison_table,
+            json_file_path,
+            args,
+            args.decimal_places,
+            data_for_current_row,
+            table,
+            output_folder,
+            time_taken,
+            value,
+        )
+    )
+
+    mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
+
+    write_table_info(comparison_table, filename, original_bitrate, args)
+
+# Plot a bar graph showing the average VMAF score of each CRF value.
+plot_graph(
+    "CRF vs VMAF",
+    "CRF",
+    "VMAF",
+    args.values,
+    vmaf_scores,
+    mean_vmaf,
+    f"{prev_output_folder}/CRF vs VMAF",
+    bar_graph=True,
+)
 
 output_directory = (
     output_folder if args.no_transcoding_mode else Path(output_folder).parent
 )
-log.info(f'All done! Check out the contents of the "{output_directory}" directory.')
+line()
+log.info(f"All done! Check out the contents of the '{output_directory}' folder.")

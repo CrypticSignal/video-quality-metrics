@@ -14,7 +14,7 @@ def run_libvmaf(
     fps,
     original_video_path,
     factory,
-    crf_or_preset=None,
+    parameter_value=None,
 ):
     characters_to_escape = ["'", ":", ",", "[", "]"]
     for character in characters_to_escape:
@@ -62,12 +62,11 @@ def run_libvmaf(
 
     message_transcoding_mode = ""
     if not args.no_transcoding_mode:
-        if isinstance(args.crf, list) and len(args.crf) > 1:
-            message_transcoding_mode += f" achieved with CRF {crf_or_preset}"
-        else:
-            message_transcoding_mode += f" achieved with preset {crf_or_preset}"
+        message_transcoding_mode += (
+            f" achieved with '-{args.parameter} {parameter_value}'"
+        )
 
     line()
-    log.info(f"Calculating the {metric_types}{message_transcoding_mode}...")
+    log.info(f"Calculating the {metric_types}{message_transcoding_mode}...\n")
 
     process.run()

@@ -6,9 +6,11 @@ log = Logger("factory")
 
 
 class EncodingArguments:
-    def __init__(self, infile, encoder, outfile):
+    def __init__(self, infile, encoder, parameter, value, outfile):
         self._infile = infile
         self._encoder = encoder
+        self._parameter = parameter
+        self._value = value
         self._outfile = outfile
         self._base_ffmpeg_arguments = ["-i", self._infile]
 
@@ -36,9 +38,7 @@ class EncodingArguments:
             "-map",
             "0:V",
             "-c:v",
-            "libaom-av1" if self._encoder == "libaom-av1" else f"lib{self._encoder}",
-            "-crf",
-            self._crf,
+            self._encoder,
         ]
 
         if self._encoder == "libaom-av1":
@@ -52,8 +52,8 @@ class EncodingArguments:
             ]
         else:
             encoding_arguments = base_encoding_arguments + [
-                "-preset",
-                self._preset,
+                f"-{self._parameter}",
+                self._value,
                 *self._video_filters,
                 self._outfile,
             ]
