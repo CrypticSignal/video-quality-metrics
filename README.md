@@ -1,5 +1,4 @@
 # Video Quality Metrics (VQM)
-
 VQM is a command line program that has 2 main modes:
 
 **[1] Transcoding Mode**
@@ -10,12 +9,10 @@ Details about **Transcoding Mode**, as well as example commands, can be found in
 
 VQM will calculate the VMAF (and optionally) the SSIM and PSNR of a transcoded video as long as you have the original video as well. To calculate SSIM and PSNR in addition to VMAF, you must use the `-ssim` and `-psnr` arguments.
 
-Here is an example:
-
-`python main.py -ntm -i example_video/original.mp4 -tv example_video/transcoded.mp4 -ssim -psnr`
+To see an example of how to use **No Transcoding Mode**, check out the [Getting Started](#getting-started) section.
 
 # Table of Contents
-
+- [Getting Started](#getting-started)
 - [Example Table](#example-table)
 - [Example Graphs](#example-graphs)
 - [Transcoding Mode](#transcoding-mode)
@@ -25,8 +22,22 @@ Here is an example:
 - [FFmpeg Builds](#ffmpeg-builds)
 - [About the model files](#about-the-model-files)
 
-# Example Table
+# Getting Started
+Clone this repository. Then, navigate to the root of this repository in your terminal and run `pip install -r requirements.txt --upgrade`.
+VQM is now ready to be used.
 
+If you would like to test VQM without using your own video(s), you can use the videos in the `example_videos` folder.
+
+To test **No Transcoding Mode**, you can run:
+```
+python main.py -ntm -i example_videos/original.mp4 -tv example_videos/transcoded.mp4 -ssim -psnr
+```
+To test **Transcoding Mode**, you can run:
+```
+python main.py -i example_videos/original.mp4 -e libx264 -p preset -v slow medium fast -ssim -psnr
+```
+
+# Example Table
 VQM creates a table in a file named `Table.txt`, and it contains the following:
 - Encoder parameter
 - Time taken to transcode the video (in seconds)
@@ -48,7 +59,7 @@ VMAF values are in the format: Min | Standard Deviation | Mean
 |  veryfast |        0.97       | 3.30 MB  | 1.67 Mbps | 86.75 | 1.78 | 90.02 |
 | superfast |        0.82       | 8.34 MB  | 4.23 Mbps | 90.90 | 1.13 | 93.70 |
 +-----------+-------------------+----------+-----------+----------------------+
-Original File: example_video/original.mp4
+Original File: example_videos/original.mp4
 Original Bitrate: 3.78 Mbps
 VQM transcoded the file with the following parameters:
 Encoder: libx264
@@ -57,7 +68,7 @@ n_subsample: 1
 ```
 The following command was used to produce such a table:
 
-`python main.py -i example_video/original.mp4 -p slow medium fast faster veryfast superfast`
+`python main.py -i example_videos/original.mp4 -p slow medium fast faster veryfast superfast`
 
 *If **No Transcoding Mode** is used, the first two columns will not exist as they are not applicable.*
 
@@ -84,13 +95,13 @@ You must specify an encoder (using the `-e` argument. If not specified, `libx264
 Examples: 
 
 ```
-python main.py -i example_video/original.mp4 -e libx265 -p preset -v slow medium
+python main.py -i example_videos/original.mp4 -e libx265 -p preset -v slow medium
 ```
 ```
-python main.py -i example_video/original.mp4 -e libx264 -p crf -v 22 23 24
+python main.py -i example_videos/original.mp4 -e libx264 -p crf -v 22 23 24
 ```
 ```
-python main.py -i example_video/original.mp4 -e h264_amf -p quality -v balanced speed quality
+python main.py -i example_videos/original.mp4 -e h264_amf -p quality -v balanced speed quality
 ```
 
 VQM will automatically transcode the video with each value. To calculate SSIM and PSNR in addition to VMAF, you must include the `-ssim` and `-psnr` arguments.
@@ -201,7 +212,7 @@ Optional Metrics:
 # Requirements
 
 1. Python **3.7+** installed and in your PATH.
-2. `pip install -r requirements.txt`
+2. `pip install -r requirements.txt --upgrade`
 3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.1.1 (or above) of the `libvmaf` filter. FFmpeg must also be built with support for the encoders you wish you test.
 
 You can check which encoders your build of FFmpeg supports by running `ffmpeg -buildconf` in the terminal.
