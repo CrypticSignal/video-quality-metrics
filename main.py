@@ -8,7 +8,6 @@ from prettytable import PrettyTable
 from args import parser
 from arguments_validator import ArgumentsValidator
 from transcode_video import transcode_video
-from ffmpeg_process_factory import FfmpegProcessFactory
 from libvmaf import run_libvmaf
 from metrics import get_metrics_save_table
 from overview import create_movie_overview
@@ -121,15 +120,12 @@ if args.no_transcoding_mode:
 
     json_file_path = f"{output_folder}/Metrics of each frame.json"
 
-    factory = FfmpegProcessFactory()
-
     run_libvmaf(
         args.transcoded_video,
         args,
         json_file_path,
         fps,
         input_video,
-        factory,
     )
 
     transcode_size = os.path.getsize(args.transcoded_video) / 1_000_000
@@ -180,7 +176,7 @@ for value in args.values:
     transcode_output_path = os.path.join(output_folder, f"{value}{output_ext}")
 
     # Transcode the video.
-    factory, time_taken = transcode_video(
+    time_taken = transcode_video(
         input_video,
         args,
         value,
@@ -204,7 +200,6 @@ for value in args.values:
         json_file_path,
         fps,
         input_video,
-        factory,
         value,
     )
 

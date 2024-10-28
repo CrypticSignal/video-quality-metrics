@@ -12,6 +12,7 @@ class EncodingArguments:
         self._parameter = parameter
         self._value = value
         self._outfile = outfile
+
         self._base_ffmpeg_arguments = ["-i", self._infile]
 
     # libaom-av1 "cpu-used" option.
@@ -35,10 +36,12 @@ class EncodingArguments:
 
     def get_arguments(self):
         base_encoding_arguments = [
-            "-map",
-            "0:V",
             "-c:v",
             self._encoder,
+            "-c:a",
+            "copy",
+            "-c:s",
+            "copy",
         ]
 
         if self._encoder == "libaom-av1":
@@ -98,9 +101,11 @@ class LibVmafArguments:
         ]
 
 
-class FfmpegProcessFactory:
-    def create_process(self, arguments):
-        _process_base_arguments = [
+class NewFfmpegProcess:
+    def __init__(self, arguments):
+        self._arguments = arguments
+
+        self._process_base_arguments = [
             "ffmpeg",
             "-progress",
             "-",
@@ -109,14 +114,10 @@ class FfmpegProcessFactory:
             "warning",
             "-y",
         ]
-        process = NewFfmpegProcess(_process_base_arguments + arguments.get_arguments())
-        return process
-
-
-class NewFfmpegProcess:
-    def __init__(self, arguments):
-        self._arguments = arguments
 
     def run(self):
-        process = FfmpegProcess(self._arguments)
+        process = FfmpegProcess(
+            [*self._process_base_arguments, *self._arguments],
+            print_detected_duration=False,
+        )
         process.run(progress_bar_description="")

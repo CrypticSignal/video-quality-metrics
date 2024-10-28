@@ -1,4 +1,4 @@
-from ffmpeg_process_factory import LibVmafArguments
+from ffmpeg_process_factory import LibVmafArguments, NewFfmpegProcess
 from utils import line, Logger, get_metrics_list
 
 log = Logger("libvmaf")
@@ -13,7 +13,6 @@ def run_libvmaf(
     json_file_path,
     fps,
     original_video_path,
-    factory,
     parameter_value=None,
 ):
     characters_to_escape = ["'", ":", ",", "[", "]"]
@@ -52,7 +51,7 @@ def run_libvmaf(
     video_filters = args.video_filters if args.video_filters else None
     libvmaf_arguments.video_filters(video_filters)
 
-    process = factory.create_process(libvmaf_arguments)
+    process = NewFfmpegProcess(libvmaf_arguments.get_arguments())
 
     metrics_list = get_metrics_list(args)
 

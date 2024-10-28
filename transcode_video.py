@@ -1,4 +1,4 @@
-from ffmpeg_process_factory import EncodingArguments, FfmpegProcessFactory
+from ffmpeg_process_factory import EncodingArguments, NewFfmpegProcess
 from utils import line, Logger, Timer
 
 log = Logger("transcode_video.py")
@@ -15,8 +15,7 @@ def transcode_video(video_path, args, value, output_path, message):
     video_filters = args.video_filters if args.video_filters else None
     arguments.video_filters(video_filters)
 
-    factory = FfmpegProcessFactory()
-    process = factory.create_process(arguments)
+    process = NewFfmpegProcess(arguments.get_arguments())
 
     line()
     log.info(f"Transcoding the video using {message}...\n")
@@ -25,4 +24,4 @@ def transcode_video(video_path, args, value, output_path, message):
     process.run()
     time_taken = timer.stop(args.decimal_places)
     log.info(f"Output file: {output_path}")
-    return factory, time_taken
+    return time_taken
