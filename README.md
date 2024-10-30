@@ -26,11 +26,11 @@ To see an example of how to use **No Transcoding Mode**, check out the [Getting 
 Clone this repository. Then, navigate to the root of this repository in your terminal and run `pip install -r requirements.txt --upgrade`.
 VQM is now ready to be used.
 
-If you would like to test VQM without using your own video(s), you can use the videos in the `example_videos` folder.
+If you would like to test VQM without using your own video(s), you can use the videos in the `test_videos` folder.
 
 To test **No Transcoding Mode**, you can run:
 ```
-python main.py -ntm -i example_videos/Seeking_30_480_1050.mp4 -tv example_videos/Seeking_10_288_375.mp4 -s 720x480
+python main.py -ntm -i test_videos/Seeking_30_480_1050.mp4 -tv test_videos/Seeking_10_288_375.mp4 -s 720x480
 ```
 _Note: `-s 720x480` was necessary to scale the transcoded video to match the resolution of the original video (720x480) before calculating VMAF scores. This is the best practice as per Netflix's tech blog. Here is a quote from [their blog](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12):_
 
@@ -40,7 +40,7 @@ _If the transcoded file is the same resolution as the original file, using the `
 
 To test **Transcoding Mode**, you can run:
 ```
-python main.py -i example_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v slow medium -ssim -psnr
+python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v slow medium -ssim -psnr
 ```
 
 # Example Table
@@ -75,7 +75,7 @@ libvmaf n_subsample: 1
 ```
 The following command was used to produce such a table:
 ```
-python main.py -i example_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v veryslow slower slow medium fast faster veryfast superfast ultrafast -ssim -psnr
+python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v veryslow slower slow medium fast faster veryfast superfast ultrafast -ssim -psnr
 ```
 
 *If **No Transcoding Mode** is used, the first two columns will not exist as they are not applicable.*
@@ -103,13 +103,13 @@ You must specify an encoder (using the `-e` argument. If not specified, `libx264
 Examples: 
 
 ```
-python main.py -i example_videos/Seeking_30_480_1050.mp4 -e libx265 -p preset -v slow medium
+python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx265 -p preset -v slow medium
 ```
 ```
-python main.py -i example_videos/Seeking_30_480_1050.mp4 -e libx264 -p crf -v 22 23 24
+python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p crf -v 22 23 24
 ```
 ```
-python main.py -i example_videos/Seeking_30_480_1050.mp4 -e h264_amf -p quality -v balanced speed quality
+python main.py -i test_videos/Seeking_30_480_1050.mp4 -e h264_amf -p quality -v balanced speed quality
 ```
 
 VQM will automatically transcode the video with each value. To calculate SSIM and PSNR in addition to VMAF, you must include the `-ssim` and `-psnr` arguments.
@@ -140,7 +140,7 @@ VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
 
 A recent addition to this program is "overview mode", which can be used with **Transcoding Mode** by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
 
-Example: `python main.py -i example_videos/Seeking_30_480_1050.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
+Example: `python main.py -i test_videos/Seeking_30_480_1050.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
 
 In the example above, we're grabbing a two-second-long clip (`--clip-length 2`) every minute (`--interval 60`) in the video. These 2-second long clips are concatenated to make the overview video. A 1-hour long video is turned into an overview video that is 1 minute and 58 seconds long. The benefit of overview mode should now be clear - transcoding and computing the quality metrics of a <2 minutes long video is **much** quicker than doing so with an hour long video.
 
