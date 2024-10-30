@@ -41,9 +41,7 @@ def run_libvmaf(
     )
     feature_string = f":feature='{'|'.join(features)}'"
 
-    vmaf_options = f"""
-    {model_string}:log_fmt=json:log_path='{json_file_path}':n_subsample={n_subsample}:n_threads={args.n_threads}{feature_string}
-    """
+    vmaf_options = f"{model_string}:log_fmt=json:log_path='{json_file_path}':n_subsample={n_subsample}:n_threads={args.n_threads}{feature_string}"
 
     libvmaf_arguments = LibVmafArguments(
         fps, transcode_output_path, original_video_path, vmaf_options
