@@ -11,42 +11,12 @@ VQM will calculate the VMAF (and optionally) the SSIM and PSNR of a transcoded v
 
 To see an example of how to use **No Transcoding Mode**, check out the [Getting Started](#getting-started) section.
 
-# Table of Contents
-- [Getting Started](#getting-started)
-- [Example Table](#example-table)
-- [Example Graphs](#example-graphs)
-- [Transcoding Mode](#transcoding-mode)
-- [Overview Mode](#overview-mode)
-- [Available Arguments](#available-arguments)
-- [Requirements](#requirements)
-- [FFmpeg Builds](#ffmpeg-builds)
-- [About the model files](#about-the-model-files)
+# What does VQM produce?
+VQM produces a table to show the metrics, and graphs that show the variation of the value of the quality metric throughout the video (on a per-frame basis).
 
-# Getting Started
-Clone this repository. Then, navigate to the root of this repository in your terminal and run `pip install -r requirements.txt --upgrade`.
-VQM is now ready to be used.
-
-If you would like to test VQM without using your own video(s), you can use the videos in the `test_videos` folder.
-
-To test **No Transcoding Mode**, you can run:
-```
-python main.py -ntm -i test_videos/Seeking_30_480_1050.mp4 -tv test_videos/Seeking_10_288_375.mp4 -s 720x480
-```
-_Note: `-s 720x480` was necessary to scale the transcoded video to match the resolution of the original video (720x480) before calculating VMAF scores. This is the best practice as per Netflix's tech blog. Here is a quote from [their blog](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12):_
-
-_"A typical encoding pipeline for adaptive streaming introduces two types of artifacts — compression artifacts (due to lossy compression) and scaling artifacts (for low bitrates, source video is downsampled before compression, and later upsampled on the display device). When using VMAF to evaluate perceptual quality, both types of artifacts must be taken into account. For example, when a source is 1080p but the encode is 480p, the correct way of calculating VMAF on the pair is to upsample the encode to 1080p to match the source’s resolution. If, instead, the source is downsampled to 480p to match the encode, the obtained VMAF score will not capture the scaling artifacts."_
-
-_If the transcoded file is the same resolution as the original file, using the `-s` argument is not necessary._
-
-To test **Transcoding Mode**, you can run:
-```
-python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v slow medium -ssim -psnr
-```
-
-# Example Table
-VQM creates a table in a file named `Table.txt`, and it contains the following:
-- Encoder parameter
-- Time taken to transcode the video (in seconds)
+The table can be found in a file named `metrics_table.txt` and it contains the following:
+- Encoder parameter (only applicable if using **Transcoding Mode**)
+- Time taken to transcode the video (only applicable if using **Transcoding Mode**)
 - Filesize (MB)
 - Bitrate (Mbps)
 - [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) values. VMAF is a perceptual video quality assessment algorithm developed by Netflix.
@@ -78,24 +48,54 @@ The following command was used to produce such a table:
 python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v veryslow slower slow medium fast faster veryfast superfast ultrafast -ssim -psnr
 ```
 
-*If **No Transcoding Mode** is used, the first two columns will not exist as they are not applicable.*
-
-# Example Graphs
+In **No Transcoding Mode**, a graph is created which shows the variation of the VMAF/SSIM/PSNR throughout the video. [1]
 
 In **Transcoding Mode**, two types of graphs are created:
 
-- A graph where the average VMAF is plotted against the value of the encoder parameter. If one opts to compare CRF values, the following type of graph will produced:
+- A graph where the average VMAF is plotted against the value of the encoder parameter. [1]
+- A graph for each encoder parameter value, showing the variation of the VMAF/SSIM/PSNR throughout the video. [2]
 
-![CRF vs VMAF graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/CRF%20vs%20VMAF.png)
-
-- A graph for each encoder parameter value, showing the variation of the VMAF/SSIM/PSNR throughout the video. An example is shown below.
+Here's an example of graph type [1]. This graph shows the variation of the VMAF score throughout the video:
 
 ![VMAF variation graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/VMAF.png)
 
-_Example SSIM and PSNR graphs can be found in the [example_graphs folder](https://github.com/CrypticSignal/video-quality-metrics/tree/master/example_graphs)._
+_An example of the per-frame SSIM graph and per-frame PSNR graph can be found in the [example_graphs folder](https://github.com/CrypticSignal/video-quality-metrics/tree/master/example_graphs)._
+
+Here's an example of graph type [2]. This is the kind of graph that will be produced if you opted to compare the effects of different CRF values:
+
+![CRF vs VMAF graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/CRF%20vs%20VMAF.png)
+
+# Quick Links
+- [Getting Started](#getting-started)
+- [Transcoding Mode](#transcoding-mode)
+- [Overview Mode](#overview-mode)
+- [Available Arguments](#available-arguments)
+- [Requirements](#requirements)
+- [FFmpeg Builds](#ffmpeg-builds)
+- [About the model files](#about-the-model-files)
+
+# Getting Started
+Clone this repository. Then, navigate to the root of this repository in your terminal and run `pip install -r requirements.txt --upgrade`.
+VQM is now ready to be used.
+
+If you would like to test VQM without using your own video(s), you can use the videos in the `test_videos` folder.
+
+To test **No Transcoding Mode**, you can run:
+```
+python main.py -ntm -i test_videos/Seeking_30_480_1050.mp4 -tv test_videos/Seeking_10_288_375.mp4 -s 720x480
+```
+_Note: `-s 720x480` was necessary to scale the transcoded video to match the resolution of the original video (720x480) before calculating VMAF scores. This is the best practice as per Netflix's tech blog. Here is a quote from [their blog](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12):_
+
+_"A typical encoding pipeline for adaptive streaming introduces two types of artifacts — compression artifacts (due to lossy compression) and scaling artifacts (for low bitrates, source video is downsampled before compression, and later upsampled on the display device). When using VMAF to evaluate perceptual quality, both types of artifacts must be taken into account. For example, when a source is 1080p but the encode is 480p, the correct way of calculating VMAF on the pair is to upsample the encode to 1080p to match the source’s resolution. If, instead, the source is downsampled to 480p to match the encode, the obtained VMAF score will not capture the scaling artifacts."_
+
+_If the transcoded file is the same resolution as the original file, using the `-s` argument is not necessary._
+
+To test **Transcoding Mode**, you can run:
+```
+python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v slow medium -ssim -psnr
+```
 
 # Transcoding Mode
-
 In this mode, VQM will compare the VMAF (and optionally) the SSIM and PSNR achieved with different values of the chosen encoder parameter.
 
 You must specify an encoder (using the `-e` argument. If not specified, `libx264` will be used), a FFmpeg encoder parameter (e.g. `-preset`, `-crf`, `-quality`) and the values you want to compare (using the `-v` argument). 
@@ -137,7 +137,6 @@ VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
 ```
 
 # Overview Mode
-
 A recent addition to this program is "overview mode", which can be used with **Transcoding Mode** by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
 
 Example: `python main.py -i test_videos/Seeking_30_480_1050.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
@@ -147,7 +146,6 @@ In the example above, we're grabbing a two-second-long clip (`--clip-length 2`) 
 _An alternative method of reducing the execution time of this program is by only using the first x seconds of the original video (you can do this with the `-t` argument), but **Overview Mode** provides a better representation of the whole video._
 
 # Available Arguments
-
 You can see a list of the available arguments with `python main.py -h`:
 
 ```
@@ -224,7 +222,6 @@ Optional Metrics:
 ```
 
 # Requirements
-
 1. Python **3.7+** installed and in your PATH.
 2. `pip install -r requirements.txt --upgrade`
 3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.1.1 (or above) of the `libvmaf` filter. FFmpeg must also be built with support for the encoders you wish you test.
@@ -234,7 +231,6 @@ You can check which encoders your build of FFmpeg supports by running `ffmpeg -b
 If `--enable-libvmaf` is not printed when running `ffmpeg -buildconf`, your build of FFmpeg is not sufficient as VQM needs the `libvmaf` filter.
 
 # FFmpeg Builds
-
 For convenience, below are links to FFmpeg builds that support the `libvmaf` filter. 
 
 **Windows:** https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z
@@ -248,7 +244,6 @@ Alternatively, you can install FFmpeg using Homebrew - `brew install ffmpeg`
 Download the _git master_ build. Installation instructions, as well as how to add FFmpeg and FFprobe to your PATH, can be found [here](https://www.johnvansickle.com/ffmpeg/faq/).
 
 # About the model files
-
 Two model files are provided, `vmaf_v0.6.1.json` and `vmaf_4k_v0.6.1.json`. There is also the phone model that can be enabled by using the `-pm` argument.
 
 This program uses the `vmaf_v0.6.1.json` model file by default, which is "based on the assumption that the viewers sit in front of a 1080p display in a living room-like environment with the viewing distance of 3x the screen height (3H)."
@@ -260,7 +255,6 @@ The 4K model (`vmaf_4k_v0.6.1.json`) "predicts the subjective quality of video d
 The source of the quoted text, plus additional information about VMAF (such as the correct way to calculate VMAF), can be found [here](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12).
 
 **Notes:**
-
 - If you are transcoding a video that will be viewed on a mobile phone, you can add the `-pm` argument which will enable the [phone model](https://github.com/Netflix/vmaf/blob/master/resource/doc/models.md/#predict-quality-on-a-cellular-phone-screen).
 
 - If you are transcoding a video that will be viewed on a 4K display, the default model (`vmaf_v0.6.1.json`) is fine if you are only interested in relative VMAF scores, i.e. the score differences between different encoder parameter values, but if you are interested in absolute scores, it may be better to use the 4K model file which predicts the subjective quality of video displayed on a 4K screen at a distance of 1.5x the height of the screen. To use the 4K model, replace the value of the `model_file_path` variable in libvmaf.py with `'vmaf_models/vmaf_4k_v0.6.1.json'`.

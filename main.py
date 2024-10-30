@@ -52,7 +52,7 @@ def create_output_folder_initialise_table(crf_or_preset):
     else:
         output_folder = f"({filename})/{crf_or_preset} Comparison"
 
-    comparison_table = os.path.join(output_folder, "Table.txt")
+    comparison_table = os.path.join(output_folder, "metrics_table.txt")
     table_column_names.insert(0, crf_or_preset)
     # Set the names of the columns
     table.field_names = table_column_names
@@ -112,10 +112,10 @@ if args.no_transcoding_mode:
 
     os.makedirs(output_folder, exist_ok=True)
 
-    table_path = os.path.join(output_folder, "Table.txt")
+    table_path = os.path.join(output_folder, "metrics_table.txt")
     table.field_names = table_column_names
 
-    json_file_path = f"{output_folder}/Metrics of each frame.json"
+    json_file_path = f"{output_folder}/per_frame_metrics.json"
 
     run_libvmaf(
         args.transcoded_video,
@@ -189,7 +189,7 @@ for value in args.values:
     data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
 
     # Save the output of libvmaf to the following path.
-    json_file_path = f"{output_folder}/Metrics of each frame.json"
+    json_file_path = f"{output_folder}/per_frame_metrics.json"
     # Run the libvmaf filter.
     run_libvmaf(
         transcode_output_path,

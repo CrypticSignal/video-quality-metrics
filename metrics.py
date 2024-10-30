@@ -76,7 +76,7 @@ def get_metrics_save_table(
     collected_metric_types = "/".join(metrics_list)
     table_title = f"{collected_metric_types} values are in the format: Min | Standard Deviation | Mean"
 
-    # Write the table to the Table.txt file.
+    # Write the table to metrics_table.txt
     with open(comparison_table, "w") as f:
         f.write(f"{table_title}\n")
         f.write(table.get_string())
