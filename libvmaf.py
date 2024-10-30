@@ -49,7 +49,7 @@ def run_libvmaf(
     video_filters = args.video_filters if args.video_filters else None
     libvmaf_arguments.video_filters(video_filters)
 
-    process = NewFfmpegProcess(libvmaf_arguments.get_arguments())
+    process = NewFfmpegProcess(original_video_path)
 
     metrics_list = get_metrics_list(args)
 
@@ -66,4 +66,4 @@ def run_libvmaf(
     line()
     log.info(f"Calculating the {metric_types}{message_transcoding_mode}...\n")
 
-    process.run()
+    process.run(libvmaf_arguments.get_arguments())

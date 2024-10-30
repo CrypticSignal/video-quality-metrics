@@ -36,6 +36,8 @@ class EncodingArguments:
 
     def get_arguments(self):
         base_encoding_arguments = [
+            "-map",
+            "0",
             "-c:v",
             self._encoder,
             "-c:a",
@@ -92,9 +94,9 @@ class LibVmafArguments:
             "-map",
             "1:V",
             "-lavfi",
-            f"[0:v]setpts=PTS-STARTPTS[dist];"
-            f"[1:v]setpts=PTS-STARTPTS{self._video_filters}[ref];"
-            f"[dist][ref]libvmaf={self._vmaf_options}",
+            f"[0:V]setpts=PTS-STARTPTS{self._video_filters}[distorted];"
+            "[1:V]setpts=PTS-STARTPTS[reference];"
+            f"[distorted][reference]libvmaf={self._vmaf_options}",
             "-f",
             "null",
             "-",
@@ -102,9 +104,7 @@ class LibVmafArguments:
 
 
 class NewFfmpegProcess:
-    def __init__(self, arguments):
-        self._arguments = arguments
-
+    def __init__(self, original_video_path):
         self._process_base_arguments = [
             "ffmpeg",
             "-progress",
@@ -113,11 +113,13 @@ class NewFfmpegProcess:
             "-loglevel",
             "warning",
             "-y",
+            "-i",
+            original_video_path,
         ]
 
-    def run(self):
+    def run(self, arguments):
         process = FfmpegProcess(
-            [*self._process_base_arguments, *self._arguments],
+            [*self._process_base_arguments, *arguments],
             print_detected_duration=False,
         )
         process.run(progress_bar_description="")

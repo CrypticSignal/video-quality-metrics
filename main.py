@@ -33,8 +33,8 @@ if len(sys.argv) == 1:
     line()
 
 args = parser.parse_args()
-input_video = args.input_video
-filename = Path(input_video).name
+original_video_path = args.input_video
+filename = Path(original_video_path).name
 encoder = args.encoder
 
 args_validator = ArgumentsValidator()
@@ -57,16 +57,13 @@ def create_output_folder_initialise_table(crf_or_preset):
     # Set the names of the columns
     table.field_names = table_column_names
 
-    output_ext = Path(args.input_video).suffix
-    # The M4V container does not support the H.265 codec.
-    if output_ext == ".m4v" and args.encoder == "libx265":
-        output_ext = ".mp4"
+    output_ext = ".mkv"
 
     return output_folder, comparison_table, output_ext
 
 
 # Use the VideoInfoProvider class to get the framerate, bitrate and duration.
-provider = VideoInfoProvider(args.input_video)
+provider = VideoInfoProvider(original_video_path)
 duration = provider.get_duration()
 fps = provider.get_framerate_fraction()
 fps_float = provider.get_framerate_float()
@@ -92,10 +89,10 @@ if args.interval is not None:
     output_folder = f"({filename})"
     clip_length = str(args.clip_length)
     result, concatenated_video = create_movie_overview(
-        input_video, output_folder, args.interval, clip_length
+        original_video_path, output_folder, args.interval, clip_length
     )
     if result:
-        input_video = concatenated_video
+        original_video_path = concatenated_video
     else:
         exit_program("Something went wrong when trying to create the overview video.")
 
@@ -125,7 +122,7 @@ if args.no_transcoding_mode:
         args,
         json_file_path,
         fps,
-        input_video,
+        original_video_path,
     )
 
     transcode_size = os.path.getsize(args.transcoded_video) / 1_000_000
@@ -166,7 +163,7 @@ prev_output_folder, comparison_table, output_ext = (
 
 # The user only wants to transcode the first x seconds of the video.
 if args.transcode_length:
-    input_video = cut_video(
+    original_video_path = cut_video(
         filename, args, output_ext, prev_output_folder, comparison_table
     )
 
@@ -177,7 +174,7 @@ for value in args.values:
 
     # Transcode the video.
     time_taken = transcode_video(
-        input_video,
+        original_video_path,
         args,
         value,
         transcode_output_path,
@@ -199,7 +196,7 @@ for value in args.values:
         args,
         json_file_path,
         fps,
-        input_video,
+        original_video_path,
         value,
     )
 
