@@ -69,8 +69,7 @@ general_args.add_argument(
     "-vf",
     "--video-filters",
     type=str,
-    help="Add FFmpeg video filter(s). Each filter must be separated by a comma. "
-    "Example: -vf bwdif=mode=0,crop=1920:800:0:140",
+    help="Apply video filter(s) to the original video before calculating quality metrics. Each filter must be separated by a comma.\nExample: -vf bwdif=mode=0,crop=1920:800:0:140",
 )
 
 # Set AV1 speed/quality ratio

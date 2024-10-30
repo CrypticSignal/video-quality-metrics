@@ -44,12 +44,14 @@ def run_libvmaf(
     vmaf_options = f"{model_string}:log_fmt=json:log_path='{json_file_path}':n_subsample={n_subsample}:n_threads={args.n_threads}{feature_string}"
 
     libvmaf_arguments = LibVmafArguments(
-        fps, transcode_output_path, original_video_path, vmaf_options
+        fps,
+        original_video_path,
+        args.video_filters,
+        transcode_output_path,
+        vmaf_options,
     )
-    video_filters = args.video_filters if args.video_filters else None
-    libvmaf_arguments.video_filters(video_filters)
 
-    process = NewFfmpegProcess(original_video_path)
+    process = NewFfmpegProcess()
 
     metrics_list = get_metrics_list(args)
 

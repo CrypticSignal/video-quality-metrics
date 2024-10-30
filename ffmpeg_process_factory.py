@@ -25,25 +25,20 @@ class EncodingArguments:
     def crf(self, value):
         self._crf = value
 
-    def video_filters(self, filters):
-        if filters is not None:
-            self._video_filters = ["-vf", filters]
-        else:
-            self._video_filters = ""
-
     def outfile(self, value):
         self._outfile = value
 
     def get_arguments(self):
         base_encoding_arguments = [
+            "-i",
+            self._infile,
             "-map",
             "0",
-            "-c:v",
-            self._encoder,
             "-c:a",
             "copy",
             "-c:s",
             "copy",
+            "-c:v",
         ]
 
         if self._encoder == "libaom-av1":
@@ -52,14 +47,13 @@ class EncodingArguments:
                 "0",
                 "-cpu-used",
                 self._av1_cpu_used,
-                *self._video_filters,
                 self._outfile,
             ]
         else:
             encoding_arguments = base_encoding_arguments + [
+                self._encoder,
                 f"-{self._parameter}",
                 self._value,
-                *self._video_filters,
                 self._outfile,
             ]
 
@@ -67,35 +61,32 @@ class EncodingArguments:
 
 
 class LibVmafArguments:
-    def __init__(self, fps, distorted_video, original_video, vmaf_options):
+    def __init__(
+        self, fps, original_video, video_filters, distorted_video, vmaf_options
+    ):
         self._fps = fps
         self._distorted_video = distorted_video
         self._original_video = original_video
         self._vmaf_options = vmaf_options
-
-    def video_filters(self, filters):
-        if filters is not None:
-            self._video_filters = f",{filters}"
-        else:
-            self._video_filters = ""
+        self._video_filters = f"{video_filters}," if video_filters else ""
 
     def get_arguments(self):
         return [
             "-r",
             self._fps,
             "-i",
-            self._distorted_video,
+            self._original_video,
             "-r",
             self._fps,
             "-i",
-            self._original_video,
+            self._distorted_video,
             "-map",
             "0:V",
             "-map",
             "1:V",
             "-lavfi",
-            f"[0:V]setpts=PTS-STARTPTS{self._video_filters}[distorted];"
-            "[1:V]setpts=PTS-STARTPTS[reference];"
+            f"[0:V]{self._video_filters}setpts=PTS-STARTPTS[reference];"
+            "[1:V]setpts=PTS-STARTPTS[distorted];"
             f"[distorted][reference]libvmaf={self._vmaf_options}",
             "-f",
             "null",
@@ -104,7 +95,7 @@ class LibVmafArguments:
 
 
 class NewFfmpegProcess:
-    def __init__(self, original_video_path):
+    def __init__(self):
         self._process_base_arguments = [
             "ffmpeg",
             "-progress",
@@ -113,8 +104,6 @@ class NewFfmpegProcess:
             "-loglevel",
             "warning",
             "-y",
-            "-i",
-            original_video_path,
         ]
 
     def run(self, arguments):

@@ -12,10 +12,7 @@ def transcode_video(original_video_path, args, value, output_path, message):
     if args.encoder == "libaom-av1":
         arguments.av1_cpu_used(str(args.av1_cpu_used))
 
-    video_filters = args.video_filters if args.video_filters else None
-    arguments.video_filters(video_filters)
-
-    process = NewFfmpegProcess(original_video_path)
+    process = NewFfmpegProcess()
 
     line()
     log.info(f"Transcoding the video using {message}...\n")

@@ -168,7 +168,7 @@ General Arguments:
   -tv, --transcoded-video TRANSCODED_VIDEO
                         Transcoded video. Can be a relative or absolute path, or an URL. Only applicable when using the -ntm mode.
   -vf, --video-filters VIDEO_FILTERS
-                        Add FFmpeg video filter(s). Each filter must be separated by a comma. Example: -vf bwdif=mode=0,crop=1920:800:0:140
+                        Apply video filter(s) to the original video before calculating quality metrics. Each filter must be separated by a comma. Example: -vf bwdif=mode=0,crop=1920:800:0:140
 
 Transcoding Arguments:
   --av1-cpu-used <1-8>  Only applicable if the libaom-av1 (AV1) encoder is chosen. Set the quality/encoding speed tradeoff.
