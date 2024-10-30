@@ -55,7 +55,7 @@ def get_metrics_save_table(
             }
 
             plot_graph(
-                f"{metric_type}\nn_subsample: {args.subsample}",
+                f"{metric_type}\nlibvmaf n_subsample: {args.n_subsample}",
                 "Frame Number",
                 metric_type,
                 frame_numbers,

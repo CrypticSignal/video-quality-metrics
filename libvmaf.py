@@ -20,7 +20,7 @@ def run_libvmaf(
         if character in json_file_path:
             json_file_path = json_file_path.replace(character, f"\{character}")
 
-    n_subsample = "1" if not args.subsample else args.subsample
+    n_subsample = args.n_subsample if args.n_subsample else "1"
 
     model_params = filter(
         None,
@@ -49,6 +49,7 @@ def run_libvmaf(
         args.video_filters,
         transcode_output_path,
         vmaf_options,
+        args.scale,
     )
 
     process = NewFfmpegProcess()

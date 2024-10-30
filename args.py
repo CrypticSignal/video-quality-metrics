@@ -131,6 +131,16 @@ overview_mode_args.add_argument(
     "Overview Mode creates a lossless overview video by grabbing a --clip-length long segment every X seconds from the original video.\nSpecify a value for X (in the range 1-600)",
 )
 
+# libvmaf n_subsample
+vmaf_args.add_argument(
+    "-n",
+    "--n-subsample",
+    type=str,
+    default="1",
+    metavar="<x>",
+    help="Set a value for libvmaf's n_subsample option if you only want the VMAF/SSIM/PSNR to be calculated for every nth frame.\nWithout this argument, VMAF/SSIM/PSNR scores will be calculated for every frame.",
+)
+
 # Set the number of threads to be used when computing VMAF.
 vmaf_args.add_argument(
     "--n-threads",
@@ -144,14 +154,14 @@ vmaf_args.add_argument(
     "--phone-model", action="store_true", help="Enable VMAF phone model"
 )
 
-# n_subsample
 vmaf_args.add_argument(
     "-s",
-    "--subsample",
+    "--scale",
     type=str,
-    default="1",
-    metavar="<x>",
-    help="Set a value for libvmaf's n_subsample option if you only want the VMAF/SSIM/PSNR to be calculated for every nth frame.\nWithout this argument, VMAF/SSIM/PSNR scores will be calculated for every frame.",
+    help="Scale the transcoded video to match the resolution of the original video.\n"
+    "To ensure accurate VMAF scores, this is necessary if the transcoded video has a different resolution.\n"
+    "For example, if the original video is 1920x1980 and the transcoded video is 1280x720, you should specify:\n"
+    "-s 1920x1080",
 )
 
 # PSNR

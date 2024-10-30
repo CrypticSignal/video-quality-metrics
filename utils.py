@@ -187,7 +187,7 @@ def write_table_info(table_path, video_filename, original_bitrate, args):
                 if args.video_filters
                 else ""
             )
-            + f"libvmaf n_subsample: {args.subsample}\n"
+            + f"libvmaf n_subsample: {args.n_subsample}\n"
         )
 
 

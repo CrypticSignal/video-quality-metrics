@@ -62,13 +62,24 @@ class EncodingArguments:
 
 class LibVmafArguments:
     def __init__(
-        self, fps, original_video, video_filters, distorted_video, vmaf_options
+        self,
+        fps,
+        original_video,
+        video_filters,
+        distorted_video,
+        vmaf_options,
+        transcoded_video_scaling=None,
     ):
         self._fps = fps
         self._distorted_video = distorted_video
         self._original_video = original_video
         self._vmaf_options = vmaf_options
         self._video_filters = f"{video_filters}," if video_filters else ""
+        self._transcoded_video_scaling = (
+            f"scale={transcoded_video_scaling.replace("x", ":")}:flags=bicubic,"
+            if transcoded_video_scaling
+            else ""
+        )
 
     def get_arguments(self):
         return [
@@ -86,7 +97,7 @@ class LibVmafArguments:
             "1:V",
             "-lavfi",
             f"[0:V]{self._video_filters}setpts=PTS-STARTPTS[reference];"
-            "[1:V]setpts=PTS-STARTPTS[distorted];"
+            f"[1:V]{self._transcoded_video_scaling}setpts=PTS-STARTPTS[distorted];"
             f"[distorted][reference]libvmaf={self._vmaf_options}",
             "-f",
             "null",
