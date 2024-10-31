@@ -20,5 +20,6 @@ def transcode_video(original_video_path, args, value, output_path, message):
     timer.start()
     process.run(arguments.get_arguments())
     time_taken = timer.stop(args.decimal_places)
+    print(f"Transcoding with {args.parameter} '{value}' took {time_taken}s")
     log.info(f"Output file: {output_path}")
     return time_taken

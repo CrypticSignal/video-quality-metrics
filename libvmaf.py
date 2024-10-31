@@ -1,5 +1,5 @@
 from ffmpeg_process_factory import LibVmafArguments, NewFfmpegProcess
-from utils import line, Logger, get_metrics_list
+from utils import line, Logger, get_metrics_list, Timer
 
 log = Logger("libvmaf")
 
@@ -69,4 +69,7 @@ def run_libvmaf(
     line()
     log.info(f"Calculating the {metric_types}{message_transcoding_mode}...\n")
 
+    timer = Timer()
+    timer.start()
     process.run(libvmaf_arguments.get_arguments())
+    print(f"Time Taken: {timer.stop(args.decimal_places)}s")

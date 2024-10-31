@@ -21,6 +21,7 @@ from utils import (
     VideoInfoProvider,
     write_table_info,
     get_metrics_list,
+    Timer,
 )
 
 log = Logger("main.py")
@@ -167,6 +168,9 @@ if args.transcode_length:
         filename, args, output_ext, prev_output_folder, comparison_table
     )
 
+t1 = Timer()
+t1.start()
+
 for value in args.values:
     output_folder = f"{prev_output_folder}/{args.parameter} {value}"
     os.makedirs(output_folder, exist_ok=True)
@@ -217,6 +221,9 @@ for value in args.values:
     mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
 
     write_table_info(comparison_table, filename, original_bitrate, args)
+
+line()
+print(f"Total Time Taken: {t1.stop(args.decimal_places)}s")
 
 # Plot a bar graph showing the average VMAF score of each CRF value.
 plot_graph(
