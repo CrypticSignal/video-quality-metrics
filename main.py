@@ -1,14 +1,13 @@
 import os
 from pathlib import Path
 import sys
-
+import tempfile
 import numpy as np
 from prettytable import PrettyTable
 
 from args import parser
 from arguments_validator import ArgumentsValidator
 from transcode_video import transcode_video
-from libvmaf import run_libvmaf
 from metrics import get_metrics_save_table
 from overview import create_movie_overview
 from utils import (
@@ -21,6 +20,7 @@ from utils import (
     VideoInfoProvider,
     write_table_info,
     get_metrics_list,
+    Timer,
 )
 
 log = Logger("main.py")
@@ -33,8 +33,8 @@ if len(sys.argv) == 1:
     line()
 
 args = parser.parse_args()
-original_video_path = args.input_video
-filename = Path(original_video_path).name
+input_video = args.input_video
+filename = Path(input_video).name
 encoder = args.encoder
 
 args_validator = ArgumentsValidator()
@@ -59,11 +59,55 @@ def create_output_folder_initialise_table(crf_or_preset):
 
     output_ext = ".mkv"
 
+    # output_ext = Path(args.input_video).suffix
+    # # The M4V container does not support the H.265 codec.
+    # if output_ext == ".m4v" and args.encoder == "libx265":
+    #     output_ext = ".mp4"
+
     return output_folder, comparison_table, output_ext
 
 
+# Change this if you want to use a different VMAF model file.
+model_file_path = "vmaf_models/vmaf_v0.6.1.json"
+
+
+def create_vmaf_options_string(
+    args,
+    json_file_path,
+):
+    characters_to_escape = ["'", ":", ",", "[", "]"]
+    for character in characters_to_escape:
+        if character in json_file_path:
+            json_file_path = json_file_path.replace(character, f"\{character}")
+
+    n_subsample = "1" if not args.n_subsample else args.n_subsample
+
+    model_params = filter(
+        None,
+        [
+            f"path={model_file_path}",
+            "enable_transform=true" if args.phone_model else "",
+        ],
+    )
+    model_string = f"model='{'|'.join(model_params)}'"
+
+    features = filter(
+        None,
+        [
+            "name=psnr" if args.calculate_psnr else "",
+            "name=float_ssim" if args.calculate_ssim else "",
+            "name=float_ms_ssim" if args.calculate_msssim else "",
+        ],
+    )
+    feature_string = f":feature='{'|'.join(features)}'"
+
+    vmaf_options = f"{model_string}:log_fmt=json:log_path='{json_file_path}':n_subsample={n_subsample}:n_threads={args.n_threads}{feature_string}"
+
+    return vmaf_options
+
+
 # Use the VideoInfoProvider class to get the framerate, bitrate and duration.
-provider = VideoInfoProvider(original_video_path)
+provider = VideoInfoProvider(args.input_video)
 duration = provider.get_duration()
 fps = provider.get_framerate_fraction()
 fps_float = provider.get_framerate_float()
@@ -89,10 +133,10 @@ if args.interval is not None:
     output_folder = f"({filename})"
     clip_length = str(args.clip_length)
     result, concatenated_video = create_movie_overview(
-        original_video_path, output_folder, args.interval, clip_length
+        input_video, output_folder, args.interval, clip_length
     )
     if result:
-        original_video_path = concatenated_video
+        input_video = concatenated_video
     else:
         exit_program("Something went wrong when trying to create the overview video.")
 
@@ -111,18 +155,14 @@ if args.no_transcoding_mode:
         output_folder = f"[VQM] {Path(args.transcoded_video).name}"
 
     os.makedirs(output_folder, exist_ok=True)
+    json_file_path = f"{output_folder}/per_frame_metrics.json"
 
     table_path = os.path.join(output_folder, "metrics_table.txt")
     table.field_names = table_column_names
 
-    json_file_path = f"{output_folder}/per_frame_metrics.json"
-
-    run_libvmaf(
-        args.transcoded_video,
+    create_vmaf_options_string(
         args,
         json_file_path,
-        fps,
-        original_video_path,
     )
 
     transcode_size = os.path.getsize(args.transcoded_video) / 1_000_000
@@ -163,23 +203,39 @@ prev_output_folder, comparison_table, output_ext = (
 
 # The user only wants to transcode the first x seconds of the video.
 if args.transcode_length:
-    original_video_path = cut_video(
+    input_video = cut_video(
         filename, args, output_ext, prev_output_folder, comparison_table
     )
+
+t1 = Timer()
+t1.start()
 
 for value in args.values:
     output_folder = f"{prev_output_folder}/{args.parameter} {value}"
     os.makedirs(output_folder, exist_ok=True)
     transcode_output_path = os.path.join(output_folder, f"{value}{output_ext}")
 
-    # Transcode the video.
-    time_taken = transcode_video(
-        original_video_path,
+    # Save the output of libvmaf to the following path.
+    json_file_path = f"{output_folder}/per_frame_metrics.json"
+
+    vmaf_options = create_vmaf_options_string(
         args,
-        value,
-        transcode_output_path,
-        f"'-{args.parameter} {value}'",
+        json_file_path,
     )
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file_name = temp_file.name
+
+        # Transcode the video.
+        time_taken = transcode_video(
+            input_video,
+            args,
+            value,
+            transcode_output_path,
+            f"'-{args.parameter} {value}'",
+            vmaf_options,
+            fps,
+        )
 
     transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
     transcoded_bitrate = provider.get_bitrate(
@@ -187,18 +243,6 @@ for value in args.values:
     )
     size_rounded = force_decimal_places(transcode_size, args.decimal_places)
     data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
-
-    # Save the output of libvmaf to the following path.
-    json_file_path = f"{output_folder}/per_frame_metrics.json"
-    # Run the libvmaf filter.
-    run_libvmaf(
-        transcode_output_path,
-        args,
-        json_file_path,
-        fps,
-        original_video_path,
-        value,
-    )
 
     vmaf_scores.append(
         get_metrics_save_table(
@@ -217,6 +261,8 @@ for value in args.values:
     mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
 
     write_table_info(comparison_table, filename, original_bitrate, args)
+
+print(f"Time: {t1.stop(args.decimal_places)}")
 
 # Plot a bar graph showing the average VMAF score of each CRF value.
 plot_graph(

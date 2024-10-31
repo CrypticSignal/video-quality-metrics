@@ -5,6 +5,106 @@ from better_ffmpeg_progress import FfmpegProcess
 log = Logger("factory")
 
 
+class FFmpegCommand:
+    def __init__(
+        self, infile, encoder, parameter, value, output_file, vmaf_options, fps
+    ):
+        self._infile = infile
+        self._encoder = encoder
+        self._parameter = parameter
+        self._value = value
+        self._output_file = output_file
+        self._vmaf_options = vmaf_options
+        self._fps = fps
+
+        self._base_ffmpeg_arguments = [
+            "-i",
+            self._infile,
+            "-map",
+            "0:v",
+        ]
+
+    # libaom-av1 "cpu-used" option.
+    def av1_cpu_used(self, value):
+        self._av1_cpu_used = value
+
+    def preset(self, value):
+        self._preset = value
+
+    def crf(self, value):
+        self._crf = value
+
+    def video_filters(self, filters):
+        if filters is not None:
+            self._video_filters = ["-vf", filters]
+        else:
+            self._video_filters = ""
+
+    def outfile(self, value):
+        self._outfile = value
+
+    def get_arguments(self):
+        base_encoding_arguments = [
+            "-c:v",
+            self._encoder,
+        ]
+
+        if self._encoder == "libaom-av1":
+            encoding_arguments = base_encoding_arguments + [
+                "-b:v",
+                "0",
+                "-cpu-used",
+                self._av1_cpu_used,
+                *self._video_filters,
+                # "-flush_packets",
+                # "1",
+            ]
+        else:
+            encoding_arguments = base_encoding_arguments + [
+                f"-{self._parameter}",
+                self._value,
+                *self._video_filters,
+                # "-flush_packets",
+                # "1",
+            ]
+
+        libvmaf = [
+            "ffmpeg",
+            "-r",
+            self._fps,
+            "-i",
+            "pipe:0",
+            "-r",
+            self._fps,
+            "-i",
+            self._infile,
+            "-lavfi",
+            f"[0:v]setpts=PTS-STARTPTS[dist];[1:v]setpts=PTS-STARTPTS{self._video_filters}[ref];[dist][ref]libvmaf={self._vmaf_options.strip()}",
+            # "-flush_packets",
+            # "1",
+            "-f",
+            "null",
+            "-",
+        ]
+
+        return (
+            self._base_ffmpeg_arguments
+            + encoding_arguments
+            + [
+                "-f",
+                "rawvideo",
+                # "-pix_fmt",
+                # "yuv420p",
+                "-",  # Output to pipe
+                "-f",
+                "matroska",
+                self._output_file,  # Output to file
+                "|",
+            ]
+            + libvmaf
+        )
+
+
 class EncodingArguments:
     def __init__(self, infile, encoder, parameter, value, outfile):
         self._infile = infile
@@ -25,20 +125,23 @@ class EncodingArguments:
     def crf(self, value):
         self._crf = value
 
+    def video_filters(self, filters):
+        if filters is not None:
+            self._video_filters = ["-vf", filters]
+        else:
+            self._video_filters = ""
+
     def outfile(self, value):
         self._outfile = value
 
     def get_arguments(self):
         base_encoding_arguments = [
-            "-i",
-            self._infile,
-            "-map",
-            "0",
+            "-c:v",
+            self._encoder,
             "-c:a",
             "copy",
             "-c:s",
             "copy",
-            "-c:v",
         ]
 
         if self._encoder == "libaom-av1":
@@ -47,67 +150,28 @@ class EncodingArguments:
                 "0",
                 "-cpu-used",
                 self._av1_cpu_used,
+                *self._video_filters,
                 self._outfile,
             ]
         else:
             encoding_arguments = base_encoding_arguments + [
-                self._encoder,
                 f"-{self._parameter}",
                 self._value,
+                *self._video_filters,
                 self._outfile,
             ]
 
         return self._base_ffmpeg_arguments + encoding_arguments
 
 
-class LibVmafArguments:
-    def __init__(
-        self,
-        fps,
-        original_video,
-        video_filters,
-        distorted_video,
-        vmaf_options,
-        transcoded_video_scaling=None,
-    ):
-        self._fps = fps
-        self._distorted_video = distorted_video
-        self._original_video = original_video
-        self._vmaf_options = vmaf_options
-        self._video_filters = f"{video_filters}," if video_filters else ""
-        self._transcoded_video_scaling = (
-            f"scale={transcoded_video_scaling.replace("x", ":")}:flags=bicubic,"
-            if transcoded_video_scaling
-            else ""
-        )
-
-    def get_arguments(self):
-        return [
-            "-r",
-            self._fps,
-            "-i",
-            self._original_video,
-            "-r",
-            self._fps,
-            "-i",
-            self._distorted_video,
-            "-map",
-            "0:V",
-            "-map",
-            "1:V",
-            "-lavfi",
-            f"[0:V]{self._video_filters}setpts=PTS-STARTPTS[reference];"
-            f"[1:V]{self._transcoded_video_scaling}setpts=PTS-STARTPTS[distorted];"
-            f"[distorted][reference]libvmaf={self._vmaf_options}",
-            "-f",
-            "null",
-            "-",
-        ]
-
-
 class NewFfmpegProcess:
-    def __init__(self):
+    def __init__(self, arguments):
+        self._arguments = arguments
+
         self._process_base_arguments = [
+            # "stdbuf",
+            # "-oL",
+            # "-eL",
             "ffmpeg",
             "-progress",
             "-",
@@ -117,9 +181,12 @@ class NewFfmpegProcess:
             "-y",
         ]
 
-    def run(self, arguments):
+    def run(
+        self,
+    ):
         process = FfmpegProcess(
-            [*self._process_base_arguments, *arguments],
+            [*self._process_base_arguments, *self._arguments],
             print_detected_duration=False,
         )
+
         process.run(progress_bar_description="")

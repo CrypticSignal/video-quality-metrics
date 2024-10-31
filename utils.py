@@ -61,13 +61,14 @@ class VideoInfoProvider:
         self._video_path = video_path
 
     def get_bitrate(self, decimal_places, video_path=None):
-        if video_path:
-            bitrate = probe(video_path)["format"]["bit_rate"]
-        else:
-            bitrate = probe(self._video_path)["format"]["bit_rate"]
-        return (
-            f"{force_decimal_places((int(bitrate) / 1_000_000), decimal_places)} Mbps"
-        )
+        try:
+            if video_path:
+                bitrate = probe(video_path)["format"]["bit_rate"]
+            else:
+                bitrate = probe(self._video_path)["format"]["bit_rate"]
+            return f"{force_decimal_places((int(bitrate) / 1_000_000), decimal_places)} Mbps"
+        except Exception:
+            print("failed")
 
     def get_framerate_fraction(self):
         r_frame_rate = [
@@ -181,13 +182,10 @@ def write_table_info(table_path, video_filename, original_bitrate, args):
         f.write(
             f"\nOriginal File: {video_filename}\n"
             f"Original Bitrate: {original_bitrate}\n"
-            f"VQM transcoded the file with the {args.encoder} encoder\n"
-            + (
-                f"Filter(s) applied to original video before quality metrics calculation: {args.video_filters}\n"
-                if args.video_filters
-                else ""
-            )
-            + f"libvmaf n_subsample: {args.n_subsample}\n"
+            "VQM transcoded the file with the following parameters:\n"
+            f"Encoder: {args.encoder}\n"
+            f'Filter(s) used: {"None" if not args.video_filters else args.video_filters}\n'
+            f"n_subsample: {args.n_subsample}"
         )
 
 
