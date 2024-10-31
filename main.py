@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 import sys
-import tempfile
 import numpy as np
 from prettytable import PrettyTable
 
@@ -223,19 +222,16 @@ for value in args.values:
         json_file_path,
     )
 
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        temp_file_name = temp_file.name
-
-        # Transcode the video.
-        time_taken = transcode_video(
-            input_video,
-            args,
-            value,
-            transcode_output_path,
-            f"'-{args.parameter} {value}'",
-            vmaf_options,
-            fps,
-        )
+    # Transcode the video.
+    time_taken = transcode_video(
+        input_video,
+        args,
+        value,
+        transcode_output_path,
+        f"'-{args.parameter} {value}'",
+        vmaf_options,
+        fps,
+    )
 
     transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
     transcoded_bitrate = provider.get_bitrate(
