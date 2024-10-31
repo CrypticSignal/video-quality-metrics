@@ -111,7 +111,6 @@ class NewFfmpegProcess:
             "ffmpeg",
             "-progress",
             "-",
-            "-nostats",
             "-loglevel",
             "warning",
             "-y",
@@ -119,7 +118,6 @@ class NewFfmpegProcess:
 
     def run(self, arguments):
         process = FfmpegProcess(
-            [*self._process_base_arguments, *arguments],
-            print_detected_duration=False,
+            [*self._process_base_arguments, *arguments], print_detected_duration=False
         )
         process.run(progress_bar_description="")
