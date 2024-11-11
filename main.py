@@ -80,7 +80,8 @@ fps_float = provider.get_framerate_float()
 original_bitrate = provider.get_bitrate(args.decimal_places)
 
 line()
-log.info("Video Quality Metrics\nGitHub.com/CrypticSignal/video-quality-metrics")
+log.info("Video Quality Metrics")
+log.info("Version Date: 11th October 2024")
 line()
 log.info("Here's some information about the original video:")
 log.info(f"Filename: {filename}")
@@ -179,9 +180,9 @@ t1 = Timer()
 t1.start()
 
 for value in args.values:
-    output_folder = f"{output_folder}/{args.parameter} {value}"
-    os.makedirs(output_folder, exist_ok=True)
-    transcode_output_path = os.path.join(output_folder, f"{value}{output_ext}")
+    current_output_folder = f"{output_folder}/{args.parameter} {value}"
+    os.makedirs(current_output_folder, exist_ok=True)
+    transcode_output_path = os.path.join(current_output_folder, f"{value}{output_ext}")
 
     # Transcode the video.
     time_taken = transcode_video(
@@ -200,7 +201,7 @@ for value in args.values:
     data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
 
     # Save the output of libvmaf to the following path.
-    json_file_path = f"{output_folder}/per_frame_metrics.json"
+    json_file_path = f"{current_output_folder}/per_frame_metrics.json"
     # Run the libvmaf filter.
     run_libvmaf(
         transcode_output_path,
@@ -218,7 +219,7 @@ for value in args.values:
             args.decimal_places,
             data_for_current_row,
             table,
-            output_folder,
+            current_output_folder,
             time_taken,
             value,
         )
@@ -243,8 +244,5 @@ plot_graph(
     bar_graph=True,
 )
 
-output_directory = (
-    output_folder if args.no_transcoding_mode else Path(output_folder).parent
-)
 line()
-log.info(f"All done! Check out the contents of the '{output_directory}' folder.")
+log.info(f"All done! Check out the contents of the '{output_folder}' folder.")
