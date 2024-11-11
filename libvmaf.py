@@ -50,7 +50,7 @@ def run_libvmaf(
         args.scale,
     )
 
-    process = NewFfmpegProcess()
+    process = NewFfmpegProcess(log_file="calculate_metrics_log.txt")
 
     metrics_list = get_metrics_list(args)
 

@@ -103,14 +103,17 @@ class LibVmafArguments:
 
 
 class NewFfmpegProcess:
-    def __init__(self):
+    def __init__(self, log_file):
         self._process_base_arguments = [
             "ffmpeg",
             "-y",
         ]
+        self._log_file = log_file
 
     def run(self, arguments):
         process = FfmpegProcess(
-            [*self._process_base_arguments, *arguments], print_detected_duration=False
+            [*self._process_base_arguments, *arguments],
+            print_detected_duration=False,
+            ffmpeg_loglevel="debug",
         )
-        process.run(progress_bar_description="")
+        process.run(progress_bar_description="", log_file=self._log_file)
