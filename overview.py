@@ -18,23 +18,18 @@ class ConcatenateError(Exception):
     pass
 
 
-def step_to_movie_timestamp(step_seconds):
-    time_from_step = time.gmtime(step_seconds)
-    timestamp = time.strftime("%H:%M:%S", time_from_step)
+def clip_number_to_movie_timestamp(clip_number_seconds):
+    time_from_clip_number = time.gmtime(clip_number_seconds)
+    timestamp = time.strftime("%H:%M:%S", time_from_clip_number)
     return timestamp
 
 
-def create_clips(video_path, output_folder, interval_seconds, clip_length):
+def create_clips(input_video, output_folder, interval_seconds, clip_length):
     # The output folder for the clips.
     output_folder = os.path.join(output_folder, "clips")
+    os.makedirs(output_folder, exist_ok=True)
 
-    if not os.path.exists(video_path):
-        raise ClipError("The specified video file does not exist.")
-
-    if not os.path.exists(output_folder):
-        os.mkdir(output_folder)
-
-    provider = VideoInfoProvider(video_path)
+    provider = VideoInfoProvider(input_video)
     duration = int(float(provider.get_duration()))
 
     if interval_seconds > duration:
@@ -42,7 +37,7 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
             f"The interval ({interval_seconds}s) may not be longer than the video ({duration}s)."
         )
 
-    number_steps = math.trunc(duration / interval_seconds)
+    num_clips = math.trunc(duration / interval_seconds)
 
     txt_file_path = f"{output_folder}/clips.txt"
     # Create the file.
@@ -50,18 +45,24 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
 
     log.info("Overview mode activated.")
     log.info(
-        f"Creating a {clip_length} second clip every {interval_seconds} seconds from {video_path}..."
+        f"Creating a {clip_length} second clip every {interval_seconds} seconds from {input_video}..."
     )
     line()
 
     try:
-        for step in range(1, number_steps):
-            clip_name = f"clip{step}.mkv"
+        for clip_number in range(1, num_clips):
+            clip_name = f"clip{clip_number}.mkv"
+
             with open(txt_file_path, "a") as f:
                 f.write(f"file '{clip_name}'\n")
+
             clip_output_path = os.path.join(output_folder, clip_name)
-            clip_offset = step_to_movie_timestamp(step * interval_seconds)
-            log.info(f"Creating clip {step} which starts at {clip_offset}...")
+            clip_offset = clip_number_to_movie_timestamp(clip_number * interval_seconds)
+
+            log.info(
+                f"Creating clip {clip_number} which starts at {clip_offset} and ends {interval_seconds} seconds later ..."
+            )
+
             subprocess_cut_args = [
                 "ffmpeg",
                 "-loglevel",
@@ -71,7 +72,7 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
                 "-ss",
                 clip_offset,
                 "-i",
-                video_path,
+                input_video,
                 "-map",
                 "0:V",
                 "-t",
@@ -84,19 +85,22 @@ def create_clips(video_path, output_folder, interval_seconds, clip_length):
                 "ultrafast",
                 clip_output_path,
             ]
+
             subprocess.run(subprocess_cut_args)
+
     except Exception as error:
         log.info("An error occurred while trying to create the clips.")
         exit_program(error)
+
     else:
         return txt_file_path
 
 
-def concatenate_clips(txt_file_path, output_folder, extension, interval_seconds, clip_length):
+def concatenate_clips(txt_file_path, output_folder, extension):
     if not os.path.exists(txt_file_path):
         raise ConcatenateError(f"{txt_file_path} does not exist.")
 
-    overview_filename = f"{clip_length}-{interval_seconds} (ClipLength-IntervalSeconds){extension}"
+    overview_filename = f"Overview_Video{extension}"
     concatenated_filepath = os.path.join(output_folder, overview_filename)
 
     subprocess_concatenate_args = [
@@ -127,14 +131,14 @@ def concatenate_clips(txt_file_path, output_folder, extension, interval_seconds,
         return concatenated_filepath
 
 
-def create_movie_overview(video_path, output_folder, interval_seconds, clip_length):
+def create_overview_video(input_video, output_folder, interval_seconds, clip_length):
     os.makedirs(output_folder, exist_ok=True)
-    extension = Path(video_path).suffix
+    extension = Path(input_video).suffix
     try:
-        txt_file_path = create_clips(video_path, output_folder, interval_seconds, clip_length)
-        output_file = concatenate_clips(
-            txt_file_path, output_folder, extension, interval_seconds, clip_length
+        txt_file_path = create_clips(
+            input_video, output_folder, interval_seconds, clip_length
         )
+        output_file = concatenate_clips(txt_file_path, output_folder, extension)
         result = True
     except ClipError as err:
         result = False
@@ -144,8 +148,6 @@ def create_movie_overview(video_path, output_folder, interval_seconds, clip_leng
         exit_program(err.args[0])
 
     if result:
-        log.info(
-            f"Overview Video: {clip_length}-{interval_seconds} (ClipLength-IntervalSeconds){extension}"
-        )
+        log.info(f"Overview Video: {output_file}")
         line()
         return result, output_file

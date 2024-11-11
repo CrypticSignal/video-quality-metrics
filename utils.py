@@ -98,7 +98,7 @@ def cut_video(filename, args, output_ext, output_folder, comparison_table):
     # Create the cut version.
     log.info(f"Cutting the video to a length of {args.transcode_length} seconds...")
     os.system(
-        f"ffmpeg -loglevel warning -y -i {args.original_video_path} -t {args.transcode_length} "
+        f"ffmpeg -loglevel debug -y -i {args.original_video_path} -t {args.transcode_length} "
         f'-map 0 -c copy "{output_file_path}"'
     )
     log.info("Done!")

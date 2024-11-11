@@ -10,7 +10,7 @@ from arguments_validator import ArgumentsValidator
 from transcode_video import transcode_video
 from libvmaf import run_libvmaf
 from metrics import get_metrics_save_table
-from overview import create_movie_overview
+from overview import create_overview_video
 from utils import (
     cut_video,
     exit_program,
@@ -46,21 +46,30 @@ if not validation_result:
         log.info(f"Error: {error}")
     exit_program("Argument validation failed.")
 
+output_ext = ".mkv"
 
-def create_output_folder_initialise_table(crf_or_preset):
+table = PrettyTable()
+metrics_list = get_metrics_list(args)
+table_column_names = ["Encoding Time (s)", "Size", "Bitrate"] + metrics_list
+
+
+def define_output_folder():
     if args.output_folder:
-        output_folder = f"{args.output_folder}/{crf_or_preset} Comparison"
+        output_folder = f"{args.output_folder}/{args.parameter} Comparison"
     else:
-        output_folder = f"({filename})/{crf_or_preset} Comparison"
+        output_folder = f"({filename})/{args.parameter} Comparison"
 
+    return output_folder
+
+
+def initialise_table():
     comparison_table = os.path.join(output_folder, "metrics_table.txt")
-    table_column_names.insert(0, crf_or_preset)
+
+    table_column_names.insert(0, args.parameter)
     # Set the names of the columns
     table.field_names = table_column_names
 
-    output_ext = ".mkv"
-
-    return output_folder, comparison_table, output_ext
+    return comparison_table
 
 
 # Use the VideoInfoProvider class to get the framerate, bitrate and duration.
@@ -86,20 +95,20 @@ if args.video_filters:
     log.info(args.video_filters)
     line()
 
+
 if args.interval is not None:
-    output_folder = f"({filename})"
+    output_folder = define_output_folder()
     clip_length = str(args.clip_length)
-    result, concatenated_video = create_movie_overview(
+
+    result, concatenated_video = create_overview_video(
         original_video_path, output_folder, args.interval, clip_length
     )
+
     if result:
         original_video_path = concatenated_video
     else:
         exit_program("Something went wrong when trying to create the overview video.")
 
-table = PrettyTable()
-metrics_list = get_metrics_list(args)
-table_column_names = ["Encoding Time (s)", "Size", "Bitrate"] + metrics_list
 
 # No Transcoding Mode
 if args.no_transcoding_mode:
@@ -158,21 +167,20 @@ log.info(
     f"The following values will be compared: {", ".join(str(value) for value in args.values)}"
 )
 
-prev_output_folder, comparison_table, output_ext = (
-    create_output_folder_initialise_table(args.parameter)
-)
+output_folder = define_output_folder()
+comparison_table = initialise_table()
 
 # The user only wants to transcode the first x seconds of the video.
 if args.transcode_length:
     original_video_path = cut_video(
-        filename, args, output_ext, prev_output_folder, comparison_table
+        filename, args, output_ext, output_folder, comparison_table
     )
 
 t1 = Timer()
 t1.start()
 
 for value in args.values:
-    output_folder = f"{prev_output_folder}/{args.parameter} {value}"
+    output_folder = f"{output_folder}/{args.parameter} {value}"
     os.makedirs(output_folder, exist_ok=True)
     transcode_output_path = os.path.join(output_folder, f"{value}{output_ext}")
 
@@ -233,7 +241,7 @@ plot_graph(
     args.values,
     vmaf_scores,
     mean_vmaf,
-    f"{prev_output_folder}/CRF vs VMAF",
+    f"{output_folder}/CRF vs VMAF",
     bar_graph=True,
 )
 

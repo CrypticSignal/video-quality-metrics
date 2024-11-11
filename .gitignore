@@ -13,7 +13,9 @@
 *.code-workspace
 .DS_Store
 *.exe
+*.json
 *.log
+*.png
 *.txt
 # Folders
 *)
