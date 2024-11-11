@@ -11,7 +11,6 @@ def run_libvmaf(
     transcode_output_path,
     args,
     json_file_path,
-    fps,
     original_video_path,
     parameter_value=None,
 ):
@@ -44,7 +43,6 @@ def run_libvmaf(
     vmaf_options = f"{model_string}:log_fmt=json:log_path='{json_file_path}':n_subsample={n_subsample}:n_threads={args.n_threads}{feature_string}"
 
     libvmaf_arguments = LibVmafArguments(
-        fps,
         original_video_path,
         args.video_filters,
         transcode_output_path,

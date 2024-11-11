@@ -131,7 +131,6 @@ if args.no_transcoding_mode:
         args.transcoded_video,
         args,
         json_file_path,
-        fps,
         original_video_path,
     )
 
@@ -207,7 +206,6 @@ for value in args.values:
         transcode_output_path,
         args,
         json_file_path,
-        fps,
         original_video_path,
         value,
     )
