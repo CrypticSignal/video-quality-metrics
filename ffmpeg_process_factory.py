@@ -29,15 +29,6 @@ class EncodingArguments:
     def av1_cpu_used(self, value):
         self._av1_cpu_used = value
 
-    def preset(self, value):
-        self._preset = value
-
-    def crf(self, value):
-        self._crf = value
-
-    def outfile(self, value):
-        self._outfile = value
-
     def get_arguments(self):
         if self._encoder == "libaom-av1":
             encoding_arguments = [

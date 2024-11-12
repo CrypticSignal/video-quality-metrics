@@ -146,7 +146,6 @@ def plot_graph(
     plt.ylabel(y_label)
     if bar_graph:
         xlocs = x_values
-        # If the X values are strings, presets comparison mode was used. Otherwise, CRF comparison mode was used.
         # xlocs is a list which defines the locations of the xticks.
         if isinstance(x_values[0], str):
             xlocs = np.arange(len(x_values))
