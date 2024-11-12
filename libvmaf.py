@@ -14,11 +14,6 @@ def run_libvmaf(
     original_video_path,
     parameter_value=None,
 ):
-    characters_to_escape = ["'", ":", ",", "[", "]"]
-    for character in characters_to_escape:
-        if character in json_file_path:
-            json_file_path = json_file_path.replace(character, f"\{character}")
-
     n_subsample = args.n_subsample if args.n_subsample else "1"
 
     model_params = filter(

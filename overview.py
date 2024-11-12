@@ -39,7 +39,7 @@ def create_clips(input_video, output_folder, interval_seconds, clip_length):
 
     num_clips = math.trunc(duration / interval_seconds)
 
-    txt_file_path = f"{output_folder}/clips.txt"
+    txt_file_path = os.path.join(output_folder, "clips.txt")
     # Create the file.
     open(txt_file_path, "w").close()
 

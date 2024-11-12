@@ -46,20 +46,12 @@ if not validation_result:
         log.info(f"Error: {error}")
     exit_program("Argument validation failed.")
 
+output_folder = args.output_folder if args.output_folder else f"[{filename}]"
 output_ext = ".mkv"
 
 table = PrettyTable()
 metrics_list = get_metrics_list(args)
 table_column_names = ["Encoding Time (s)", "Size", "Bitrate"] + metrics_list
-
-
-def define_output_folder():
-    if args.output_folder:
-        output_folder = f"{args.output_folder}/{args.parameter} Comparison"
-    else:
-        output_folder = f"({filename})/{args.parameter} Comparison"
-
-    return output_folder
 
 
 def initialise_table():
@@ -98,7 +90,6 @@ if args.video_filters:
 
 
 if args.interval is not None:
-    output_folder = define_output_folder()
     clip_length = str(args.clip_length)
 
     result, concatenated_video = create_overview_video(
@@ -167,7 +158,6 @@ log.info(
     f"The following values will be compared: {", ".join(str(value) for value in args.values)}"
 )
 
-output_folder = define_output_folder()
 comparison_table = initialise_table()
 
 # The user only wants to transcode the first x seconds of the video.
@@ -180,7 +170,7 @@ t1 = Timer()
 t1.start()
 
 for value in args.values:
-    current_output_folder = f"{output_folder}/{args.parameter} {value}"
+    current_output_folder = os.path.join(output_folder, f"{args.parameter}_{value}")
     os.makedirs(current_output_folder, exist_ok=True)
     transcode_output_path = os.path.join(current_output_folder, f"{value}{output_ext}")
 
@@ -201,7 +191,10 @@ for value in args.values:
     data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
 
     # Save the output of libvmaf to the following path.
-    json_file_path = f"{current_output_folder}/per_frame_metrics.json"
+    json_file_path = (
+        f"{current_output_folder.replace("\\", "/")}/per_frame_metrics.json"
+    )
+
     # Run the libvmaf filter.
     run_libvmaf(
         transcode_output_path,
@@ -232,15 +225,15 @@ for value in args.values:
 line()
 print(f"Total Time Taken: {t1.stop(args.decimal_places)}s")
 
-# Plot a bar graph showing the average VMAF score of each CRF value.
+# Plot a bar graph showing the average VMAF score achieved with each parameter value.
 plot_graph(
-    "CRF vs VMAF",
-    "CRF",
+    f"{args.parameter} vs VMAF",
+    args.parameter,
     "VMAF",
     args.values,
     vmaf_scores,
     mean_vmaf,
-    f"{output_folder}/CRF vs VMAF",
+    os.path.join(output_folder, f"{args.parameter} vs VMAF"),
     bar_graph=True,
 )
 
