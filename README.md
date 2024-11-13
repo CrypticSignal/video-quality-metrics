@@ -81,11 +81,15 @@ VQM is now ready to be used.
 
 If you would like to test VQM without using your own video(s), you can use the videos in the `test_videos` folder.
 
+`Seeking_30_480_1050.mp4` is the original video and `Seeking_10_288_375.mp4` is the distorted video.
+
+There is also `ForBiggerFun.mp4`, which is a video that is exactly 1 minute long.
+
 To test **No Transcoding Mode**, you can run:
 ```
 python main.py -ntm -i test_videos/Seeking_30_480_1050.mp4 -tv test_videos/Seeking_10_288_375.mp4 -s 720x480
 ```
-_Note: If using the files in the test_videos folder, `-s 720x480` is necessary to scale the transcoded video to match the resolution of the original video (720x480) before calculating VMAF scores. This is the best practice as per Netflix's tech blog. Here is a quote from [their blog](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12):_
+_Note: If using the `Seeking_...` videos in the test_videos folder, `-s 720x480` is necessary to scale the distorted video to match the resolution of the original video (720x480) before calculating VMAF scores. This is the best practice as per Netflix's tech blog. Here is a quote from [their blog](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12):_
 
 _"A typical encoding pipeline for adaptive streaming introduces two types of artifacts — compression artifacts (due to lossy compression) and scaling artifacts (for low bitrates, source video is downsampled before compression, and later upsampled on the display device). When using VMAF to evaluate perceptual quality, both types of artifacts must be taken into account. For example, when a source is 1080p but the encode is 480p, the correct way of calculating VMAF on the pair is to upsample the encode to 1080p to match the source’s resolution. If, instead, the source is downsampled to 480p to match the encode, the obtained VMAF score will not capture the scaling artifacts."_
 
@@ -95,6 +99,7 @@ To test **Transcoding Mode**, you can run:
 ```
 python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v slow medium -ssim -psnr
 ```
+Alternatively, you can use `test_videos/ForBiggerFun.mp4`.
 
 # Transcoding Mode
 In this mode, VQM will compare the VMAF (and optionally) the SSIM and PSNR achieved with different values of the chosen encoder parameter.
