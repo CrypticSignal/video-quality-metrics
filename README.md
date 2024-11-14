@@ -16,6 +16,7 @@ To see an example of how to use **No Transcoding Mode**, check out the [Getting 
 - [Getting Started](#getting-started)
 - [Transcoding Mode](#transcoding-mode)
 - [Overview Mode](#overview-mode)
+- [Combination Mode](#combination-mode)
 - [Available Arguments](#available-arguments)
 - [Requirements](#requirements)
 - [FFmpeg Builds](#ffmpeg-builds)
@@ -143,7 +144,7 @@ VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
 ```
 
 # Overview Mode
-A recent addition to this program is "overview mode", which can be used with **Transcoding Mode** by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
+Overview Mode can be used with **Transcoding Mode** by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
 
 Example: `python main.py -i test_videos/Seeking_30_480_1050.mp4 -crf 17 18 19 --interval 60 --clip-length 2`
 
@@ -151,12 +152,38 @@ In the example above, we're grabbing a two-second-long clip (`--clip-length 2`) 
 
 _An alternative method of reducing the execution time of this program is by only using the first x seconds of the original video (you can do this with the `-t` argument), but **Overview Mode** provides a better representation of the whole video._
 
+# Combination Mode
+Instead of comparing the quality achieved with various values of one encoder parameter, Combination Mode allows you to compare the quality achieved with a combination of two or more parameters.
+
+To activate Combination Mode, specify the `-c` or `--combinations` argument, followed by a list of combinations you wish to compare. The list of combinations must be surrounded in quotes, and each combination must be separated by a comma.
+
+For example, if you want to compare the quality achieved with:
+- The combination of preset `veryslow` and a CRF value of `18`
+- The combination of preset `slower` and CRF value of `16`
+
+You would run something like:
+```
+python main.py -i "test_videos/ForBiggerFun.mp4" -e libx265 -c "preset veryslow crf 18,preset slower crf 16"
+```
+The table produced will look something like this:
+```
+VMAF values are in the format: Min | Standard Deviation | Mean
++--------------------------+-------------------+----------+-----------+----------------------+
+|       Combination        | Encoding Time (s) |   Size   |  Bitrate  |         VMAF         |
++--------------------------+-------------------+----------+-----------+----------------------+
+| -preset veryslow -crf 18 |       325.79      | 19.13 MB | 2.55 Mbps | 94.99 | 1.27 | 99.06 |
+|  -preset slower -crf 16  |       211.81      | 24.06 MB | 3.20 Mbps | 95.62 | 1.14 | 99.23 |
++--------------------------+-------------------+----------+-----------+----------------------+
+```
+- Combination Mode can be used alongside Overview Mode.
+- You need to decide whether you want to use the regular mode, which compares the quality metrics achieved with various values of **one** particular encoder parameter (using the `-p` and `-v` arguments), OR Combination Mode. You cannot do both.
+
 # Available Arguments
 You can see a list of the available arguments with `python main.py -h`:
 
 ```
-usage: main.py [-h] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-ntm] [-o OUTPUT_FOLDER] [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS] [--av1-cpu-used <1-8>] [-e ENCODER] [-eo ENCODER_OPTIONS] [-p PARAMETER] [-v VALUES [VALUES ...]] [-cl <1-60>] [--interval <1-600>]
-               [-n <x>] [--n-threads N_THREADS] [--phone-model] [-s SCALE] [-psnr] [-ssim] [-msssim]
+usage: main.py [-h] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-ntm] [-o OUTPUT_FOLDER] [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS] [--av1-cpu-used <1-8>] [-e ENCODER] [-eo ENCODER_OPTIONS] [-p PARAMETER] [-v VALUES [VALUES ...]] [-c COMBINATIONS] [-cl <1-60>]
+               [--interval <1-600>] [-n <x>] [--n-threads N_THREADS] [--phone-model] [-s SCALE] [-psnr] [-ssim] [-msssim]
 
 options:
   -h, --help            show this help message and exit
@@ -183,7 +210,7 @@ General Arguments:
                         Apply video filter(s) to the original video before calculating quality metrics. Each filter must be separated by a comma.
                         Example: -vf bwdif=mode=0,crop=1920:800:0:140
 
-Transcoding Arguments:
+Encoder Arguments:
   --av1-cpu-used <1-8>  Only applicable if the libaom-av1 (AV1) encoder is chosen. Set the quality/encoding speed tradeoff.
                         Lower values mean slower encoding but better quality, and vice-versa
   -e, --encoder ENCODER
@@ -192,7 +219,7 @@ Transcoding Arguments:
   -eo, --encoder-options ENCODER_OPTIONS
                         Set general encoder options to use for all transcodes.
                         Use FFmpeg syntax. Must be surronded in quotes. Example:
-                        --encoder-options '-crf 18 -x264-params keyint=123:min-keyint=20'
+                        --encoder-options='-crf 18 -x264-params keyint=123:min-keyint=20'
   -p, --parameter PARAMETER
                         The encoder parameter to compare, e.g. preset, crf, quality.
                         Example: -p preset
@@ -201,6 +228,11 @@ Transcoding Arguments:
                         Compare presets: -p preset -v slow fast
                         Compare CRF values: -p crf -v 22 23
                         Compare h264_amf quality levels: -p quality -v balanced speed
+  -c, --combinations COMBINATIONS
+                        Use this mode if you want to compare the quality achieved with a combination of two or more parameters.
+                        The list of combinations must be surrounded in quotes, and each combination must be separated by a comma.
+                        For example, if you want to compare the combination of preset veryslow and CRF 18, with the combination of preset slower and CRF 16:
+                        -c 'preset veryslow crf 18,preset slower crf 16'
 
 Overview Mode Arguments:
   -cl, --clip-length <1-60>

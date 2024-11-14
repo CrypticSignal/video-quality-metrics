@@ -12,7 +12,7 @@ def run_libvmaf(
     args,
     json_file_path,
     original_video_path,
-    parameter_value=None,
+    message,
 ):
     n_subsample = args.n_subsample if args.n_subsample else "1"
 
@@ -53,14 +53,10 @@ def run_libvmaf(
     if len(metrics_list) > 1:
         metric_types = f"{', '.join(metrics_list[:-1])} and {metrics_list[-1]}"
 
-    message_transcoding_mode = ""
-    if not args.no_transcoding_mode:
-        message_transcoding_mode += (
-            f" achieved with '-{args.parameter} {parameter_value}'"
-        )
-
     line()
-    log.info(f"Calculating the {metric_types}{message_transcoding_mode}...\n")
+    log.info(
+        f"Calculating the {metric_types}{message if not args.no_transcoding_mode else ""}...\n"
+    )
 
     timer = Timer()
     timer.start()

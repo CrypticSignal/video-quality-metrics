@@ -14,8 +14,10 @@ class EncodingArguments:
         parameter,
         value,
         output_path,
+        combination,
     ):
         self._encoder = encoder
+        self._combination = combination
         self._parameter = parameter
         self._value = value
         self._output_path = output_path
@@ -31,7 +33,10 @@ class EncodingArguments:
             "copy",
             "-c:v",
             self._encoder,
-        ] + encoder_options.split(" ")
+        ]
+
+        if encoder_options:
+            self._base_ffmpeg_arguments += encoder_options.split(" ")
 
     # libaom-av1 "cpu-used" option.
     def av1_cpu_used(self, value):
@@ -46,6 +51,9 @@ class EncodingArguments:
                 self._av1_cpu_used,
                 self._output_path,
             ]
+        elif self._combination:
+            self._combination.append(self._output_path)
+            encoding_arguments = self._combination
         else:
             encoding_arguments = [
                 f"-{self._parameter}",

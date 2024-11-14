@@ -17,7 +17,7 @@ def get_metrics_save_table(
     table,
     output_folder,
     time_taken,
-    crf_or_preset=None,
+    first_column_data,
 ):
     with open(json_file_path, "r") as f:
         file_contents = json.load(f)
@@ -68,7 +68,7 @@ def get_metrics_save_table(
             data_for_current_row.append(f"{min_score} | {std_score} | {mean_score}")
 
     if not args.no_transcoding_mode:
-        data_for_current_row.insert(0, crf_or_preset)
+        data_for_current_row.insert(0, first_column_data)
         data_for_current_row.insert(1, time_taken)
 
     table.add_row(data_for_current_row)

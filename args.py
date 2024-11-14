@@ -4,7 +4,7 @@ import os
 parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 
 general_args = parser.add_argument_group("General Arguments")
-transcoding_args = parser.add_argument_group("Transcoding Arguments")
+encoder_args = parser.add_argument_group("Encoder Arguments")
 overview_mode_args = parser.add_argument_group("Overview Mode Arguments")
 vmaf_args = parser.add_argument_group("VMAF Arguments")
 optional_metrics_args = parser.add_argument_group("Optional Metrics")
@@ -73,7 +73,7 @@ general_args.add_argument(
 )
 
 # Set AV1 speed/quality ratio
-transcoding_args.add_argument(
+encoder_args.add_argument(
     "--av1-cpu-used",
     type=int,
     default=5,
@@ -84,7 +84,7 @@ transcoding_args.add_argument(
 )
 
 # Encoder
-transcoding_args.add_argument(
+encoder_args.add_argument(
     "-e",
     "--encoder",
     type=str,
@@ -93,17 +93,17 @@ transcoding_args.add_argument(
 )
 
 # Encoder Options
-transcoding_args.add_argument(
+encoder_args.add_argument(
     "-eo",
     "--encoder-options",
     type=str,
     help="Set general encoder options to use for all transcodes.\n"
     "Use FFmpeg syntax. Must be surronded in quotes. Example:\n"
-    "--encoder-options '-crf 18 -x264-params keyint=123:min-keyint=20'",
+    "--encoder-options='-crf 18 -x264-params keyint=123:min-keyint=20'",
 )
 
 # Encoder Parameter
-transcoding_args.add_argument(
+encoder_args.add_argument(
     "-p",
     "--parameter",
     type=str,
@@ -111,7 +111,7 @@ transcoding_args.add_argument(
 )
 
 # Encoder Parameter Values
-transcoding_args.add_argument(
+encoder_args.add_argument(
     "-v",
     "--values",
     nargs="+",
@@ -119,6 +119,17 @@ transcoding_args.add_argument(
     "Compare presets: -p preset -v slow fast\n"
     "Compare CRF values: -p crf -v 22 23\n"
     "Compare h264_amf quality levels: -p quality -v balanced speed",
+)
+
+# Combination Mode
+encoder_args.add_argument(
+    "-c",
+    "--combinations",
+    type=str,
+    help="Use this mode if you want to compare the quality achieved with a combination of two or more parameters.\n"
+    "The list of combinations must be surrounded in quotes, and each combination must be separated by a comma.\n"
+    "For example, if you want to compare the combination of preset veryslow and CRF 18, with the combination of preset slower and CRF 16:\n"
+    "-c 'preset veryslow crf 18,preset slower crf 16'",
 )
 
 # The length of each clip for Overview Mode.
