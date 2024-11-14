@@ -60,7 +60,7 @@ def create_clips(input_video, output_folder, interval_seconds, clip_length):
             clip_offset = clip_number_to_movie_timestamp(clip_number * interval_seconds)
 
             log.info(
-                f"Creating clip {clip_number} which starts at {clip_offset} and ends {interval_seconds} seconds later ..."
+                f"Creating clip {clip_number} which starts at {clip_offset} and ends {clip_length} seconds later ..."
             )
 
             subprocess_cut_args = [
