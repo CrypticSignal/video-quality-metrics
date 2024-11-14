@@ -154,9 +154,7 @@ if args.no_transcoding_mode:
 vmaf_scores = []
 
 log.info(f"Values of {args.encoder}'s '-{args.parameter}' parameter will be compared.")
-log.info(
-    f"The following values will be compared: {", ".join(str(value) for value in args.values)}"
-)
+log.info("The following values will be compared: {}".format(", ".join(str(value) for value in args.values)))
 
 comparison_table = initialise_table()
 
@@ -192,7 +190,7 @@ for value in args.values:
 
     # Save the output of libvmaf to the following path.
     json_file_path = (
-        f"{current_output_folder.replace("\\", "/")}/per_frame_metrics.json"
+        "{}/per_frame_metrics.json".format(current_output_folder.replace("\\", "/"))
     )
 
     # Run the libvmaf filter.

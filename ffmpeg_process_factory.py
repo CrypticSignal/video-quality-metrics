@@ -63,7 +63,7 @@ class LibVmafArguments:
         self._distorted_video = distorted_video
         self._video_filters = f"{video_filters}," if video_filters else ""
         self._transcoded_video_scaling = (
-            f"scale={transcoded_video_scaling.replace("x", ":")}:flags=bicubic,"
+            "scale={}:flags=bicubic,".format(transcoded_video_scaling.replace("x", ":"))
             if transcoded_video_scaling
             else ""
         )

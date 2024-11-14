@@ -24,3 +24,4 @@ venv/
 .vscode/
 # Don't ignore files in the test_videos folder
 !test_videos/*
+.venv
