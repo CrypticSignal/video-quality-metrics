@@ -1,5 +1,4 @@
 import logging
-import math
 import numpy as np
 import os
 from pathlib import Path
@@ -141,37 +140,37 @@ def plot_graph(
     save_path,
     bar_graph=False,
 ):
+    def generate_colors(n):
+        """Generate n distinct colors by evenly spacing hues."""
+        return [plt.cm.hsv(i / n) for i in range(n)]
+
+    plt.figure(figsize=(10, 6))
     plt.suptitle(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
+
     if bar_graph:
-        xlocs = x_values
-        # xlocs is a list which defines the locations of the xticks.
-        if isinstance(x_values[0], str):
-            xlocs = np.arange(len(x_values))
-            xticks_labels_rotation = 45
-        else:
-            xlocs = x_values
-            xticks_labels_rotation = 0
+        x_positions = np.arange(len(x_values))
+        plt.bar(x_positions, y_values, color=generate_colors(len(x_values)))
+        plt.xticks(x_positions, x_values, rotation=45, ha="right")
 
-        plt.xticks(xlocs, x_values, rotation=xticks_labels_rotation)
-        # Set the range of the y-axis values.
-        plt.ylim(min(y_values) - 1, math.ceil(max(y_values)))
+        # Go 1 point lower than the lowest value, but not below 0
+        y_min = max(0, min(y_values) - 1)
+        # Go 1 point higher than the highest value, but not above 100
+        y_max = min(100, max(y_values) + 1)
+        plt.ylim(y_min, y_max)
 
-        i = 0
-        for value in x_values:
-            plt.bar(value, y_values[i], label=y_values[i])
-            i += 1
+        # Show the value in the middle of each bar
+        for i, v in enumerate(y_values):
+            y_position = (y_min + v) / 2  # Calculate middle position
+            plt.text(i, y_position, str(v), ha="center", va="center")
 
-        plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.tight_layout()
-
-    # Plot a line graph.
     else:
         plt.plot(x_values, y_values, label=f"{y_label} ({mean_y_value})")
         plt.legend(loc="lower right")
 
-    plt.savefig(save_path)
+    plt.tight_layout()
+    plt.savefig(save_path, bbox_inches="tight")
     plt.clf()
 
 
