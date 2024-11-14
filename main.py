@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import sys
+from typing import List, Optional, Tuple
 
 import numpy as np
 from prettytable import PrettyTable
@@ -9,7 +10,7 @@ from args import parser
 from arguments_validator import ArgumentsValidator
 from transcode_video import transcode_video
 from libvmaf import run_libvmaf
-from metrics import get_metrics_save_table
+from metrics import process_metrics
 from overview import create_overview_video
 from utils import (
     cut_video,
@@ -26,281 +27,300 @@ from utils import (
 
 log = Logger("main.py")
 
-if len(sys.argv) == 1:
-    line()
-    log.info(
-        'For more details about the available arguments, enter "python main.py -h"'
-    )
-    line()
 
-args = parser.parse_args()
-original_video_path = args.input_video
-filename = Path(original_video_path).name
-encoder = args.encoder
+def validate_args(args) -> None:
+    validator = ArgumentsValidator()
+    result, errors = validator.validate(args)
+    if not result:
+        for error in errors:
+            log.info(f"Error: {error}")
+        exit_program("Argument validation failed.")
 
-args_validator = ArgumentsValidator()
-validation_result, validation_errors = args_validator.validate(args)
 
-if not validation_result:
-    for error in validation_errors:
-        log.info(f"Error: {error}")
-    exit_program("Argument validation failed.")
+def get_video_info(
+    input_video: str, decimal_places: int, output_folder: Optional[str] = None
+) -> Tuple[str, str, str, str, float, str]:
+    provider = VideoInfoProvider(input_video)
+    filename = Path(input_video).name
+    output_folder = output_folder or f"[{filename}]"
 
-output_folder = args.output_folder if args.output_folder else f"[{filename}]"
-output_ext = ".mkv"
-
-table = PrettyTable()
-metrics_list = get_metrics_list(args)
-table_column_names = [
-    "Combination" if args.combinations else args.parameter,
-    "Encoding Time (s)",
-    "Size",
-    "Bitrate",
-] + metrics_list
-table.field_names = table_column_names
-comparison_table = os.path.join(output_folder, "metrics_table.txt")
-
-# Use the VideoInfoProvider class to get the framerate, bitrate and duration.
-provider = VideoInfoProvider(original_video_path)
-duration = provider.get_duration()
-fps = provider.get_framerate_fraction()
-fps_float = provider.get_framerate_float()
-original_bitrate = provider.get_bitrate(args.decimal_places)
-
-line()
-log.info("Video Quality Metrics")
-log.info("Version Date: 11th October 2024")
-line()
-log.info("Here's some information about the original video:")
-log.info(f"Filename: {filename}")
-log.info(f"Bitrate: {original_bitrate}")
-log.info(f"Framerate: {fps} ({fps_float}) FPS")
-line()
-
-if args.video_filters:
-    log.info(
-        "The -vf/--video-filters argument has been supplied. The following filter(s) will be used:"
-    )
-    log.info(args.video_filters)
-    line()
-
-# The user only wants to transcode the first x seconds of the video.
-if args.transcode_length:
-    original_video_path = cut_video(
-        filename, args, output_ext, output_folder, comparison_table
+    return (
+        input_video,
+        filename,
+        provider.get_framerate_fraction(),
+        provider.get_framerate_float(),
+        provider.get_bitrate(decimal_places),
+        output_folder,
     )
 
-# Overview Mode
-if args.interval is not None:
-    clip_length = str(args.clip_length)
 
-    result, concatenated_video = create_overview_video(
-        original_video_path, output_folder, args.interval, clip_length
-    )
+def initialize_table(args) -> PrettyTable:
+    table = PrettyTable()
+    metrics_list = get_metrics_list(args)
+    column_names = [
+        "Combination" if args.combinations else args.parameter,
+        "Encoding Time (s)",
+        "Size",
+        "Bitrate",
+    ] + metrics_list
+    table.field_names = column_names
+    return table
 
-    if result:
-        original_video_path = concatenated_video
-    else:
-        exit_program("Something went wrong when trying to create the overview video.")
 
-# No Transcoding Mode
-if args.no_transcoding_mode:
-    print("No Transcoding Mode activated.")
-    del table_column_names[0]
+def handle_video_filters(args) -> None:
+    if args.video_filters:
+        log.info("The following filter(s) will be used:")
+        log.info(args.video_filters)
+        line()
 
-    if args.output_folder:
-        output_folder = args.output_folder
-    else:
-        output_folder = f"[VQM] {Path(args.transcoded_video).name}"
 
-    os.makedirs(output_folder, exist_ok=True)
+def prepare_video(video_path: str, filename: str, output_folder: str, args) -> str:
+    if args.transcode_length:
+        video_path = cut_video(
+            filename,
+            args,
+            ".mkv",
+            output_folder,
+            os.path.join(output_folder, "metrics_table.txt"),
+        )
 
-    table_path = os.path.join(output_folder, "metrics_table.txt")
-    table.field_names = table_column_names
+    if args.interval is not None:
+        result, concatenated_video = create_overview_video(
+            video_path, output_folder, args.interval, str(args.clip_length)
+        )
+        if result:
+            video_path = concatenated_video
+        else:
+            exit_program("Failed to create overview video.")
 
-    json_file_path = f"{output_folder}/per_frame_metrics.json"
+    return video_path
 
-    run_libvmaf(
-        args.transcoded_video,
+
+def transcode_and_analyse(
+    video_path: str,
+    output_path: str,
+    output_folder: str,
+    args,
+    combination_list: Optional[List[str]],
+    description: str,
+    value: Optional[str] = None,
+) -> Tuple[float, str]:
+    time_taken = transcode_video(
+        video_path,
         args,
+        value,
+        output_path,
+        f"Transcoding the video using {description}",
+        combination_list,
+    )
+
+    json_file_path = f"{output_folder.replace('\\', '/')}/per_frame_metrics.json"
+    run_libvmaf(
+        output_path, args, json_file_path, video_path, f" achieved with {description}"
+    )
+
+    return time_taken, json_file_path
+
+
+def process_combination(
+    combination: str,
+    video_path: str,
+    output_folder: str,
+    args,
+    table: PrettyTable,
+    vmaf_scores: List[float],
+) -> float:
+    current_output_folder = os.path.join(output_folder, combination.replace(" ", "_"))
+    os.makedirs(current_output_folder, exist_ok=True)
+
+    output_path = os.path.join(
+        current_output_folder, f"{combination.replace(' ', '_')}.mkv"
+    )
+
+    combination_list = combination.split(" ")
+
+    for i in range(0, len(combination_list), 2):
+        combination_list[i] = f"-{combination_list[i]}"
+
+    combination_string = " ".join(combination_list)
+
+    time_taken, json_file_path = transcode_and_analyse(
+        video_path,
+        output_path,
+        current_output_folder,
+        args,
+        combination_list,
+        f"combination '{combination_string}'",
+    )
+
+    vmaf_score = update_metrics(
+        output_folder,
+        current_output_folder,
+        output_path,
         json_file_path,
-        original_video_path,
+        time_taken,
+        combination_string,
+        args,
+        table,
+    )
+    vmaf_scores.append(vmaf_score)
+    return vmaf_score
+
+
+def process_parameter_value(
+    value: str,
+    video_path: str,
+    output_folder: str,
+    args,
+    table: PrettyTable,
+    vmaf_scores: List[float],
+) -> float:
+    current_output_folder = os.path.join(output_folder, f"{args.parameter}_{value}")
+    os.makedirs(current_output_folder, exist_ok=True)
+
+    output_path = os.path.join(current_output_folder, f"{value}.mkv")
+
+    time_taken, json_file_path = transcode_and_analyse(
+        video_path,
+        output_path,
+        current_output_folder,
+        args,
+        None,
+        f"'-{args.parameter} {value}'",
+        value,
     )
 
-    transcode_size = os.path.getsize(args.transcoded_video) / 1_000_000
-    size_rounded = force_decimal_places(transcode_size, args.decimal_places)
-    transcoded_bitrate = provider.get_bitrate(
-        args.decimal_places, args.transcoded_video
+    vmaf_score = update_metrics(
+        output_folder,
+        current_output_folder,
+        output_path,
+        json_file_path,
+        time_taken,
+        value,
+        args,
+        table,
     )
-    data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
+    vmaf_scores.append(vmaf_score)
+    return vmaf_score
 
-    get_metrics_save_table(
-        table_path,
+
+def update_metrics(
+    output_folder: str,
+    current_output_folder: str,
+    output_path: str,
+    json_file_path: str,
+    time_taken: float,
+    value: str,
+    args,
+    table: PrettyTable,
+) -> float:
+    provider = VideoInfoProvider(output_path)
+    size = force_decimal_places(
+        os.path.getsize(output_path) / 1_000_000, args.decimal_places
+    )
+    bitrate = provider.get_bitrate(args.decimal_places)
+
+    return process_metrics(
+        os.path.join(output_folder, "metrics_table.txt"),
         json_file_path,
         args,
         args.decimal_places,
-        data_for_current_row,
+        [f"{size} MB", bitrate],
         table,
-        output_folder,
-        time_taken=None,
+        current_output_folder,
+        time_taken,
+        value,
     )
 
-    with open(table_path, "a") as f:
-        f.write(f"\nOriginal Bitrate: {original_bitrate}")
 
-    sys.exit()
+def finalise(
+    filename: str,
+    output_folder: str,
+    original_bitrate: str,
+    args,
+    vmaf_scores: List[float],
+) -> None:
+    mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
+    write_table_info(
+        os.path.join(output_folder, "metrics_table.txt"),
+        filename,
+        original_bitrate,
+        args,
+    )
 
-vmaf_scores = []
-t1 = Timer()
-t1.start()
+    parameter = args.parameter if args.parameter else "Combination"
+    values = args.values if args.values else args.combinations.split(",")
 
-# Combination Mode
-if args.combinations:
-    print("Combination Mode activated.")
-    combinations = args.combinations.split(",")
+    plot_graph(
+        f"{parameter} vs VMAF",
+        parameter,
+        "VMAF",
+        values,
+        vmaf_scores,
+        mean_vmaf,
+        os.path.join(output_folder, f"{parameter} vs VMAF"),
+        bar_graph=True,
+    )
 
-    for combination in combinations:
-        current_output_folder = os.path.join(
-            output_folder, combination.replace(" ", "_")
+
+def main():
+    if len(sys.argv) == 1:
+        line()
+        log.info(
+            'For more details about the available arguments, enter "python main.py -h"'
         )
-        os.makedirs(current_output_folder, exist_ok=True)
-        transcode_output_path = os.path.join(
-            current_output_folder, f"{combination.replace(" ", "_")}{output_ext}"
-        )
+        line()
+        return
 
-        combination = combination.split(" ")
+    args = parser.parse_args()
+    validate_args(args)
 
-        for i in range(0, len(combination), 2):
-            combination[i] = f"-{combination[i]}"
+    video_path, filename, fps, fps_float, original_bitrate, output_folder = (
+        get_video_info(args.input_video, args.decimal_places, args.output_folder)
+    )
+    table = initialize_table(args)
+    timer = Timer()
+    vmaf_scores = []
 
-        combination_string = " ".join(combination)
+    line()
+    log.info("Video Quality Metrics")
+    log.info("Version Date: 11th October 2024")
+    line()
+    log.info("Here's some information about the original video:")
+    log.info(f"Filename: {filename}")
+    log.info(f"Bitrate: {original_bitrate}")
+    log.info(f"Framerate: {fps} ({fps_float}) FPS")
+    line()
 
-        # Transcode the video.
-        time_taken = transcode_video(
-            original_video_path,
-            args,
-            None,
-            transcode_output_path,
-            f"Transcoding the video using combination '{combination_string}'",
-            combination,
-        )
+    timer.start()
+    handle_video_filters(args)
+    video_path = prepare_video(video_path, filename, output_folder, args)
 
-        transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-        transcoded_bitrate = provider.get_bitrate(
-            args.decimal_places, transcode_output_path
-        )
-        size_rounded = force_decimal_places(transcode_size, args.decimal_places)
-        data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
-
-        # Save the output of libvmaf to the following path.
-        json_file_path = (
-            f"{current_output_folder.replace("\\", "/")}/per_frame_metrics.json"
-        )
-
-        # Run the libvmaf filter.
-        run_libvmaf(
-            transcode_output_path,
-            args,
-            json_file_path,
-            original_video_path,
-            f" achieved with combination '{combination_string}'",
-        )
-
-        vmaf_scores.append(
-            get_metrics_save_table(
-                comparison_table,
-                json_file_path,
-                args,
-                args.decimal_places,
-                data_for_current_row,
-                table,
-                current_output_folder,
-                time_taken,
-                combination_string,
+    if args.combinations:
+        log.info("Combination Mode activated.")
+        for combination in args.combinations.split(","):
+            process_combination(
+                combination, video_path, output_folder, args, table, vmaf_scores
             )
+    else:
+        log.info(
+            f"Values of {args.encoder}'s '-{args.parameter}' parameter will be compared."
         )
-
-        mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
-        write_table_info(comparison_table, filename, original_bitrate, args)
-
-else:
-    log.info(
-        f"Values of {args.encoder}'s '-{args.parameter}' parameter will be compared."
-    )
-    log.info(
-        f"The following values will be compared: {", ".join(str(value) for value in args.values)}"
-    )
-
-    for value in args.values:
-        current_output_folder = os.path.join(output_folder, f"{args.parameter}_{value}")
-        os.makedirs(current_output_folder, exist_ok=True)
-        transcode_output_path = os.path.join(
-            current_output_folder, f"{value}{output_ext}"
+        log.info(
+            f"The following values will be compared: {', '.join(str(value) for value in args.values)}"
         )
-
-        # Transcode the video.
-        time_taken = transcode_video(
-            original_video_path,
-            args,
-            value,
-            transcode_output_path,
-            f"Transcoding the video using -{args.parameter} {value}",
-        )
-
-        transcode_size = os.path.getsize(transcode_output_path) / 1_000_000
-        transcoded_bitrate = provider.get_bitrate(
-            args.decimal_places, transcode_output_path
-        )
-        size_rounded = force_decimal_places(transcode_size, args.decimal_places)
-        data_for_current_row = [f"{size_rounded} MB", transcoded_bitrate]
-
-        # Save the output of libvmaf to the following path.
-        json_file_path = (
-            f"{current_output_folder.replace("\\", "/")}/per_frame_metrics.json"
-        )
-
-        # Run the libvmaf filter.
-        run_libvmaf(
-            transcode_output_path,
-            args,
-            json_file_path,
-            original_video_path,
-            f" achieved with '-{args.parameter} {value}",
-        )
-
-        vmaf_scores.append(
-            get_metrics_save_table(
-                comparison_table,
-                json_file_path,
-                args,
-                args.decimal_places,
-                data_for_current_row,
-                table,
-                current_output_folder,
-                time_taken,
-                value,
+        for value in args.values:
+            process_parameter_value(
+                value, video_path, output_folder, args, table, vmaf_scores
             )
-        )
 
-        mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
-        write_table_info(comparison_table, filename, original_bitrate, args)
+    line()
+    log.info(f"Total Time Taken: {timer.stop(args.decimal_places)}s")
 
-line()
-print(f"Total Time Taken: {t1.stop(args.decimal_places)}s")
+    finalise(filename, output_folder, original_bitrate, args, vmaf_scores)
 
-# Plot a bar graph showing the average VMAF score achieved with each parameter value (or each combination).
-plot_graph(
-    f"{args.parameter if args.parameter else "Combination"} vs VMAF",
-    args.parameter if args.parameter else "Combination",
-    "VMAF",
-    args.values if args.values else args.combinations.split(","),
-    vmaf_scores,
-    mean_vmaf,
-    os.path.join(
-        output_folder, f"{args.parameter if args.parameter else "Combination"} vs VMAF"
-    ),
-    bar_graph=True,
-)
+    line()
+    log.info(f"All done! Check out the contents of the '{output_folder}' folder.")
 
-line()
-log.info(f"All done! Check out the contents of the '{output_folder}' folder.")
+
+main()

@@ -1,5 +1,7 @@
-from ffmpeg_process_factory import LibVmafArguments, NewFfmpegProcess
+from ffmpeg_process_factory import LibVmafArguments
 from utils import line, Logger, get_metrics_list, Timer
+
+from better_ffmpeg_progress import FfmpegProcess
 
 log = Logger("libvmaf")
 
@@ -39,13 +41,15 @@ def run_libvmaf(
 
     libvmaf_arguments = LibVmafArguments(
         original_video_path,
-        args.video_filters,
         transcode_output_path,
         vmaf_options,
+        args.video_filters,
         args.scale,
     )
 
-    process = NewFfmpegProcess(log_file="calculate_metrics_log.txt")
+    process = FfmpegProcess(
+        libvmaf_arguments.get_arguments(), print_detected_duration=False
+    )
 
     metrics_list = get_metrics_list(args)
 
@@ -60,5 +64,5 @@ def run_libvmaf(
 
     timer = Timer()
     timer.start()
-    process.run(libvmaf_arguments.get_arguments())
+    process.run(progress_bar_description="")
     print(f"Time Taken: {timer.stop(args.decimal_places)}s")

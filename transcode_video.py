@@ -1,5 +1,7 @@
-from ffmpeg_process_factory import EncodingArguments, NewFfmpegProcess
+from ffmpeg_process_factory import EncodingArguments, EncoderOptions
 from utils import line, Logger, Timer
+
+from better_ffmpeg_progress import FfmpegProcess
 
 log = Logger("transcode_video.py")
 
@@ -7,26 +9,30 @@ log = Logger("transcode_video.py")
 def transcode_video(
     original_video_path, args, value, output_path, message, combination=None
 ):
-    arguments = EncodingArguments(
+    encoder_opts = EncoderOptions(
+        encoder=args.encoder,
+        options=args.encoder_options,
+        av1_cpu_used=args.av1_cpu_used,
+    )
+
+    encoding_args = EncodingArguments(
         original_video_path,
-        args.encoder,
-        args.encoder_options,
+        encoder_opts,
+        output_path,
         args.parameter,
         value,
-        output_path,
         combination,
     )
 
-    if args.encoder == "libaom-av1":
-        arguments.av1_cpu_used(str(args.av1_cpu_used))
-
-    process = NewFfmpegProcess(log_file="transcode_video_log.txt")
+    process = FfmpegProcess(
+        encoding_args.get_arguments(), print_detected_duration=False
+    )
 
     line()
     log.info(f"{message}...\n")
     timer = Timer()
     timer.start()
-    process.run(arguments.get_arguments())
+    process.run(log_file="transcode_log.txt", progress_bar_description="")
     time_taken = timer.stop(args.decimal_places)
     print(f"Time Taken: {time_taken}s")
     log.info(f"Output file: {output_path}")

@@ -1,30 +1,36 @@
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Optional, Union
 from utils import Logger
-
-from better_ffmpeg_progress import FfmpegProcess
 
 log = Logger("factory")
 
 
+@dataclass
+class EncoderOptions:
+    encoder: str
+    options: Optional[str] = None
+    av1_cpu_used: Optional[str] = None
+
+
+@dataclass
 class EncodingArguments:
-    def __init__(
-        self,
-        original_video_path,
-        encoder,
-        encoder_options,
-        parameter,
-        value,
-        output_path,
-        combination,
-    ):
-        self._encoder = encoder
-        self._combination = combination
-        self._parameter = parameter
-        self._value = value
-        self._output_path = output_path
+    original_video_path: Union[str, Path]
+    encoder_options: EncoderOptions
+    output_path: Union[str, Path]
+    parameter: Optional[str] = None
+    value: Optional[str] = None
+    combination: Optional[List[str]] = None
+
+    def __post_init__(self) -> None:
+        self.original_video_path = Path(self.original_video_path)
+        self.output_path = Path(self.output_path)
 
         self._base_ffmpeg_arguments = [
+            "ffmpeg",
+            "-y",
             "-i",
-            original_video_path,
+            str(self.original_video_path),
             "-map",
             "0",
             "-c:a",
@@ -32,93 +38,85 @@ class EncodingArguments:
             "-c:s",
             "copy",
             "-c:v",
-            self._encoder,
+            self.encoder_options.encoder,
         ]
 
-        if encoder_options:
-            self._base_ffmpeg_arguments += encoder_options.split(" ")
+        if self.encoder_options.options is not None:
+            self._base_ffmpeg_arguments.extend(self.encoder_options.options.split())
 
-    # libaom-av1 "cpu-used" option.
-    def av1_cpu_used(self, value):
-        self._av1_cpu_used = value
+    def get_arguments(self) -> List[str]:
+        if self.output_path is None:
+            raise ValueError("Output path must be specified")
 
-    def get_arguments(self):
-        if self._encoder == "libaom-av1":
+        if self.encoder_options.encoder == "libaom-av1":
+            if self.encoder_options.av1_cpu_used is None:
+                raise ValueError(
+                    "av1_cpu_used must be specified for libaom-av1 encoder"
+                )
             encoding_arguments = [
                 "-b:v",
                 "0",
                 "-cpu-used",
-                self._av1_cpu_used,
-                self._output_path,
+                self.encoder_options.av1_cpu_used,
+                str(self.output_path),
             ]
-        elif self._combination:
-            self._combination.append(self._output_path)
-            encoding_arguments = self._combination
-        else:
+        elif self.combination:
+            self.combination.append(str(self.output_path))
+            encoding_arguments = self.combination
+        elif self.parameter and self.value:
             encoding_arguments = [
-                f"-{self._parameter}",
-                self._value,
-                self._output_path,
+                f"-{self.parameter}",
+                self.value,
+                str(self.output_path),
             ]
+        else:
+            raise ValueError("Invalid encoding configuration")
 
         return self._base_ffmpeg_arguments + encoding_arguments
 
 
+@dataclass
 class LibVmafArguments:
-    def __init__(
-        self,
-        original_video,
-        video_filters,
-        distorted_video,
-        vmaf_options,
-        transcoded_video_scaling=None,
-    ):
-        self._original_video = original_video
-        self._distorted_video = distorted_video
-        self._video_filters = f"{video_filters}," if video_filters else ""
-        self._transcoded_video_scaling = (
-            f"scale={transcoded_video_scaling.replace("x", ":")}:flags=bicubic,"
-            if transcoded_video_scaling
-            else ""
-        )
-        self._vmaf_options = vmaf_options
+    original_video: Union[str, Path]
+    distorted_video: Union[str, Path]
+    vmaf_options: str
+    video_filters: Optional[str] = None
+    transcoded_video_scaling: Optional[str] = None
 
-    def get_arguments(self):
+    def __post_init__(self) -> None:
+        self.original_video = Path(self.original_video)
+        self.distorted_video = Path(self.distorted_video)
+        self._video_filters = (
+            f"{self.video_filters}," if self.video_filters is not None else ""
+        )
+
+    def _get_scaling_filter(self) -> str:
+        if self.transcoded_video_scaling is None:
+            return ""
+        return f"scale={self.transcoded_video_scaling.replace('x', ':')}:flags=bicubic,"
+
+    def get_arguments(self) -> List[str]:
+        scaling_filter = self._get_scaling_filter()
+
         return [
+            "ffmpeg",
             "-r",
             "24",
             "-i",
-            self._original_video,
+            str(self.original_video),
             "-r",
             "24",
             "-i",
-            self._distorted_video,
+            str(self.distorted_video),
             "-map",
             "0:V",
             "-map",
             "1:V",
             "-lavfi",
             f"[0:V]{self._video_filters}setpts=PTS-STARTPTS[reference];"
-            f"[1:V]{self._transcoded_video_scaling}setpts=PTS-STARTPTS[distorted];"
-            f"[distorted][reference]libvmaf={self._vmaf_options}",
+            f"[1:V]{scaling_filter}setpts=PTS-STARTPTS[distorted];"
+            f"[distorted][reference]libvmaf={self.vmaf_options}",
             "-f",
             "null",
             "-",
         ]
-
-
-class NewFfmpegProcess:
-    def __init__(self, log_file):
-        self._process_base_arguments = [
-            "ffmpeg",
-            "-y",
-        ]
-        self._log_file = log_file
-
-    def run(self, arguments):
-        process = FfmpegProcess(
-            [*self._process_base_arguments, *arguments],
-            print_detected_duration=False,
-            ffmpeg_loglevel="debug",
-        )
-        process.run(progress_bar_description="", log_file=self._log_file)
