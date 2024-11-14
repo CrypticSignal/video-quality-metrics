@@ -6,7 +6,12 @@ log = Logger("transcode_video.py")
 
 def transcode_video(original_video_path, args, value, output_path, message):
     arguments = EncodingArguments(
-        original_video_path, args.encoder, args.parameter, value, output_path
+        original_video_path,
+        args.encoder,
+        args.encoder_options,
+        args.parameter,
+        value,
+        output_path,
     )
 
     if args.encoder == "libaom-av1":

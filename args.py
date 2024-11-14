@@ -92,6 +92,16 @@ transcoding_args.add_argument(
     help="Specify an ffmpeg video encoder.\nExamples: libx265, h264_amf, libaom-av1",
 )
 
+# Encoder Options
+transcoding_args.add_argument(
+    "-eo",
+    "--encoder-options",
+    type=str,
+    help="Set general encoder options to use for all transcodes.\n"
+    "Use FFmpeg syntax. Must be surronded in quotes. Example:\n"
+    "--encoder-options '-crf 18 -x264-params keyint=123:min-keyint=20'",
+)
+
 # Encoder Parameter
 transcoding_args.add_argument(
     "-p",
@@ -105,7 +115,10 @@ transcoding_args.add_argument(
     "-v",
     "--values",
     nargs="+",
-    help="The values of the specified encoder parameter to compare. Must be used alongside the -p option. Examples:\nCompare presets: -p preset -v slow fast\nCompare CRF values: -p crf -v 22 23\nCompare h264_amf quality levels: -p quality -v balanced speed",
+    help="The values of the specified encoder parameter to compare. Must be used alongside the -p option. Examples:\n"
+    "Compare presets: -p preset -v slow fast\n"
+    "Compare CRF values: -p crf -v 22 23\n"
+    "Compare h264_amf quality levels: -p quality -v balanced speed",
 )
 
 # The length of each clip for Overview Mode.

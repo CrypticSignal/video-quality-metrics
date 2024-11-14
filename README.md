@@ -155,8 +155,8 @@ _An alternative method of reducing the execution time of this program is by only
 You can see a list of the available arguments with `python main.py -h`:
 
 ```
-usage: main.py [-h] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-ntm] [-o OUTPUT_FOLDER] [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS] [--av1-cpu-used <1-8>] [-e ENCODER] [-p PARAMETER] [-v VALUES [VALUES ...]] [-cl <1-60>] [--interval <1-600>] [-n <x>]
-               [--n-threads N_THREADS] [--phone-model] [-s SCALE] [-psnr] [-ssim] [-msssim]
+usage: main.py [-h] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-ntm] [-o OUTPUT_FOLDER] [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS] [--av1-cpu-used <1-8>] [-e ENCODER] [-eo ENCODER_OPTIONS] [-p PARAMETER] [-v VALUES [VALUES ...]] [-cl <1-60>] [--interval <1-600>]
+               [-n <x>] [--n-threads N_THREADS] [--phone-model] [-s SCALE] [-psnr] [-ssim] [-msssim]
 
 options:
   -h, --help            show this help message and exit
@@ -189,6 +189,10 @@ Transcoding Arguments:
   -e, --encoder ENCODER
                         Specify an ffmpeg video encoder.
                         Examples: libx265, h264_amf, libaom-av1
+  -eo, --encoder-options ENCODER_OPTIONS
+                        Set general encoder options to use for all transcodes.
+                        Use FFmpeg syntax. Must be surronded in quotes. Example:
+                        --encoder-options '-crf 18 -x264-params keyint=123:min-keyint=20'
   -p, --parameter PARAMETER
                         The encoder parameter to compare, e.g. preset, crf, quality.
                         Example: -p preset

@@ -6,16 +6,23 @@ log = Logger("factory")
 
 
 class EncodingArguments:
-    def __init__(self, infile, encoder, parameter, value, outfile):
-        self._infile = infile
+    def __init__(
+        self,
+        original_video_path,
+        encoder,
+        encoder_options,
+        parameter,
+        value,
+        output_path,
+    ):
         self._encoder = encoder
         self._parameter = parameter
         self._value = value
-        self._outfile = outfile
+        self._output_path = output_path
 
         self._base_ffmpeg_arguments = [
             "-i",
-            self._infile,
+            original_video_path,
             "-map",
             "0",
             "-c:a",
@@ -23,7 +30,8 @@ class EncodingArguments:
             "-c:s",
             "copy",
             "-c:v",
-        ]
+            self._encoder,
+        ] + encoder_options.split(" ")
 
     # libaom-av1 "cpu-used" option.
     def av1_cpu_used(self, value):
@@ -32,19 +40,17 @@ class EncodingArguments:
     def get_arguments(self):
         if self._encoder == "libaom-av1":
             encoding_arguments = [
-                self._encoder,
                 "-b:v",
                 "0",
                 "-cpu-used",
                 self._av1_cpu_used,
-                self._outfile,
+                self._output_path,
             ]
         else:
             encoding_arguments = [
-                self._encoder,
                 f"-{self._parameter}",
                 self._value,
-                self._outfile,
+                self._output_path,
             ]
 
         return self._base_ffmpeg_arguments + encoding_arguments
