@@ -63,8 +63,8 @@ In **No Transcoding Mode**, a graph is created which shows the variation of the 
 
 In **Transcoding Mode**, two types of graphs are created:
 
-- A graph where the average VMAF is plotted against the value of the encoder parameter. [1]
-- A graph for each encoder parameter value, showing the variation of the VMAF/SSIM/PSNR throughout the video. [2]
+- A graph where the average VMAF is plotted against the value of the encoder parameter. [2]
+- A graph for each encoder parameter value, showing the variation of the VMAF/SSIM/PSNR throughout the video. [1]
 
 Here's an example of graph type [1]. This graph shows the variation of the VMAF score throughout the video:
 
