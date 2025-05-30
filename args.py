@@ -43,7 +43,7 @@ general_args.add_argument(
     "-ntm",
     "--no-transcoding-mode",
     action="store_true",
-    help="Enable 'No Transcoding Mode', which allows you to calculate the VMAF/SSIM/PSNR for a video that you have already transcoded.\n"
+    help="Enable 'No Transcoding Mode', which allows you to calculate the VMAF/PSNR for a video that you have already transcoded.\n"
     "The original and transcoded video paths must be specified using the -i and -tv arguments, respectively.\n"
     "Example: python main.py -ntm -i original.mp4 -tv transcoded.mp4",
 )
@@ -162,7 +162,7 @@ vmaf_args.add_argument(
     type=str,
     default="1",
     metavar="<x>",
-    help="Set a value for libvmaf's n_subsample option if you only want the VMAF/SSIM/PSNR to be calculated for every nth frame.\nWithout this argument, VMAF/SSIM/PSNR scores will be calculated for every frame.",
+    help="Set a value for libvmaf's n_subsample option if you only want the VMAF/PSNR to be calculated for every nth frame.\nWithout this argument, VMAF/PSNR scores will be calculated for every frame.",
 )
 
 # Set the number of threads to be used when computing VMAF.
@@ -194,20 +194,4 @@ optional_metrics_args.add_argument(
     "--calculate-psnr",
     action="store_true",
     help="Enable PSNR calculation in addition to VMAF",
-)
-
-# SSIM
-optional_metrics_args.add_argument(
-    "-ssim",
-    "--calculate-ssim",
-    action="store_true",
-    help="Enable SSIM calculation in addition to VMAF",
-)
-
-# MS-SSIM
-optional_metrics_args.add_argument(
-    "-msssim",
-    "--calculate-msssim",
-    action="store_true",
-    help="Enable MS-SSIM calculation in addition to VMAF",
 )

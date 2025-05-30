@@ -186,16 +186,11 @@ def write_table_info(table_path, video_filename, original_bitrate, args):
                 if args.video_filters
                 else ""
             )
-            + f"libvmaf n_subsample: {args.n_subsample}\n"
+            + f"libvmaf n_subsample: {args.n_subsample}"
         )
 
 
 def get_metrics_list(args):
-    metrics_list = [
-        "VMAF",
-        "PSNR" if args.calculate_psnr else None,
-        "SSIM" if args.calculate_ssim else None,
-        "MS-SSIM" if args.calculate_msssim else None,
-    ]
+    metrics_list = ["VMAF", "PSNR" if args.calculate_psnr else None]
 
     return list(filter(None, metrics_list))

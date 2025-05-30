@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import re
 import sys
 from typing import List, Optional, Tuple
 
@@ -40,9 +41,14 @@ def validate_args(args) -> None:
 def get_video_info(
     input_video: str, decimal_places: int, output_folder: Optional[str] = None
 ) -> Tuple[str, str, str, str, float, str]:
-    provider = VideoInfoProvider(input_video)
     filename = Path(input_video).name
-    output_folder = output_folder or f"[{filename}]"
+    output_folder = output_folder or filename
+    # Replace any character that is not a letter, digit, underscore or hyphen with an underscore
+    output_folder = re.sub(r"[^a-zA-Z0-9_-]", "_", output_folder)
+
+    os.makedirs(output_folder, exist_ok=True)
+
+    provider = VideoInfoProvider(input_video)
 
     return (
         input_video,
@@ -114,9 +120,14 @@ def transcode_and_analyse(
         combination_list,
     )
 
-    json_file_path = f"{output_folder.replace('\\', '/')}/per_frame_metrics.json"
+    json_file_path = Path(output_folder) / "per_frame_metrics.json"
+
     run_libvmaf(
-        output_path, args, json_file_path, video_path, f" achieved with {description}"
+        output_path,
+        args,
+        json_file_path,
+        video_path,
+        f" achieved with {description}",
     )
 
     return time_taken, json_file_path

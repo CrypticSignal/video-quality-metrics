@@ -32,7 +32,7 @@ def transcode_video(
     log.info(f"{message}...\n")
     timer = Timer()
     timer.start()
-    process.run(progress_bar_description="")
+    process.run()
     time_taken = timer.stop(args.decimal_places)
     print(f"Time Taken: {time_taken}s")
     log.info(f"Output file: {output_path}")

@@ -1,13 +1,11 @@
 # Video Quality Metrics (VQM)
-VQM is a command line program that has 2 main modes:
+VQM is a command line program that has two main modes:
 
-**[1] Transcoding Mode**
+- **Transcoding Mode**
+  - Details about **Transcoding Mode**, as well as example commands, can be found in the [Transcoding Mode](#transcoding-mode) section.
 
-Details about **Transcoding Mode**, as well as example commands, can be found in the [Transcoding Mode](#transcoding-mode) section.
-
-**[2] No Transcoding Mode (`-ntm`)** 
-
-VQM will calculate the VMAF (and optionally) the SSIM and PSNR of a transcoded video as long as you have the original video as well. To calculate SSIM and PSNR in addition to VMAF, you must use the `-ssim` and `-psnr` arguments.
+- **No Transcoding Mode (`-ntm`)**
+  - VQM will calculate the VMAF (and optionally) the PSNR of a transcoded video as long as you have the original video as well. To calculate PSNR in addition to VMAF, you must specify the `-psnr` argument.
 
 To see an example of how to use **No Transcoding Mode**, check out the [Getting Started](#getting-started) section.
 
@@ -31,48 +29,22 @@ The table can be found in a file named `metrics_table.txt` and it contains the f
 - Filesize (MB)
 - Bitrate (Mbps)
 - [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) values. VMAF is a perceptual video quality assessment algorithm developed by Netflix.
-- [Optional] Peak Signal-to-Noise-Ratio (PSNR). _You must use the `-psnr` argument._
-- [Optional] Structural Similarity Index (SSIM). _You must use the `-ssim` argument._
-- [Optional] Multi-Scale Structural Similarity Index (MS-SSIM). _You must use the `-msssim` argument._
-```
-VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
-+-----------+-------------------+---------+-----------+----------------------+----------------------+--------------------+
-|   preset  | Encoding Time (s) |   Size  |  Bitrate  |         VMAF         |         PSNR         |        SSIM        |
-+-----------+-------------------+---------+-----------+----------------------+----------------------+--------------------+
-|  veryslow |        2.10       | 1.29 MB | 1.73 Mbps | 90.48 | 1.02 | 99.70 | 35.33 | 0.80 | 38.34 | 0.98 | 0.00 | 0.99 |
-|   slower  |        1.21       | 1.36 MB | 1.81 Mbps | 91.56 | 0.91 | 99.75 | 35.52 | 0.79 | 38.52 | 0.98 | 0.00 | 0.99 |
-|    slow   |        0.65       | 1.55 MB | 2.06 Mbps | 91.38 | 1.30 | 99.35 | 35.18 | 1.20 | 37.97 | 0.98 | 0.00 | 0.99 |
-|   medium  |        0.40       | 1.56 MB | 2.08 Mbps | 90.92 | 1.46 | 99.23 | 35.14 | 1.19 | 37.91 | 0.98 | 0.00 | 0.99 |
-|    fast   |        0.34       | 1.59 MB | 2.13 Mbps | 90.82 | 1.70 | 99.01 | 35.08 | 1.19 | 37.83 | 0.98 | 0.00 | 0.99 |
-|   faster  |        0.26       | 1.57 MB | 2.09 Mbps | 90.09 | 1.82 | 98.90 | 35.01 | 1.20 | 37.87 | 0.98 | 0.00 | 0.99 |
-|  veryfast |        0.21       | 1.57 MB | 2.09 Mbps | 88.10 | 3.15 | 96.82 | 34.18 | 1.17 | 36.81 | 0.97 | 0.00 | 0.98 |
-| superfast |        0.15       | 1.87 MB | 2.50 Mbps | 87.64 | 3.60 | 95.11 | 33.39 | 1.24 | 35.71 | 0.97 | 0.00 | 0.98 |
-| ultrafast |        0.11       | 3.72 MB | 4.97 Mbps | 92.80 | 1.65 | 98.60 | 34.50 | 0.98 | 35.94 | 0.97 | 0.00 | 0.98 |
-+-----------+-------------------+---------+-----------+----------------------+----------------------+--------------------+
-Original File: Seeking_30_480_1050.mp4
-Original Bitrate: 1.04 Mbps
-VQM transcoded the file with the libx264 encoder
-libvmaf n_subsample: 1
-```
-The following command was used to produce such a table:
-```
-python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v veryslow slower slow medium fast faster veryfast superfast ultrafast -ssim -psnr
-```
+- [Optional] Peak Signal-to-Noise-Ratio (PSNR). _You must specify the `-psnr` argument._
 
-In **No Transcoding Mode**, a graph is created which shows the variation of the VMAF/SSIM/PSNR throughout the video. [1]
+In **No Transcoding Mode**, a graph (type 1) is created which shows the variation of the VMAF/PSNR throughout the video. 
 
 In **Transcoding Mode**, two types of graphs are created:
 
-- A graph where the average VMAF is plotted against the value of the encoder parameter. [2]
-- A graph for each encoder parameter value, showing the variation of the VMAF/SSIM/PSNR throughout the video. [1]
+- A graph (type 1) for each encoder parameter value, showing the variation of the VMAF/PSNR throughout the video.
+- A graph (type 2) where the average VMAF is plotted against the value of the encoder parameter.
 
-Here's an example of graph type [1]. This graph shows the variation of the VMAF score throughout the video:
+Here's an example of graph type 1, which shows the per-frame VMAF score:
 
 ![VMAF variation graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/VMAF.png)
 
-_An example of the per-frame SSIM graph and per-frame PSNR graph can be found in the [example_graphs folder](https://github.com/CrypticSignal/video-quality-metrics/tree/master/example_graphs)._
+_An example of the per-frame PSNR graph can be found in the [example_graphs folder](https://github.com/CrypticSignal/video-quality-metrics/tree/master/example_graphs)._
 
-Here's an example of graph type [2]. This is the kind of graph that will be produced if you opted to compare the effects of different CRF values:
+Here's an example of graph type 2 if you opt to compare the effects of different CRF values:
 
 ![CRF vs VMAF graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/CRF%20vs%20VMAF.png)
 
@@ -98,12 +70,12 @@ _If the transcoded file is the same resolution as the original file, using the `
 
 To test **Transcoding Mode**, you can run:
 ```
-python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v slow medium -ssim -psnr
+python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v slow medium -psnr
 ```
 Alternatively, you can use `test_videos/ForBiggerFun.mp4`.
 
 # Transcoding Mode
-In this mode, VQM will compare the VMAF (and optionally) the SSIM and PSNR achieved with different values of the chosen encoder parameter.
+In this mode, VQM will compare the VMAF (and optionally) the PSNR achieved with different values of the chosen encoder parameter.
 
 You must specify an encoder (using the `-e` argument. If not specified, `libx264` will be used), a FFmpeg encoder parameter (e.g. `-preset`, `-crf`, `-quality`) and the values you want to compare (using the `-v` argument). 
 
@@ -119,28 +91,28 @@ python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p crf -v 22 23
 python main.py -i test_videos/Seeking_30_480_1050.mp4 -e h264_amf -p quality -v balanced speed quality
 ```
 
-VQM will automatically transcode the video with each value. To calculate SSIM and PSNR in addition to VMAF, you must include the `-ssim` and `-psnr` arguments.
+VQM will automatically transcode the video with each value. To calculate PSNR in addition to VMAF, you must specify the `-psnr` argument.
 
 Here is  an example of the table that is produced when comparing presets:
 ```
-VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
-+--------+-------------------+---------+-----------+----------------------+----------------------+--------------------+
-| Preset | Encoding Time (s) |   Size  |  Bitrate  |         VMAF         |         PSNR         |        SSIM        |
-+--------+-------------------+---------+-----------+----------------------+----------------------+--------------------+
-|  slow  |        2.75       | 4.23 MB | 2.15 Mbps | 90.56 | 1.13 | 94.09 | 46.24 | 0.91 | 48.30 | 1.00 | 0.00 | 1.00 |
-| medium |        2.14       | 4.33 MB | 2.20 Mbps | 90.65 | 1.07 | 93.95 | 46.17 | 0.92 | 48.24 | 1.00 | 0.00 | 1.00 |
-+--------+-------------------+---------+-----------+----------------------+----------------------+--------------------+
+VMAF/PSNR values are in the format: Min | Standard Deviation | Mean
++--------+-------------------+---------+-----------+----------------------+----------------------+
+| Preset | Encoding Time (s) |   Size  |  Bitrate  |         VMAF         |         PSNR         |
++--------+-------------------+---------+-----------+----------------------+----------------------+
+|  slow  |        2.75       | 4.23 MB | 2.15 Mbps | 90.56 | 1.13 | 94.09 | 46.24 | 0.91 | 48.30 |
+| medium |        2.14       | 4.33 MB | 2.20 Mbps | 90.65 | 1.07 | 93.95 | 46.17 | 0.92 | 48.24 |
++--------+-------------------+---------+-----------+----------------------+----------------------+
 ```
 
 Here is  an example of the table that is produced when comparing CRF values:
 ```
-VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
-+-----+-------------------+---------+-----------+----------------------+----------------------+--------------------+
-| CRF | Encoding Time (s) |   Size  |  Bitrate  |         VMAF         |         PSNR         |        SSIM        |
-+-----+-------------------+---------+-----------+----------------------+----------------------+--------------------+
-|  20 |        2.43       | 6.70 MB | 3.40 Mbps | 92.90 | 1.13 | 95.77 | 47.80 | 1.08 | 50.44 | 1.00 | 0.00 | 1.00 |
-|  23 |        2.13       | 4.33 MB | 2.20 Mbps | 90.65 | 1.07 | 93.95 | 46.17 | 0.92 | 48.24 | 1.00 | 0.00 | 1.00 |
-+-----+-------------------+---------+-----------+----------------------+----------------------+--------------------+
+VMAF/PSNR values are in the format: Min | Standard Deviation | Mean
++-----+-------------------+---------+-----------+----------------------+----------------------+
+| CRF | Encoding Time (s) |   Size  |  Bitrate  |         VMAF         |         PSNR         |
++-----+-------------------+---------+-----------+----------------------+-----------------------
+|  20 |        2.43       | 6.70 MB | 3.40 Mbps | 92.90 | 1.13 | 95.77 | 47.80 | 1.08 | 50.44 |
+|  23 |        2.13       | 4.33 MB | 2.20 Mbps | 90.65 | 1.07 | 93.95 | 46.17 | 0.92 | 48.24 |
++-----+-------------------+---------+-----------+----------------------+----------------------+
 ```
 
 # Overview Mode
@@ -182,60 +154,62 @@ VMAF values are in the format: Min | Standard Deviation | Mean
 You can see a list of the available arguments with `python main.py -h`:
 
 ```
-usage: main.py [-h] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-ntm] [-o OUTPUT_FOLDER] [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS] [--av1-cpu-used <1-8>] [-e ENCODER] [-eo ENCODER_OPTIONS] [-p PARAMETER] [-v VALUES [VALUES ...]] [-c COMBINATIONS] [-cl <1-60>]
-               [--interval <1-600>] [-n <x>] [--n-threads N_THREADS] [--phone-model] [-s SCALE] [-psnr] [-ssim] [-msssim]
+usage: main.py [-h] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-ntm] [-o OUTPUT_FOLDER]
+               [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS] [--av1-cpu-used <1-8>] [-e ENCODER] [-eo ENCODER_OPTIONS]
+               [-p PARAMETER] [-v VALUES [VALUES ...]] [-c COMBINATIONS] [-cl <1-60>] [--interval <1-600>] [-n <x>]
+               [--n-threads N_THREADS] [--phone-model] [-s SCALE] [-psnr]
 
 options:
   -h, --help            show this help message and exit
 
 General Arguments:
-  -dp, --decimal-places DECIMAL_PLACES
+  -dp DECIMAL_PLACES, --decimal-places DECIMAL_PLACES
                         The number of decimal places to use for the data in the table
-  -i, --input-video INPUT_VIDEO
+  -i INPUT_VIDEO, --input-video INPUT_VIDEO
                         Input video. Can be a relative or absolute path, or a URL.
                         If the path contains a space, it must be surrounded in double quotes.
-  -t, --transcode-length TRANSCODE_LENGTH
+  -t TRANSCODE_LENGTH, --transcode-length TRANSCODE_LENGTH
                         Create a lossless version of the original video that is just the first x seconds of the video.
                         This cut version of the original video is what will be transcoded and used as the reference video.
                         You cannot use this option in conjunction with the --interval or -cl argument.
   -ntm, --no-transcoding-mode
-                        Enable 'No Transcoding Mode', which allows you to calculate the VMAF/SSIM/PSNR for a video that you have already transcoded.
+                        Enable 'No Transcoding Mode', which allows you to calculate the VMAF/PSNR for a video that you have already transcoded.
                         The original and transcoded video paths must be specified using the -i and -tv arguments, respectively.
                         Example: python main.py -ntm -i original.mp4 -tv transcoded.mp4
-  -o, --output-folder OUTPUT_FOLDER
+  -o OUTPUT_FOLDER, --output-folder OUTPUT_FOLDER
                         Use this argument if you want a specific name for the output folder. If you want the name of the output folder to contain a space, the string must be surrounded in double quotes
-  -tv, --transcoded-video TRANSCODED_VIDEO
+  -tv TRANSCODED_VIDEO, --transcoded-video TRANSCODED_VIDEO
                         Transcoded video. Can be a relative or absolute path, or an URL. Only applicable when using the -ntm mode.
-  -vf, --video-filters VIDEO_FILTERS
+  -vf VIDEO_FILTERS, --video-filters VIDEO_FILTERS
                         Apply video filter(s) to the original video before calculating quality metrics. Each filter must be separated by a comma.
                         Example: -vf bwdif=mode=0,crop=1920:800:0:140
 
 Encoder Arguments:
   --av1-cpu-used <1-8>  Only applicable if the libaom-av1 (AV1) encoder is chosen. Set the quality/encoding speed tradeoff.
                         Lower values mean slower encoding but better quality, and vice-versa
-  -e, --encoder ENCODER
+  -e ENCODER, --encoder ENCODER
                         Specify an ffmpeg video encoder.
                         Examples: libx265, h264_amf, libaom-av1
-  -eo, --encoder-options ENCODER_OPTIONS
+  -eo ENCODER_OPTIONS, --encoder-options ENCODER_OPTIONS
                         Set general encoder options to use for all transcodes.
                         Use FFmpeg syntax. Must be surronded in quotes. Example:
                         --encoder-options='-crf 18 -x264-params keyint=123:min-keyint=20'
-  -p, --parameter PARAMETER
+  -p PARAMETER, --parameter PARAMETER
                         The encoder parameter to compare, e.g. preset, crf, quality.
                         Example: -p preset
-  -v, --values VALUES [VALUES ...]
+  -v VALUES [VALUES ...], --values VALUES [VALUES ...]
                         The values of the specified encoder parameter to compare. Must be used alongside the -p option. Examples:
                         Compare presets: -p preset -v slow fast
                         Compare CRF values: -p crf -v 22 23
                         Compare h264_amf quality levels: -p quality -v balanced speed
-  -c, --combinations COMBINATIONS
+  -c COMBINATIONS, --combinations COMBINATIONS
                         Use this mode if you want to compare the quality achieved with a combination of two or more parameters.
                         The list of combinations must be surrounded in quotes, and each combination must be separated by a comma.
                         For example, if you want to compare the combination of preset veryslow and CRF 18, with the combination of preset slower and CRF 16:
                         -c 'preset veryslow crf 18,preset slower crf 16'
 
 Overview Mode Arguments:
-  -cl, --clip-length <1-60>
+  -cl <1-60>, --clip-length <1-60>
                         When using Overview Mode, a X seconds long segment is taken from the original video every --interval seconds and these segments are concatenated to create the overview video.
                         Specify a value for X (in the range 1-60)
   --interval <1-600>    To activate Overview Mode, this argument must be specified.
@@ -243,13 +217,14 @@ Overview Mode Arguments:
                         Specify a value for X (in the range 1-600)
 
 VMAF Arguments:
-  -n, --n-subsample <x>
-                        Set a value for libvmaf's n_subsample option if you only want the VMAF/SSIM/PSNR to be calculated for every nth frame.
-                        Without this argument, VMAF/SSIM/PSNR scores will be calculated for every frame.
+  -n <x>, --n-subsample <x>
+                        Set a value for libvmaf's n_subsample option if you only want the VMAF/PSNR to be calculated for every nth frame.
+                        Without this argument, VMAF/PSNR scores will be calculated for every frame.
   --n-threads N_THREADS
                         Specify the number of threads to use when calculating VMAF
   --phone-model         Enable VMAF phone model
-  -s, --scale SCALE     Scale the transcoded video to match the resolution of the original video.
+  -s SCALE, --scale SCALE
+                        Scale the transcoded video to match the resolution of the original video.
                         To ensure accurate VMAF scores, this is necessary if the transcoded video has a different resolution.
                         For example, if the original video is 1920x1980 and the transcoded video is 1280x720, you should specify:
                         -s 1920x1080
@@ -257,10 +232,6 @@ VMAF Arguments:
 Optional Metrics:
   -psnr, --calculate-psnr
                         Enable PSNR calculation in addition to VMAF
-  -ssim, --calculate-ssim
-                        Enable SSIM calculation in addition to VMAF
-  -msssim, --calculate-msssim
-                        Enable MS-SSIM calculation in addition to VMAF
 ```
 
 # Requirements
@@ -268,9 +239,7 @@ Optional Metrics:
 2. `pip install -r requirements.txt --upgrade`
 3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must have v2.1.1 (or above) of the `libvmaf` filter. FFmpeg must also be built with support for the encoders you wish you test.
 
-You can check which encoders your build of FFmpeg supports by running `ffmpeg -buildconf` in the terminal.
-
-If `--enable-libvmaf` is not printed when running `ffmpeg -buildconf`, your build of FFmpeg is not sufficient as VQM needs the `libvmaf` filter.
+You can check which encoders your build of FFmpeg supports by running `ffmpeg -buildconf -hide_banner` in the terminal. If `--enable-libvmaf` is not printed, your build of FFmpeg is not sufficient as VQM needs the `libvmaf` filter.
 
 # FFmpeg Builds
 For convenience, below are links to FFmpeg builds that support the `libvmaf` filter. 

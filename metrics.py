@@ -19,13 +19,20 @@ class MetricScores:
 
 
 def load_frame_data(json_file_path: str) -> Tuple[List[Dict], List[int]]:
+    if not os.path.isfile(json_file_path):
+        print(f"The following file path does not exist:\n{json_file_path}")
+        return [], []
+
     with open(json_file_path, "r") as f:
-        file_contents = json.load(f)
+        try:
+            file_contents = json.load(f)
+        except json.JSONDecodeError:
+            return [], []
+        else:
+            frames = file_contents["frames"]
+            frame_numbers = [frame["frameNum"] for frame in frames]
 
-    frames = file_contents["frames"]
-    frame_numbers = [frame["frameNum"] for frame in frames]
-
-    return frames, frame_numbers
+            return frames, frame_numbers
 
 
 def calculate_metric_scores(
@@ -47,32 +54,27 @@ def process_metric(
     output_folder: str,
     decimal_places: int,
 ) -> Optional[MetricScores]:
-    metric_lookup = {
-        "VMAF": "vmaf",
-        "PSNR": "psnr_y",
-        "SSIM": "float_ssim",
-        "MS-SSIM": "float_ms_ssim",
-    }
-
+    metric_lookup = {"VMAF": "vmaf", "PSNR": "psnr_y"}
     metric_key = metric_lookup[metric_type]
-    if not frames[0]["metrics"][metric_key]:
-        return None
 
-    metric_scores = [frame["metrics"][metric_key] for frame in frames]
+    if len(frames):
+        if not frames[0]["metrics"][metric_key]:
+            return None
 
-    scores = calculate_metric_scores(metric_scores, decimal_places)
+        metric_scores = [frame["metrics"][metric_key] for frame in frames]
+        scores = calculate_metric_scores(metric_scores, decimal_places)
 
-    plot_graph(
-        f"{metric_type}\nlibvmaf n_subsample: {args.n_subsample}",
-        "Frame Number",
-        metric_type,
-        frame_numbers,
-        metric_scores,
-        scores.mean,
-        os.path.join(output_folder, metric_type),
-    )
+        plot_graph(
+            f"{metric_type}\nlibvmaf n_subsample: {args.n_subsample}",
+            "Frame Number",
+            metric_type,
+            frame_numbers,
+            metric_scores,
+            scores.mean,
+            os.path.join(output_folder, metric_type),
+        )
 
-    return scores
+        return scores
 
 
 def write_table_to_file(
@@ -115,6 +117,10 @@ def process_metrics(
     if not args.no_transcoding_mode:
         data_for_current_row.insert(0, first_column_data)
         data_for_current_row.insert(1, time_taken)
+
+    # Pad the row if it has fewer elements than the number of columns
+    while len(data_for_current_row) < len(table._field_names):
+        data_for_current_row.append("")
 
     table.add_row(data_for_current_row)
     write_table_to_file(comparison_table, table, metrics_list)

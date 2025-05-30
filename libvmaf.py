@@ -27,17 +27,10 @@ def run_libvmaf(
     )
     model_string = f"model='{'|'.join(model_params)}'"
 
-    features = filter(
-        None,
-        [
-            "name=psnr" if args.calculate_psnr else "",
-            "name=float_ssim" if args.calculate_ssim else "",
-            "name=float_ms_ssim" if args.calculate_msssim else "",
-        ],
-    )
-    feature_string = f":feature='{'|'.join(features)}'"
-
-    vmaf_options = f"{model_string}:log_fmt=json:log_path='{json_file_path}':n_subsample={n_subsample}:n_threads={args.n_threads}{feature_string}"
+    json_file_path_str = str(json_file_path).replace("\\", "/")
+    # Escape any single quotes
+    json_file_path_escaped = json_file_path_str.replace("'", "\\'")
+    vmaf_options = f"{model_string}:log_fmt=json:log_path='{json_file_path_escaped}':n_subsample={n_subsample}:n_threads={args.n_threads}{':feature=name=psnr' if args.calculate_psnr else ''}"
 
     libvmaf_arguments = LibVmafArguments(
         original_video_path,
@@ -59,10 +52,10 @@ def run_libvmaf(
 
     line()
     log.info(
-        f"Calculating the {metric_types}{message if not args.no_transcoding_mode else ""}...\n"
+        f"Calculating the {metric_types}{message if not args.no_transcoding_mode else ''}...\n"
     )
 
     timer = Timer()
     timer.start()
-    process.run(progress_bar_description="")
+    process.run()
     print(f"Time Taken: {timer.stop(args.decimal_places)}s")
