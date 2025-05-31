@@ -1,5 +1,5 @@
 # Video Quality Metrics (VQM)
-VQM will compare the VMAF, SSIM and PSNR achieved with different values of the chosen encoder parameter.
+VQM will compare the VMAF, SSIM and PSNR achieved with different values of the specified encoder parameter.
 
 # Quick Links
 - [What does VQM produce?](#what-does-vqm-produce)
@@ -14,44 +14,16 @@ VQM will compare the VMAF, SSIM and PSNR achieved with different values of the c
 # What does VQM produce?
 VQM produces a table to show the metrics, and graphs that show the per-frame VMAF, SSIM and PSNR.
 
-The table can be found in a file named `metrics_table.txt` and it contains the following:
-- Encoder parameter
-- Time taken to transcode the video
+The table is written to a file named `metrics_table.txt` and it contains the following for each value of the specified encoder parameter:
+- Parameter value
+- Time taken to transcode the video (seconds)
 - Filesize (MB)
 - Bitrate (Mbps)
-- [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) values. VMAF is a perceptual video quality assessment algorithm developed by Netflix.
-- Peak Signal-to-Noise-Ratio (PSNR).
+- [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf)
+- Structural Similarity Index (SSIM)
+- Peak Signal-to-Noise-Ratio (PSNR)
 
-In addition to the table, two types of graphs are created:
-- A graph (type 1) for each encoder parameter value, showing the per-frame VMAF, SSIM and PSNR.
-- A graph (type 2) where the average VMAF is plotted against the value of the encoder parameter.
-
-Here's an example of graph type 1, which shows the per-frame VMAF score:
-
-![Per-frame VMAF](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/Per-frame%20VMAF.png?raw=true)
-
-_An example of the per-frame PSNR graph can be found in the [example_graphs folder](https://github.com/CrypticSignal/video-quality-metrics/tree/master/example_graphs)._
-
-Here's an example of graph type 2 if you opt to compare the effects of different CRF values:
-
-![CRF vs VMAF graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/CRF%20vs%20VMAF.png?raw=true)
-
-# Usage
-You must specify an encoder (using the `-e` argument), an FFmpeg encoder parameter (using the `-p` argument, e.g. `-p preset`, `-p crf` or `-p quality`) and the values you want to compare (using the `-v` argument).
-
-If you would like to test VQM without using your own video(s), you can use `ForBiggerFun.mp4`.
-
-Examples: 
-```
-python main.py -i ForBiggerFun.mp4 -e libx264 -p preset -v veryfast superfast ultrafast
-```
-```
-python main.py -i ForBiggerFun.mp4 -e libx264 -p crf -v 22 23 24
-```
-```
-python main.py -i ForBiggerFun.mp4 -e h264_amf -p quality -v balanced speed quality
-```
-Here is an example of the table that is produced when opting to compare all x264 presets apart from `placebo`:
+Here's an example:
 ```
 VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
 +-----------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
@@ -75,12 +47,42 @@ libvmaf n_subsample: 1
 ```
 _Command used: `python main.py -i ForBiggerFun.mp4 -e libx264 -p preset -v veryslow slower slow medium fast faster veryfast superfast ultrafast`_
 
+In addition to the table, two types of graphs are created:
+- A graph (type 1) for each encoder parameter value, showing the per-frame VMAF, SSIM and PSNR.
+- A graph (type 2) where the average VMAF is plotted against the value of the encoder parameter.
+
+Here's an example of graph type 1:
+
+![Per-frame VMAF](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/Per-frame%20VMAF.png?raw=true)
+
+_This particular graph shows the per-frame VMAF score. An example of the per-frame SSIM graph and per-frame PSNR graph can be found in the [example_graphs folder](https://github.com/CrypticSignal/video-quality-metrics/tree/master/example_graphs)._
+
+Here's an example of graph type 2 if you opt to compare CRF values:
+
+![CRF vs VMAF graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/CRF%20vs%20VMAF.png?raw=true)
+
+# Usage
+You must specify an encoder (using the `-e` argument), an FFmpeg encoder parameter (using the `-p` argument, e.g. `-p preset`, `-p crf` or `-p quality`) and the values you want to compare (using the `-v` argument).
+
+If you would like to test VQM without using your own video(s), you can use `ForBiggerFun.mp4`.
+
+Examples: 
+```
+python main.py -i ForBiggerFun.mp4 -e libx264 -p preset -v veryfast superfast ultrafast
+```
+```
+python main.py -i ForBiggerFun.mp4 -e libx264 -p crf -v 22 23 24
+```
+```
+python main.py -i ForBiggerFun.mp4 -e h264_amf -p quality -v balanced speed quality
+```
+
 # Overview Mode
-Overview Mode can be used with **Transcoding Mode** by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds (from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
+Overview Mode can be activated by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create an overview video by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. As the overview video can be much shorter than the original, the process of transcoding and calculating the quality metrics is quicker.
 
 Example: `python main.py -i ForBiggerFun.mp4 -p crf -v 17 18 19 --interval 5 --clip-length 2`
 
-In the example above, we're grabbing a two-second-long* clip (`--clip-length 2`) every minute* (`--interval 60`) in the video. These 2-second* long clips are concatenated to make the overview video. A 1-hour long video is turned into an overview video that is 118* seconds long. The benefit of overview mode should now be clear - transcoding and computing the quality metrics of a <2 minutes long video is **much** quicker than doing so with an hour long video.
+In the example above, an overview video is created by concatenating 2-second-long* clips (`--clip-length 2`) every 5s* (`--interval 5`) from the original video. In this example, a one-minute-long video is turned into an overview video that is 20 seconds long. Transcoding and calculating the quality metrics of a video that is 20 seconds long is quicker than doing so with a one-minute-long video.
 
 _Sections marked with an asterisk will not be exact as FFmpeg will use the closest I-frames._
 
