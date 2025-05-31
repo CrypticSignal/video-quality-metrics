@@ -51,30 +51,12 @@ general_args.add_argument(
     "You cannot use this option in conjunction with the --interval or -cl argument.",
 )
 
-# -ntm mode
-general_args.add_argument(
-    "-ntm",
-    "--no-transcoding-mode",
-    action="store_true",
-    help="Enable 'No Transcoding Mode', which allows you to calculate the VMAF/PSNR for a video that you have already transcoded.\n"
-    "The original and transcoded video paths must be specified using the -i and -tv arguments, respectively.\n"
-    "Example: python main.py -ntm -i original.mp4 -tv transcoded.mp4",
-)
-
 general_args.add_argument(
     "-o",
     "--output-folder",
     type=str,
     help="Use this argument if you want a specific name for the output folder. "
     "If you want the name of the output folder to contain a space, the string must be surrounded in double quotes",
-)
-
-# Transcoded Video (only applicable when using the -ntm mode).
-general_args.add_argument(
-    "-tv",
-    "--transcoded-video",
-    help="Transcoded video. Can be a relative or absolute path, or an URL. "
-    "Only applicable when using the -ntm mode.",
 )
 
 # FFmpeg Video Filter(s)
@@ -189,14 +171,4 @@ vmaf_args.add_argument(
 # Phone Model
 vmaf_args.add_argument(
     "--phone-model", action="store_true", help="Enable VMAF phone model"
-)
-
-vmaf_args.add_argument(
-    "-s",
-    "--scale",
-    type=str,
-    help="Scale the transcoded video to match the resolution of the original video.\n"
-    "To ensure accurate VMAF scores, this is necessary if the transcoded video has a different resolution.\n"
-    "For example, if the original video is 1920x1980 and the transcoded video is 1280x720, you should specify:\n"
-    "-s 1920x1080",
 )

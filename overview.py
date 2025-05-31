@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-import time
 
 from utils import VideoInfoProvider, line, exit_program, Logger
 
@@ -16,12 +15,6 @@ class ClipError(Exception):
 
 class ConcatenateError(Exception):
     pass
-
-
-def clip_number_to_movie_timestamp(clip_number_seconds):
-    time_from_clip_number = time.gmtime(clip_number_seconds)
-    timestamp = time.strftime("%H:%M:%S", time_from_clip_number)
-    return timestamp
 
 
 def create_clips(input_video, output_folder, interval_seconds, clip_length):
@@ -43,7 +36,6 @@ def create_clips(input_video, output_folder, interval_seconds, clip_length):
     # Create the file.
     open(txt_file_path, "w").close()
 
-    log.info("Overview mode activated.")
     log.info(
         f"Creating a {clip_length} second clip every {interval_seconds} seconds from {input_video}..."
     )
@@ -56,33 +48,27 @@ def create_clips(input_video, output_folder, interval_seconds, clip_length):
             with open(txt_file_path, "a") as f:
                 f.write(f"file '{clip_name}'\n")
 
+            seek_position = clip_number * interval_seconds
             clip_output_path = os.path.join(output_folder, clip_name)
-            clip_offset = clip_number_to_movie_timestamp(clip_number * interval_seconds)
 
-            log.info(
-                f"Creating clip {clip_number} which starts at {clip_offset} and ends {clip_length} seconds later ..."
-            )
+            log.info(f"Creating clip {clip_number}...")
 
             subprocess_cut_args = [
                 "ffmpeg",
                 "-loglevel",
-                "warning",
+                "quiet",
                 "-stats",
                 "-y",
                 "-ss",
-                clip_offset,
+                str(seek_position),
                 "-i",
                 input_video,
                 "-map",
                 "0:V",
                 "-t",
                 clip_length,
-                "-c:v",
-                "libx264",
-                "-crf",
-                "0",
-                "-preset",
-                "ultrafast",
+                "-c:V",
+                "copy",
                 clip_output_path,
             ]
 
@@ -106,7 +92,7 @@ def concatenate_clips(txt_file_path, output_folder, extension):
     subprocess_concatenate_args = [
         "ffmpeg",
         "-loglevel",
-        "warning",
+        "quiet",
         "-stats",
         "-y",
         "-f",

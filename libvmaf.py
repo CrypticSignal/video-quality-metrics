@@ -16,7 +16,7 @@ def run_libvmaf(
     args,
     json_file_path,
     original_video_path,
-    message,
+    message="",
 ):
     n_subsample = args.n_subsample if args.n_subsample else "1"
 
@@ -46,11 +46,7 @@ def run_libvmaf(
     vmaf_options = f"{model_string}:log_fmt=json:log_path='{json_file_path_escaped}':n_subsample={n_subsample}:n_threads={args.n_threads}{feature_string}"
 
     libvmaf_arguments = LibVmafArguments(
-        original_video_path,
-        transcode_output_path,
-        vmaf_options,
-        args.video_filters,
-        args.scale,
+        original_video_path, transcode_output_path, vmaf_options, args.video_filters
     )
 
     process = FfmpegProcess(
@@ -65,9 +61,7 @@ def run_libvmaf(
         metric_types = f"{', '.join(metrics_list[:-1])} and {metrics_list[-1]}"
 
     line()
-    log.info(
-        f"Calculating the {metric_types}{message if not args.no_transcoding_mode else ''}...\n"
-    )
+    log.info(f"Calculating the {metric_types}{message}...\n")
 
     timer = Timer()
     timer.start()

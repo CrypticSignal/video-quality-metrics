@@ -91,6 +91,8 @@ def prepare_video(video_path: str, filename: str, output_folder: str, args) -> s
         )
 
     if args.interval is not None:
+        log.info("Overview mode activated.")
+
         result, concatenated_video = create_overview_video(
             video_path, output_folder, args.interval, str(args.clip_length)
         )
@@ -252,6 +254,7 @@ def finalise(
     vmaf_scores: List[float],
 ) -> None:
     mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
+
     write_table_info(
         os.path.join(output_folder, "metrics_table.txt"),
         filename,
@@ -293,6 +296,9 @@ def main():
     timer = Timer()
     vmaf_scores = []
 
+    with open("logs.log", "w"):
+        pass
+
     line()
     log.info("Video Quality Metrics")
     log.info("Version Date: 11th October 2024")
@@ -309,6 +315,7 @@ def main():
 
     if args.combinations:
         log.info("Combination Mode activated.")
+
         for combination in args.combinations.split(","):
             process_combination(
                 combination, video_path, output_folder, args, table, vmaf_scores

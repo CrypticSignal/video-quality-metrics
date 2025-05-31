@@ -81,7 +81,6 @@ class LibVmafArguments:
     distorted_video: Union[str, Path]
     vmaf_options: str
     video_filters: Optional[str] = None
-    transcoded_video_scaling: Optional[str] = None
 
     def __post_init__(self) -> None:
         self.original_video = Path(self.original_video)
@@ -90,17 +89,10 @@ class LibVmafArguments:
             f"{self.video_filters}," if self.video_filters is not None else ""
         )
 
-    def _get_scaling_filter(self) -> str:
-        if self.transcoded_video_scaling is None:
-            return ""
-        return f"scale={self.transcoded_video_scaling.replace('x', ':')}:flags=bicubic,"
-
     def get_arguments(self) -> List[str]:
-        scaling_filter = self._get_scaling_filter()
-
         filtergraph = (
             f"[0:V]{self._video_filters}setpts=PTS-STARTPTS[reference];"
-            f"[1:V]{scaling_filter}setpts=PTS-STARTPTS[distorted];"
+            f"[1:V]setpts=PTS-STARTPTS[distorted];"
             f"[distorted][reference]libvmaf={self.vmaf_options}"
         )
 

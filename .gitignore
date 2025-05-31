@@ -23,5 +23,5 @@ __pycache__/
 venv/
 .vscode/
 
-!test_videos/*
+!ForBiggerFun.mp4
 !example_graphs/*

@@ -114,9 +114,8 @@ def process_metrics(
             if metric_type == "VMAF":
                 vmaf_mean = scores.mean
 
-    if not args.no_transcoding_mode:
-        data_for_current_row.insert(0, first_column_data)
-        data_for_current_row.insert(1, time_taken)
+    data_for_current_row.insert(0, first_column_data)
+    data_for_current_row.insert(1, time_taken)
 
     # Pad the row if it has fewer elements than the number of columns
     while len(data_for_current_row) < len(table._field_names):
@@ -124,10 +123,5 @@ def process_metrics(
 
     table.add_row(data_for_current_row)
     write_table_to_file(comparison_table, table, metrics_list)
-
-    if args.no_transcoding_mode:
-        line()
-        log.info(f"All done! Check out the '{output_folder}' folder.")
-        log.close()
 
     return float(vmaf_mean) if vmaf_mean is not None else 0
