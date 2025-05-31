@@ -30,7 +30,7 @@ def run_libvmaf(
     json_file_path_str = str(json_file_path).replace("\\", "/")
     # Escape any single quotes
     json_file_path_escaped = json_file_path_str.replace("'", "\\'")
-    vmaf_options = f"{model_string}:log_fmt=json:log_path='{json_file_path_escaped}':n_subsample={n_subsample}:n_threads={args.n_threads}{':feature=name=psnr' if args.calculate_psnr else ''}"
+    vmaf_options = f"{model_string}:log_fmt=json:log_path='{json_file_path_escaped}':n_subsample={n_subsample}:n_threads={args.n_threads}{':feature=name=psnr' if not args.disable_psnr else ''}"
 
     libvmaf_arguments = LibVmafArguments(
         original_video_path,

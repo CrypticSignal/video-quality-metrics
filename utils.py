@@ -191,6 +191,6 @@ def write_table_info(table_path, video_filename, original_bitrate, args):
 
 
 def get_metrics_list(args):
-    metrics_list = ["VMAF", "PSNR" if args.calculate_psnr else None]
+    metrics_list = ["VMAF", "PSNR" if not args.disable_psnr else None]
 
     return list(filter(None, metrics_list))

@@ -7,7 +7,13 @@ general_args = parser.add_argument_group("General Arguments")
 encoder_args = parser.add_argument_group("Encoder Arguments")
 overview_mode_args = parser.add_argument_group("Overview Mode Arguments")
 vmaf_args = parser.add_argument_group("VMAF Arguments")
-optional_metrics_args = parser.add_argument_group("Optional Metrics")
+
+# Disable PSNR calculation.
+general_args.add_argument(
+    "--disable-psnr",
+    action="store_true",
+    help="Disable PSNR calculation.",
+)
 
 # Number of decimal places to use for the data.
 general_args.add_argument(
@@ -186,12 +192,4 @@ vmaf_args.add_argument(
     "To ensure accurate VMAF scores, this is necessary if the transcoded video has a different resolution.\n"
     "For example, if the original video is 1920x1980 and the transcoded video is 1280x720, you should specify:\n"
     "-s 1920x1080",
-)
-
-# PSNR
-optional_metrics_args.add_argument(
-    "-psnr",
-    "--calculate-psnr",
-    action="store_true",
-    help="Enable PSNR calculation in addition to VMAF",
 )

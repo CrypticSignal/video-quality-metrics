@@ -5,7 +5,7 @@ VQM is a command line program that has two main modes:
   - Details about **Transcoding Mode**, as well as example commands, can be found in the [Transcoding Mode](#transcoding-mode) section.
 
 - **No Transcoding Mode (`-ntm`)**
-  - VQM will calculate the VMAF (and optionally) the PSNR of a transcoded video as long as you have the original video as well. To calculate PSNR in addition to VMAF, you must specify the `-psnr` argument.
+  - VQM will calculate the VMAF and PSNR of a transcoded video as long as you have the original video as well.
 
 To see an example of how to use **No Transcoding Mode**, check out the [Getting Started](#getting-started) section.
 
@@ -21,7 +21,7 @@ To see an example of how to use **No Transcoding Mode**, check out the [Getting 
 - [About the model files](#about-the-model-files)
 
 # What does VQM produce?
-VQM produces a table to show the metrics, and graphs that show the variation of the value of the quality metric throughout the video (on a per-frame basis).
+VQM produces a table to show the metrics, and graphs that show the per-frame VMAF and PSNR.
 
 The table can be found in a file named `metrics_table.txt` and it contains the following:
 - Encoder parameter (only applicable if using **Transcoding Mode**)
@@ -29,18 +29,18 @@ The table can be found in a file named `metrics_table.txt` and it contains the f
 - Filesize (MB)
 - Bitrate (Mbps)
 - [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) values. VMAF is a perceptual video quality assessment algorithm developed by Netflix.
-- [Optional] Peak Signal-to-Noise-Ratio (PSNR). _You must specify the `-psnr` argument._
+- Peak Signal-to-Noise-Ratio (PSNR).
 
-In **No Transcoding Mode**, a graph (type 1) is created which shows the variation of the VMAF/PSNR throughout the video. 
+In **No Transcoding Mode**, per-frame VMAF and PSNR graphs are created.
 
 In **Transcoding Mode**, two types of graphs are created:
 
-- A graph (type 1) for each encoder parameter value, showing the variation of the VMAF/PSNR throughout the video.
+- A graph (type 1) for each encoder parameter value, showing the per-frame VMAF and PSNR.
 - A graph (type 2) where the average VMAF is plotted against the value of the encoder parameter.
 
 Here's an example of graph type 1, which shows the per-frame VMAF score:
 
-![VMAF variation graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/VMAF.png)
+![Per-frame VMAF](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/VMAF.png)
 
 _An example of the per-frame PSNR graph can be found in the [example_graphs folder](https://github.com/CrypticSignal/video-quality-metrics/tree/master/example_graphs)._
 
@@ -70,17 +70,16 @@ _If the transcoded file is the same resolution as the original file, using the `
 
 To test **Transcoding Mode**, you can run:
 ```
-python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v slow medium -psnr
+python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v slow medium
 ```
 Alternatively, you can use `test_videos/ForBiggerFun.mp4`.
 
 # Transcoding Mode
-In this mode, VQM will compare the VMAF (and optionally) the PSNR achieved with different values of the chosen encoder parameter.
+In this mode, VQM will compare the VMAF and PSNR achieved with different values of the chosen encoder parameter.
 
 You must specify an encoder (using the `-e` argument. If not specified, `libx264` will be used), a FFmpeg encoder parameter (e.g. `-preset`, `-crf`, `-quality`) and the values you want to compare (using the `-v` argument). 
 
 Examples: 
-
 ```
 python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx265 -p preset -v slow medium
 ```
@@ -90,9 +89,6 @@ python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p crf -v 22 23
 ```
 python main.py -i test_videos/Seeking_30_480_1050.mp4 -e h264_amf -p quality -v balanced speed quality
 ```
-
-VQM will automatically transcode the video with each value. To calculate PSNR in addition to VMAF, you must specify the `-psnr` argument.
-
 Here is  an example of the table that is produced when comparing presets:
 ```
 VMAF/PSNR values are in the format: Min | Standard Deviation | Mean
@@ -103,7 +99,6 @@ VMAF/PSNR values are in the format: Min | Standard Deviation | Mean
 | medium |        2.14       | 4.33 MB | 2.20 Mbps | 90.65 | 1.07 | 93.95 | 46.17 | 0.92 | 48.24 |
 +--------+-------------------+---------+-----------+----------------------+----------------------+
 ```
-
 Here is  an example of the table that is produced when comparing CRF values:
 ```
 VMAF/PSNR values are in the format: Min | Standard Deviation | Mean
@@ -114,7 +109,6 @@ VMAF/PSNR values are in the format: Min | Standard Deviation | Mean
 |  23 |        2.13       | 4.33 MB | 2.20 Mbps | 90.65 | 1.07 | 93.95 | 46.17 | 0.92 | 48.24 |
 +-----+-------------------+---------+-----------+----------------------+----------------------+
 ```
-
 # Overview Mode
 Overview Mode can be used with **Transcoding Mode** by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
 
@@ -154,15 +148,14 @@ VMAF values are in the format: Min | Standard Deviation | Mean
 You can see a list of the available arguments with `python main.py -h`:
 
 ```
-usage: main.py [-h] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-ntm] [-o OUTPUT_FOLDER]
-               [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS] [--av1-cpu-used <1-8>] [-e ENCODER] [-eo ENCODER_OPTIONS]
-               [-p PARAMETER] [-v VALUES [VALUES ...]] [-c COMBINATIONS] [-cl <1-60>] [--interval <1-600>] [-n <x>]
-               [--n-threads N_THREADS] [--phone-model] [-s SCALE] [-psnr]
+usage: main.py [-h] [--disable-psnr] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-ntm] [-o OUTPUT_FOLDER] [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS] [--av1-cpu-used <1-8>] [-e ENCODER] [-eo ENCODER_OPTIONS] [-p PARAMETER] [-v VALUES [VALUES ...]]
+               [-c COMBINATIONS] [-cl <1-60>] [--interval <1-600>] [-n <x>] [--n-threads N_THREADS] [--phone-model] [-s SCALE]
 
 options:
   -h, --help            show this help message and exit
 
 General Arguments:
+  --disable-psnr        Disable PSNR calculation.
   -dp DECIMAL_PLACES, --decimal-places DECIMAL_PLACES
                         The number of decimal places to use for the data in the table
   -i INPUT_VIDEO, --input-video INPUT_VIDEO
@@ -228,10 +221,6 @@ VMAF Arguments:
                         To ensure accurate VMAF scores, this is necessary if the transcoded video has a different resolution.
                         For example, if the original video is 1920x1980 and the transcoded video is 1280x720, you should specify:
                         -s 1920x1080
-
-Optional Metrics:
-  -psnr, --calculate-psnr
-                        Enable PSNR calculation in addition to VMAF
 ```
 
 # Requirements
