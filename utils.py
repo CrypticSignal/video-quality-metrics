@@ -11,36 +11,40 @@ import matplotlib.pyplot as plt
 
 class Logger:
     def __init__(self, name, filename="logs.log", print_to_terminal=True):
-        with open(filename, "w"):
-            pass
+        self._logger = logging.getLogger(name)
+        self._logger.setLevel(logging.DEBUG)
 
-        logger = logging.getLogger(name)
-        logger.setLevel(10)
+        # Add handlers only if this logger has no handlers (ignore ancestors)
+        if not self._logger.handlers:
+            file_handler = logging.FileHandler(filename)
+            file_formatter = logging.Formatter("[%(name)s] %(levelname)s: %(message)s")
+            file_handler.setFormatter(file_formatter)
+            self._logger.addHandler(file_handler)
+            self._file_handler = file_handler
 
-        file_handler = logging.FileHandler(filename)
-        logger.addHandler(file_handler)
-        self._file_handler = file_handler
+            if print_to_terminal:
+                stream_handler = logging.StreamHandler()
+                stream_formatter = logging.Formatter("%(message)s")
+                stream_handler.setFormatter(stream_formatter)
+                self._logger.addHandler(stream_handler)
 
-        if print_to_terminal:
-            logger.addHandler(logging.StreamHandler())
-
-        self._logger = logger
+        # Avoid propagating logs to ancestor loggers
+        self._logger.propagate = False
 
     def info(self, msg):
-        self._file_handler.setFormatter(logging.Formatter("[%(name)s] %(message)s"))
         self._logger.info(msg)
 
     def warning(self, msg):
-        self._file_handler.setFormatter(
-            logging.Formatter("[%(name)s] [WARNING] %(message)s")
-        )
         self._logger.warning(msg)
 
     def debug(self, msg):
-        self._file_handler.setFormatter(
-            logging.Formatter("[%(name)s] [DEBUG] %(message)s")
-        )
         self._logger.debug(msg)
+
+    def close(self):
+        handlers = self._logger.handlers[:]
+        for handler in handlers:
+            handler.close()
+            self._logger.removeHandler(handler)
 
 
 class Timer:
@@ -191,6 +195,10 @@ def write_table_info(table_path, video_filename, original_bitrate, args):
 
 
 def get_metrics_list(args):
-    metrics_list = ["VMAF", "PSNR" if not args.disable_psnr else None]
+    metrics_list = [
+        "VMAF",
+        "PSNR" if not args.disable_psnr else None,
+        "SSIM" if not args.disable_ssim else None,
+    ]
 
     return list(filter(None, metrics_list))

@@ -22,5 +22,6 @@
 __pycache__/
 venv/
 .vscode/
-# Don't ignore files in the test_videos folder
+
 !test_videos/*
+!example_graphs/*

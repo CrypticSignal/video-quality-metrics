@@ -332,6 +332,7 @@ def main():
 
     line()
     log.info(f"All done! Check out the contents of the '{output_folder}' folder.")
+    log.close()
 
 
 main()

@@ -98,6 +98,12 @@ class LibVmafArguments:
     def get_arguments(self) -> List[str]:
         scaling_filter = self._get_scaling_filter()
 
+        filtergraph = (
+            f"[0:V]{self._video_filters}setpts=PTS-STARTPTS[reference];"
+            f"[1:V]{scaling_filter}setpts=PTS-STARTPTS[distorted];"
+            f"[distorted][reference]libvmaf={self.vmaf_options}"
+        )
+
         return [
             "ffmpeg",
             "-r",
@@ -113,9 +119,7 @@ class LibVmafArguments:
             "-map",
             "1:V",
             "-lavfi",
-            f"[0:V]{self._video_filters}setpts=PTS-STARTPTS[reference];"
-            f"[1:V]{scaling_filter}setpts=PTS-STARTPTS[distorted];"
-            f"[distorted][reference]libvmaf={self.vmaf_options}",
+            filtergraph,
             "-f",
             "null",
             "-",

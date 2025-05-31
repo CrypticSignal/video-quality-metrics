@@ -15,12 +15,19 @@ general_args.add_argument(
     help="Disable PSNR calculation.",
 )
 
+# Disable SSIM calculation.
+general_args.add_argument(
+    "--disable-ssim",
+    action="store_true",
+    help="Disable SSIM calculation.",
+)
+
 # Number of decimal places to use for the data.
 general_args.add_argument(
     "-dp",
     "--decimal-places",
     type=int,
-    default=2,
+    default=3,
     help="The number of decimal places to use for the data in the table",
 )
 

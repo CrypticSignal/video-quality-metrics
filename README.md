@@ -5,7 +5,7 @@ VQM is a command line program that has two main modes:
   - Details about **Transcoding Mode**, as well as example commands, can be found in the [Transcoding Mode](#transcoding-mode) section.
 
 - **No Transcoding Mode (`-ntm`)**
-  - VQM will calculate the VMAF and PSNR of a transcoded video as long as you have the original video as well.
+  - VQM will calculate the VMAF, SSIM and PSNR of a transcoded video as long as you have the original video as well.
 
 To see an example of how to use **No Transcoding Mode**, check out the [Getting Started](#getting-started) section.
 
@@ -21,7 +21,7 @@ To see an example of how to use **No Transcoding Mode**, check out the [Getting 
 - [About the model files](#about-the-model-files)
 
 # What does VQM produce?
-VQM produces a table to show the metrics, and graphs that show the per-frame VMAF and PSNR.
+VQM produces a table to show the metrics, and graphs that show the per-frame VMAF, SSIM and PSNR.
 
 The table can be found in a file named `metrics_table.txt` and it contains the following:
 - Encoder parameter (only applicable if using **Transcoding Mode**)
@@ -31,22 +31,22 @@ The table can be found in a file named `metrics_table.txt` and it contains the f
 - [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf) values. VMAF is a perceptual video quality assessment algorithm developed by Netflix.
 - Peak Signal-to-Noise-Ratio (PSNR).
 
-In **No Transcoding Mode**, per-frame VMAF and PSNR graphs are created.
+In **No Transcoding Mode**, per-frame VMAF, SSIM and PSNR graphs are created.
 
 In **Transcoding Mode**, two types of graphs are created:
 
-- A graph (type 1) for each encoder parameter value, showing the per-frame VMAF and PSNR.
+- A graph (type 1) for each encoder parameter value, showing the per-frame VMAF, SSIM and PSNR.
 - A graph (type 2) where the average VMAF is plotted against the value of the encoder parameter.
 
 Here's an example of graph type 1, which shows the per-frame VMAF score:
 
-![Per-frame VMAF](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/VMAF.png)
+![Per-frame VMAF](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/Per-frame%20VMAF.png?raw=true)
 
 _An example of the per-frame PSNR graph can be found in the [example_graphs folder](https://github.com/CrypticSignal/video-quality-metrics/tree/master/example_graphs)._
 
 Here's an example of graph type 2 if you opt to compare the effects of different CRF values:
 
-![CRF vs VMAF graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/CRF%20vs%20VMAF.png)
+![CRF vs VMAF graph](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/CRF%20vs%20VMAF.png?raw=true)
 
 # Getting Started
 Clone this repository. Then, navigate to the root of this repository in your terminal and run `pip install -r requirements.txt --upgrade`.
@@ -75,7 +75,7 @@ python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p preset -v sl
 Alternatively, you can use `test_videos/ForBiggerFun.mp4`.
 
 # Transcoding Mode
-In this mode, VQM will compare the VMAF and PSNR achieved with different values of the chosen encoder parameter.
+In this mode, VQM will compare the VMAF, SSIM and PSNR achieved with different values of the chosen encoder parameter.
 
 You must specify an encoder (using the `-e` argument. If not specified, `libx264` will be used), a FFmpeg encoder parameter (e.g. `-preset`, `-crf`, `-quality`) and the values you want to compare (using the `-v` argument). 
 
@@ -89,26 +89,30 @@ python main.py -i test_videos/Seeking_30_480_1050.mp4 -e libx264 -p crf -v 22 23
 ```
 python main.py -i test_videos/Seeking_30_480_1050.mp4 -e h264_amf -p quality -v balanced speed quality
 ```
-Here is  an example of the table that is produced when comparing presets:
+Here is an example of the table that is produced when comparing all x264 presets apart from `placebo`:
 ```
-VMAF/PSNR values are in the format: Min | Standard Deviation | Mean
-+--------+-------------------+---------+-----------+----------------------+----------------------+
-| Preset | Encoding Time (s) |   Size  |  Bitrate  |         VMAF         |         PSNR         |
-+--------+-------------------+---------+-----------+----------------------+----------------------+
-|  slow  |        2.75       | 4.23 MB | 2.15 Mbps | 90.56 | 1.13 | 94.09 | 46.24 | 0.91 | 48.30 |
-| medium |        2.14       | 4.33 MB | 2.20 Mbps | 90.65 | 1.07 | 93.95 | 46.17 | 0.92 | 48.24 |
-+--------+-------------------+---------+-----------+----------------------+----------------------+
+VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
++-----------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
+|   preset  | Encoding Time (s) |    Size   |  Bitrate   |           VMAF          |           PSNR          |          SSIM         |
++-----------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
+|  veryslow |       20.800      | 11.670 MB | 1.554 Mbps | 89.514 | 2.488 | 97.371 | 40.715 | 4.063 | 47.691 | 0.992 | 0.001 | 0.997 |
+|   slower  |       12.712      | 12.531 MB | 1.669 Mbps | 88.464 | 2.463 | 97.401 | 40.644 | 4.041 | 47.844 | 0.993 | 0.001 | 0.998 |
+|    slow   |       5.536       | 12.409 MB | 1.653 Mbps | 89.348 | 2.506 | 97.342 | 40.871 | 4.041 | 47.800 | 0.993 | 0.001 | 0.998 |
+|   medium  |       4.109       | 12.817 MB | 1.707 Mbps | 89.529 | 2.414 | 97.490 | 40.927 | 4.023 | 47.958 | 0.993 | 0.001 | 0.998 |
+|    fast   |       3.535       | 13.286 MB | 1.769 Mbps | 89.882 | 2.465 | 97.460 | 40.954 | 3.983 | 48.016 | 0.994 | 0.001 | 0.998 |
+|   faster  |       2.620       | 13.141 MB | 1.750 Mbps | 88.592 | 2.603 | 97.257 | 40.877 | 3.989 | 48.006 | 0.994 | 0.001 | 0.998 |
+|  veryfast |       1.987       | 11.761 MB | 1.566 Mbps | 83.313 | 3.698 | 95.400 | 39.779 | 4.071 | 46.612 | 0.992 | 0.002 | 0.997 |
+| superfast |       1.465       | 16.621 MB | 2.213 Mbps | 86.385 | 2.687 | 96.859 | 40.207 | 4.335 | 47.502 | 0.992 | 0.001 | 0.997 |
+| ultrafast |       0.774       | 24.623 MB | 3.279 Mbps | 88.579 | 2.067 | 97.982 | 40.093 | 4.811 | 46.288 | 0.989 | 0.002 | 0.996 |
++-----------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
+Original File: ForBiggerFun.mp4
+Original Bitrate: 1.720 Mbps
+VQM transcoded the file with the libx264 encoder
+Encoder options: None
+libvmaf n_subsample: 1
 ```
-Here is  an example of the table that is produced when comparing CRF values:
-```
-VMAF/PSNR values are in the format: Min | Standard Deviation | Mean
-+-----+-------------------+---------+-----------+----------------------+----------------------+
-| CRF | Encoding Time (s) |   Size  |  Bitrate  |         VMAF         |         PSNR         |
-+-----+-------------------+---------+-----------+----------------------+-----------------------
-|  20 |        2.43       | 6.70 MB | 3.40 Mbps | 92.90 | 1.13 | 95.77 | 47.80 | 1.08 | 50.44 |
-|  23 |        2.13       | 4.33 MB | 2.20 Mbps | 90.65 | 1.07 | 93.95 | 46.17 | 0.92 | 48.24 |
-+-----+-------------------+---------+-----------+----------------------+----------------------+
-```
+_Command used: `python main.py -i test_videos/ForBiggerFun.mp4 -e libx264 -p preset -v veryslow slower slow medium fast faster veryfast superfast ultrafast`_
+
 # Overview Mode
 Overview Mode can be used with **Transcoding Mode** by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create a lossless "overview video" by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. The transcodes and computation of the quality metrics are done using this overview video instead of the original video. As the overview video can be much shorter than the original, the process of trancoding and computing the quality metrics is much quicker, while still being a fairly accurate representation of the original video as the program goes through the whole video and grabs, say, a two-second-long segment every 60 seconds.
 
@@ -129,18 +133,22 @@ For example, if you want to compare the quality achieved with:
 
 You would run something like:
 ```
-python main.py -i "test_videos/ForBiggerFun.mp4" -e libx265 -c "preset veryslow crf 18,preset slower crf 16"
+python main.py -i "test_videos/ForBiggerFun.mp4" -e libx265 -c "preset slow crf 24,preset medium crf 23"
 ```
 The table produced will look something like this:
 ```
-VMAF values are in the format: Min | Standard Deviation | Mean
-+--------------------------+-------------------+----------+-----------+----------------------+
-|       Combination        | Encoding Time (s) |   Size   |  Bitrate  |         VMAF         |
-+--------------------------+-------------------+----------+-----------+----------------------+
-| -preset veryslow -crf 18 |       325.79      | 19.13 MB | 2.55 Mbps | 94.99 | 1.27 | 99.06 |
-|  -preset slower -crf 16  |       211.81      | 24.06 MB | 3.20 Mbps | 95.62 | 1.14 | 99.23 |
-+--------------------------+-------------------+----------+-----------+----------------------+
+VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
++------------------------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
+|      Combination       | Encoding Time (s) |    Size   |  Bitrate   |           VMAF          |           PSNR          |          SSIM         |
++------------------------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
+|  -preset slow -crf 24  |       32.700      |  9.768 MB | 1.301 Mbps | 90.631 | 2.206 | 97.704 | 41.371 | 4.015 | 47.687 | 0.991 | 0.001 | 0.997 |
+| -preset medium -crf 23 |       12.680      | 10.018 MB | 1.334 Mbps | 89.330 | 2.635 | 97.069 | 41.001 | 4.017 | 47.380 | 0.991 | 0.002 | 0.997 |
++------------------------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
 ```
+A graph will also be produced, comparing each combination:
+
+![Combination vs VMAF](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/Combination%20vs%20VMAF.png?raw=true)
+
 - Combination Mode can be used alongside Overview Mode.
 - You need to decide whether you want to use the regular mode, which compares the quality metrics achieved with various values of **one** particular encoder parameter (using the `-p` and `-v` arguments), OR Combination Mode. You cannot do both.
 
@@ -148,7 +156,7 @@ VMAF values are in the format: Min | Standard Deviation | Mean
 You can see a list of the available arguments with `python main.py -h`:
 
 ```
-usage: main.py [-h] [--disable-psnr] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-ntm] [-o OUTPUT_FOLDER] [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS] [--av1-cpu-used <1-8>] [-e ENCODER] [-eo ENCODER_OPTIONS] [-p PARAMETER] [-v VALUES [VALUES ...]]
+usage: main.py [-h] [--disable-psnr] [--disable-ssim] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-ntm] [-o OUTPUT_FOLDER] [-tv TRANSCODED_VIDEO] [-vf VIDEO_FILTERS] [--av1-cpu-used <1-8>] [-e ENCODER] [-eo ENCODER_OPTIONS] [-p PARAMETER] [-v VALUES [VALUES ...]]
                [-c COMBINATIONS] [-cl <1-60>] [--interval <1-600>] [-n <x>] [--n-threads N_THREADS] [--phone-model] [-s SCALE]
 
 options:
@@ -156,6 +164,7 @@ options:
 
 General Arguments:
   --disable-psnr        Disable PSNR calculation.
+  --disable-ssim        Disable SSIM calculation.
   -dp DECIMAL_PLACES, --decimal-places DECIMAL_PLACES
                         The number of decimal places to use for the data in the table
   -i INPUT_VIDEO, --input-video INPUT_VIDEO

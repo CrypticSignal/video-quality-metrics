@@ -54,7 +54,7 @@ def process_metric(
     output_folder: str,
     decimal_places: int,
 ) -> Optional[MetricScores]:
-    metric_lookup = {"VMAF": "vmaf", "PSNR": "psnr_y"}
+    metric_lookup = {"VMAF": "vmaf", "PSNR": "psnr_y", "SSIM": "float_ssim"}
     metric_key = metric_lookup[metric_type]
 
     if len(frames):
@@ -128,5 +128,6 @@ def process_metrics(
     if args.no_transcoding_mode:
         line()
         log.info(f"All done! Check out the '{output_folder}' folder.")
+        log.close()
 
     return float(vmaf_mean) if vmaf_mean is not None else 0
