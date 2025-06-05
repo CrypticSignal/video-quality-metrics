@@ -301,7 +301,7 @@ def main():
 
     line()
     log.info("Video Quality Metrics")
-    log.info("Version Date: 11th October 2024")
+    log.info("Version Date: 31st May 2025")
     line()
     log.info("Here's some information about the original video:")
     log.info(f"Filename: {filename}")
