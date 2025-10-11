@@ -75,6 +75,15 @@ general_args.add_argument(
     help='Specify leading ffmpeg parameter(s) without dash. (e.g. "hwaccel d3d11va" "hwaccel_output_format d3d11")',
 )
 
+# Skip libvmaf if Output File Exists
+general_args.add_argument(
+    "-m",
+    "--skip-libvmaf",
+    action="store_true",
+    default=False,
+    help="Skip libvmaf if output file exists.",
+)
+
 # Set AV1 speed/quality ratio
 encoder_args.add_argument(
     "--av1-cpu-used",
