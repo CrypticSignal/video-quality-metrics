@@ -68,7 +68,7 @@ class EncodingArguments:
                 "-b:v",
                 "0",
                 "-cpu-used",
-                self.encoder_options.av1_cpu_used,
+                str(self.encoder_options.av1_cpu_used),
                 str(self.output_path),
             ]
         elif self.combination:
