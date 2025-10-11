@@ -65,6 +65,7 @@ def initialize_table(args) -> PrettyTable:
     metrics_list = get_metrics_list(args)
     column_names = [
         "Combination" if args.combinations else args.parameter,
+        "Encoder",
         "Encoding Time (s)",
         "Size",
         "Bitrate",

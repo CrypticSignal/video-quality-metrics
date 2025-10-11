@@ -115,7 +115,8 @@ def process_metrics(
                 vmaf_mean = scores.mean
 
     data_for_current_row.insert(0, first_column_data)
-    data_for_current_row.insert(1, time_taken)
+    data_for_current_row.insert(1, args.encoder)
+    data_for_current_row.insert(2, time_taken)
 
     # Pad the row if it has fewer elements than the number of columns
     while len(data_for_current_row) < len(table._field_names):
