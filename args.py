@@ -67,6 +67,14 @@ general_args.add_argument(
     help="Apply video filter(s) to the original video before calculating quality metrics. Each filter must be separated by a comma.\nExample: -vf bwdif=mode=0,crop=1920:800:0:140",
 )
 
+# FFmpeg Leading Parameters
+general_args.add_argument(
+    "-l",
+    "--leading",
+    nargs="+",
+    help='Specify leading ffmpeg parameter(s) without dash. (e.g. "hwaccel d3d11va" "hwaccel_output_format d3d11")',
+)
+
 # Set AV1 speed/quality ratio
 encoder_args.add_argument(
     "--av1-cpu-used",

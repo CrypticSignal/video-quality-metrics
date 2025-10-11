@@ -22,6 +22,7 @@ def transcode_video(
         args.parameter,
         value,
         combination,
+        args.leading,
     )
 
     process = FfmpegProcess(

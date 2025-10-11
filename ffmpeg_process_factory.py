@@ -21,6 +21,7 @@ class EncodingArguments:
     parameter: Optional[str] = None
     value: Optional[str] = None
     combination: Optional[List[str]] = None
+    leading: Optional[List[str]] = None
 
     def __post_init__(self) -> None:
         self.original_video_path = Path(self.original_video_path)
@@ -40,6 +41,16 @@ class EncodingArguments:
             "-c:v",
             self.encoder_options.encoder,
         ]
+
+        i=0
+        for item in self.leading:
+            params=item.split(" ")
+            for index,param in enumerate(params):
+                if(index % 2 == 0):
+                    self._base_ffmpeg_arguments.insert(index+2, "-" + param.strip())
+                else:
+                    self._base_ffmpeg_arguments.insert(index+2, param.strip())
+                i=i+1
 
         if self.encoder_options.options is not None:
             self._base_ffmpeg_arguments.extend(self.encoder_options.options.split())
