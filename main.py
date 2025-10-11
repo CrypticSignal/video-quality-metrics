@@ -144,7 +144,7 @@ def process_combination(
     table: PrettyTable,
     vmaf_scores: List[float],
 ) -> float:
-    current_output_folder = os.path.join(output_folder, combination.replace(" ", "_"))
+    current_output_folder = os.path.join(output_folder, f"{args.encoder}_" + combination.replace(" ", "_"))
     os.makedirs(current_output_folder, exist_ok=True)
 
     output_path = os.path.join(
@@ -189,7 +189,7 @@ def process_parameter_value(
     table: PrettyTable,
     vmaf_scores: List[float],
 ) -> float:
-    current_output_folder = os.path.join(output_folder, f"{args.parameter}_{value}")
+    current_output_folder = os.path.join(output_folder, f"{args.encoder}_{args.parameter}_{value}")
     os.makedirs(current_output_folder, exist_ok=True)
 
     output_path = os.path.join(current_output_folder, f"{value}.mkv")
