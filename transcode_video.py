@@ -2,6 +2,7 @@ from ffmpeg_process_factory import EncodingArguments, EncoderOptions
 from utils import line, Logger, Timer
 
 from better_ffmpeg_progress import FfmpegProcess
+import os
 
 log = Logger("transcode_video.py")
 
@@ -30,11 +31,16 @@ def transcode_video(
     )
 
     line()
-    log.info(f"{message}...\n")
-    timer = Timer()
-    timer.start()
-    process.run()
-    time_taken = timer.stop(args.decimal_places)
-    print(f"Time Taken: {time_taken}s")
-    log.info(f"Output file: {output_path}")
-    return time_taken
+    if os.path.exists(output_path) and args.skip:
+        log.info(f"Skip encoding since {output_path} exists\n")
+        return 0
+    else:
+        log.info(f"{message}...\n")
+        timer = Timer()
+        timer.start()
+        process.run()
+        time_taken = timer.stop(args.decimal_places)
+        print(f"Time Taken: {time_taken}s")
+        log.info(f"Output file: {output_path}")
+        return time_taken
+        

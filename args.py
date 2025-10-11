@@ -84,6 +84,16 @@ general_args.add_argument(
     help="Skip libvmaf if output file exists.",
 )
 
+# Skip Encoding if output file exists
+general_args.add_argument(
+    "-s",
+    "--skip",
+    action="store_true",
+    default=False,
+    help="Skip encoding if output file exists.",
+)
+
+
 # Set AV1 speed/quality ratio
 encoder_args.add_argument(
     "--av1-cpu-used",
