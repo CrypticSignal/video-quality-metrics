@@ -93,6 +93,14 @@ general_args.add_argument(
     help="Skip encoding if output file exists.",
 )
 
+# Show debug information
+general_args.add_argument(
+    "-d",
+    "--debug",
+    action="store_true",
+    default=False,
+    help="Print debug message and command line.",
+)
 
 # Set AV1 speed/quality ratio
 encoder_args.add_argument(

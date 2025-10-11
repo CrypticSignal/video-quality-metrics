@@ -68,6 +68,6 @@ def run_libvmaf(
 
         timer = Timer()
         timer.start()
-        process.run()
+        process.run(print_command=args.debug)
         log.info(f"Time Taken: {timer.stop(args.decimal_places)}s")
         
