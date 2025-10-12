@@ -126,7 +126,7 @@ def exit_program(message):
 
 
 def force_decimal_places(value, decimal_places):
-    return f"{value:.{decimal_places}f}"
+    return f"{value:.0{decimal_places}f}"
 
 
 def line():
