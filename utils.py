@@ -63,14 +63,22 @@ class VideoInfoProvider:
     def __init__(self, video_path):
         self._video_path = video_path
 
-    def get_bitrate(self, decimal_places, video_path=None):
-        if video_path:
-            bitrate = probe(video_path)["format"]["bit_rate"]
+    def get_bitrate_str(self, decimal_places, video_path=None):
+        bitrate=self.get_bitrate(decimal_places, video_path)
+        if bitrate >= 0:
+            return f"{metric_size(bitrate, decimal_places, 'bps')}"
         else:
-            bitrate = probe(self._video_path)["format"]["bit_rate"]
-        return (
-            f"{force_decimal_places((int(bitrate) / 1_000_000), decimal_places)} Mbps"
-        )
+            return "N/A"
+
+    def get_bitrate(self, decimal_places, video_path=None):
+        try:
+            if video_path:
+                bitrate = probe(video_path)["format"]["bit_rate"]
+            else:
+                bitrate = probe(self._video_path)["format"]["bit_rate"]
+            return float(bitrate)
+        except:
+            return -1
 
     def get_framerate_fraction(self):
         r_frame_rate = [
@@ -84,9 +92,16 @@ class VideoInfoProvider:
         numerator, denominator = self.get_framerate_fraction().split("/")
         return int(numerator) / int(denominator)
 
-    def get_duration(self):
-        return float(probe(self._video_path)["format"]["duration"])
+    def get_duration_str(self, decimal_places=2):
+        duration = self.get_duration()
+        return f"{duration:.0{decimal_places}f} s" if duration >= 0 else "N/A"
 
+    def get_duration(self):
+        try:
+            return float(probe(self._video_path)["format"]["duration"])
+        except:
+            return -1
+    
 
 log = Logger("utils")
 
