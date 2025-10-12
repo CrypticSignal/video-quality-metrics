@@ -150,6 +150,7 @@ def process_combination(
     args,
     table: PrettyTable,
     vmaf_scores: List[float],
+    stat_file_prefix: str
 ) -> float:
     current_output_folder = os.path.join(output_folder, f"{args.encoder}_" + combination.replace(" ", "_"))
     os.makedirs(current_output_folder, exist_ok=True)
@@ -183,6 +184,7 @@ def process_combination(
         combination_string,
         args,
         table,
+        stat_file_prefix
     )
     vmaf_scores.append(vmaf_score)
     return vmaf_score
