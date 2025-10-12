@@ -72,6 +72,7 @@ general_args.add_argument(
     "-l",
     "--leading",
     nargs="+",
+    default=[],
     help='Specify leading ffmpeg parameter(s) without dash. (e.g. "hwaccel d3d11va" "hwaccel_output_format d3d11")',
 )
 
