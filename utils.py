@@ -202,3 +202,17 @@ def get_metrics_list(args):
     ]
 
     return list(filter(None, metrics_list))
+
+def metric_size(value, decimal_places = 2, suffix="iB", default="N/A", base = 1024, seperator = " "):
+    units = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"]
+    index = 0
+    
+    if type(value) != float:
+        value = float(value)
+    if value < 0:
+        return default
+    while value > base and index < len(units):
+        value = value / base
+        index = index + 1
+    
+    return f"{value:.0{decimal_places}f}{seperator}{units[index]}{suffix}"
