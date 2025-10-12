@@ -23,7 +23,7 @@ def create_clips(input_video, output_folder, interval_seconds, clip_length):
     os.makedirs(output_folder, exist_ok=True)
 
     provider = VideoInfoProvider(input_video)
-    duration = int(float(provider.get_duration()))
+    duration = provider.get_duration()
 
     if interval_seconds > duration:
         raise ClipError(
