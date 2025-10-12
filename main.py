@@ -295,10 +295,14 @@ def main():
     args = parser.parse_args()
     validate_args(args)
 
-    video_path, filename, fps, fps_float, original_bitrate, output_folder = (
-        get_video_info(args.input_video, args.decimal_places, args.output_folder)
+    video_path, filename, fps, fps_float, original_bitrate, output_folder, input_video_info = (
+        get_video_info(args.input_video, args.decimal_places,
+                       args.output_folder)
     )
     table = initialize_table(args)
+    row = [args.input_video, input_video_info['streams'][0]['codec_name'], "-", metric_size(input_video_info["format"]['size']), metric_size(input_video_info["format"]['bit_rate']), f"{int(float(input_video_info['format']['duration']))} s", "-", "-", "-"]
+    table.add_row(row)
+
     timer = Timer()
     vmaf_scores = []
 
