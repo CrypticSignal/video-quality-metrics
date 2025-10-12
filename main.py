@@ -40,7 +40,7 @@ def validate_args(args) -> None:
 
 def get_video_info(
     input_video: str, decimal_places: int, output_folder: Optional[str] = None
-) -> Tuple[str, str, str, str, float, str]:
+) -> Tuple[str, str, str, str, float, str, List]:
     filename = Path(input_video).name
     output_folder = output_folder or filename
     # Replace any character that is not a letter, digit, underscore or hyphen with an underscore
@@ -55,8 +55,9 @@ def get_video_info(
         filename,
         provider.get_framerate_fraction(),
         provider.get_framerate_float(),
-        provider.get_bitrate(decimal_places),
+        provider.get_bitrate_str(decimal_places),
         output_folder,
+        provider.get_all()
     )
 
 
