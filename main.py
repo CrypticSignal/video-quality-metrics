@@ -70,6 +70,7 @@ def initialize_table(args) -> PrettyTable:
         "Encoding Time (s)",
         "Size",
         "Bitrate",
+        "Duration",
     ] + metrics_list
     table.field_names = column_names
     return table
@@ -233,14 +234,16 @@ def update_metrics(
     size = force_decimal_places(
         os.path.getsize(output_path) / 1_000_000, args.decimal_places
     )
-    bitrate = provider.get_bitrate(args.decimal_places)
+
+    bitrate = provider.get_bitrate_str(args.decimal_places)
+    duration = provider.get_duration_str()
 
     return process_metrics(
         os.path.join(output_folder, "metrics_table.txt"),
         json_file_path,
         args,
         args.decimal_places,
-        [f"{size} MB", bitrate],
+        [size, bitrate, duration],
         table,
         current_output_folder,
         time_taken,
