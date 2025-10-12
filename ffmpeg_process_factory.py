@@ -47,9 +47,9 @@ class EncodingArguments:
             params=item.split(" ")
             for index,param in enumerate(params):
                 if(index % 2 == 0):
-                    self._base_ffmpeg_arguments.insert(index+2, "-" + param.strip())
+                    self._base_ffmpeg_arguments.insert(i+2, "-" + param.strip())
                 else:
-                    self._base_ffmpeg_arguments.insert(index+2, param.strip())
+                    self._base_ffmpeg_arguments.insert(i+2, param.strip())
                 i=i+1
 
         if self.encoder_options.options is not None:
