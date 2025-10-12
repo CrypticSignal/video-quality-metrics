@@ -197,7 +197,7 @@ def plot_graph(
 
 def write_table_info(table_path, video_filename, original_bitrate, args):
     with open(table_path, "a") as f:
-        f.write(
+        buff = (
             f"\nOriginal File: {video_filename}\n"
             f"Original Bitrate: {original_bitrate}\n"
             f"VQM transcoded the file with the {args.encoder} encoder\n"
@@ -209,6 +209,8 @@ def write_table_info(table_path, video_filename, original_bitrate, args):
             )
             + f"libvmaf n_subsample: {args.n_subsample}"
         )
+        f.write(buff)
+        return buff
 
 
 def get_metrics_list(args):

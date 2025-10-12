@@ -103,6 +103,15 @@ general_args.add_argument(
     help="Print debug message and command line.",
 )
 
+# Skip Encoding if output file exists
+general_args.add_argument(
+    "-P",
+    "--print",
+    action="store_true",
+    default=False,
+    help="Print metrics table.",
+)
+
 # Set AV1 speed/quality ratio
 encoder_args.add_argument(
     "--av1-cpu-used",

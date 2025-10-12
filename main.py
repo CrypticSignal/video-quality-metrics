@@ -269,7 +269,7 @@ def finalise(
 ) -> None:
     mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
 
-    write_table_info(
+    buff = write_table_info(
         os.path.join(output_folder, f"{stat_file_prefix}_metrics_table.txt"),
         filename,
         original_bitrate,
@@ -289,6 +289,7 @@ def finalise(
         os.path.join(output_folder, f"{stat_file_prefix} vs VMAF"),
         bar_graph=True,
     )
+    return buff
 
 
 def main():
@@ -358,11 +359,14 @@ def main():
     line()
     log.info(f"Total Time Taken: {timer.stop(args.decimal_places)}s")
 
-    finalise(filename, output_folder, original_bitrate, args, vmaf_scores, stat_file_prefix)
+    buff = finalise(filename, output_folder, original_bitrate, args, vmaf_scores, stat_file_prefix)
 
     line()
     log.info(f"All done! Check out the contents of the '{output_folder}' folder.")
     log.close()
-
+    
+    if args.print:
+        print(table.get_string())
+        print(buff)
 
 main()
