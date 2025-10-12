@@ -33,11 +33,7 @@ class EncodingArguments:
             "-i",
             str(self.original_video_path),
             "-map",
-            "0",
-            "-c:a",
-            "copy",
-            "-c:s",
-            "copy",
+            "0:v",
             "-c:v",
             self.encoder_options.encoder,
         ]
