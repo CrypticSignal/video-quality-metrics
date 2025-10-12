@@ -74,6 +74,10 @@ def initialize_table(args) -> PrettyTable:
         "Duration",
     ] + metrics_list
     table.field_names = column_names
+    table.align['Size']="r"
+    table.align['Bitrate']="r"
+    table.align['Duration']="r"
+    table.align['Encoding Time (s)']="r"
     return table
 
 
