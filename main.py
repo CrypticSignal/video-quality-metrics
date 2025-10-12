@@ -237,7 +237,7 @@ def update_metrics(
     )
 
     bitrate = provider.get_bitrate_str(args.decimal_places)
-    duration = provider.get_duration_str()
+    duration = provider.get_duration_str(args.decimal_places)
 
     return process_metrics(
         os.path.join(output_folder, "metrics_table.txt"),
@@ -300,7 +300,7 @@ def main():
                        args.output_folder)
     )
     table = initialize_table(args)
-    row = [args.input_video, input_video_info['streams'][0]['codec_name'], "-", metric_size(input_video_info["format"]['size'], args.decimal_places), metric_size(input_video_info["format"]['bit_rate'], args.decimal_places, "bps"), f"{int(float(input_video_info['format']['duration']))} s", "-", "-", "-"]
+    row = [args.input_video, input_video_info['streams'][0]['codec_name'], "-", metric_size(input_video_info["format"]['size'], args.decimal_places), metric_size(input_video_info["format"]['bit_rate'], args.decimal_places, "bps"), f"{float(input_video_info['format']['duration']):.0{args.decimal_places}f} s", "-", "-", "-"]
     table.add_row(row)
 
     timer = Timer()
