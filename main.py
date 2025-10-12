@@ -24,6 +24,7 @@ from utils import (
     write_table_info,
     get_metrics_list,
     Timer,
+    metric_size
 )
 
 log = Logger("main.py")
@@ -231,8 +232,8 @@ def update_metrics(
     table: PrettyTable,
 ) -> float:
     provider = VideoInfoProvider(output_path)
-    size = force_decimal_places(
-        os.path.getsize(output_path) / 1_000_000, args.decimal_places
+    size = metric_size(
+        os.path.getsize(output_path), args.decimal_places
     )
 
     bitrate = provider.get_bitrate_str(args.decimal_places)
