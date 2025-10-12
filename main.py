@@ -362,7 +362,8 @@ def main():
     buff = finalise(filename, output_folder, original_bitrate, args, vmaf_scores, stat_file_prefix)
 
     line()
-    log.info(f"All done! Check out the contents of the '{output_folder}' folder.")
+    log.info(
+        f"All done! Check out the contents starting with '{output_folder}{os.sep}{stat_file_prefix}*'")
     log.close()
     
     if args.print:
