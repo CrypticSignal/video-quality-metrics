@@ -54,7 +54,7 @@ class EncodingArguments:
     def get_arguments(self) -> List[str]:
         if self.output_path is None:
             raise ValueError("Output path must be specified")
-
+        encoding_arguments = []
         if self.encoder_options.encoder == "libaom-av1":
             if self.encoder_options.av1_cpu_used is None:
                 raise ValueError(
