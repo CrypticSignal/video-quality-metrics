@@ -300,7 +300,7 @@ def main():
                        args.output_folder)
     )
     table = initialize_table(args)
-    row = [args.input_video, input_video_info['streams'][0]['codec_name'], "-", metric_size(input_video_info["format"]['size']), metric_size(input_video_info["format"]['bit_rate']), f"{int(float(input_video_info['format']['duration']))} s", "-", "-", "-"]
+    row = [args.input_video, input_video_info['streams'][0]['codec_name'], "-", metric_size(input_video_info["format"]['size'], args.decimal_places), metric_size(input_video_info["format"]['bit_rate'], args.decimal_places, "bps"), f"{int(float(input_video_info['format']['duration']))} s", "-", "-", "-"]
     table.add_row(row)
 
     timer = Timer()
