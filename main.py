@@ -320,7 +320,8 @@ def main():
     log.info("Here's some information about the original video:")
     log.info(f"Filename: {filename}")
     log.info(f"Bitrate: {original_bitrate}")
-    log.info(f"Framerate: {fps} ({fps_float}) FPS")
+    log.info(f"Codec name of streams 0: {input_video_info['streams'][0]['codec_name']}")
+    log.info(f"Frame rate: {fps} ({fps_float}) FPS")
     line()
 
     timer.start()
