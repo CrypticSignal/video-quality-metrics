@@ -37,7 +37,7 @@ general_args.add_argument(
     "--input-video",
     type=str,
     required=True,
-    help="Input video. Can be a relative or absolute path, or a URL.\n"
+    help="Input video. Can be a relative or absolute path with wildcard, or a URL.\n"
     "If the path contains a space, it must be surrounded in double quotes.",
 )
 

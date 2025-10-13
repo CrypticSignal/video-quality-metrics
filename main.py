@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import glob
 from typing import List, Optional, Tuple
 
 import numpy as np
@@ -293,25 +294,13 @@ def finalise(
     )
     return buff
 
-
-def main():
-    if len(sys.argv) == 1:
-        line()
-        log.info(
-            'For more details about the available arguments, enter "python main.py -h"'
-        )
-        line()
-        return
-
-    args = parser.parse_args()
-    validate_args(args)
-
+def begin(args, input_video):
     video_path, filename, fps, fps_float, original_bitrate, output_folder, input_video_info = (
-        get_video_info(args.input_video, args.decimal_places,
+        get_video_info(input_video, args.decimal_places,
                        args.output_folder)
     )
     table = initialize_table(args)
-    row = [args.input_video, input_video_info['streams'][0]['codec_name'], "-", metric_size(input_video_info["format"]['size'], args.decimal_places), metric_size(input_video_info["format"]['bit_rate'], args.decimal_places, "bps"), f"{float(input_video_info['format']['duration']):.0{args.decimal_places}f} s", "-", "-", "-"]
+    row = [input_video, input_video_info['streams'][0]['codec_name'], "-", metric_size(input_video_info["format"]['size'], args.decimal_places), metric_size(input_video_info["format"]['bit_rate'], args.decimal_places, "bps"), f"{float(input_video_info['format']['duration']):.0{args.decimal_places}f} s", "-", "-", "-"]
     table.add_row(row)
 
     timer = Timer()
@@ -372,4 +361,26 @@ def main():
         print(table.get_string())
         print(buff)
 
+def main():
+    if len(sys.argv) == 1:
+        line()
+        log.info(
+            'For more details about the available arguments, enter "python main.py -h"'
+        )
+        line()
+        return
+
+    args = parser.parse_args()
+    validate_args(args)
+
+    if os.path.exists(args.input_video):
+        begin(args, args.input_video)
+    else:
+        input_videos=glob.glob(args.input_video)
+        if input_videos:
+            for input_video in input_videos:
+                begin(args, input_video)
+        else:
+            log.warning(f"Input file {args.input_video} not found")
+    
 main()

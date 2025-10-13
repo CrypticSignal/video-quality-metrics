@@ -1,6 +1,7 @@
 import os
 import requests
-
+import glob
+from urllib.parse import urlparse
 
 class ArgumentsValidator:
     def validate(self, args):
@@ -20,7 +21,8 @@ class ArgumentsValidator:
         return result, validation_errors
 
     def __validate_original_video_exists(self, input_video):
+        url_parts = urlparse(input_video)
         return (
-            os.path.exists(input_video) or requests.get(input_video).ok,
+            os.path.exists(input_video) or glob.glob(input_video) or (url_parts.scheme and requests.get(input_video).ok),
             f"Unable to find {input_video}",
         )
