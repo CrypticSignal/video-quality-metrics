@@ -23,6 +23,6 @@ class ArgumentsValidator:
     def __validate_original_video_exists(self, input_video):
         url_parts = urlparse(input_video)
         return (
-            os.path.exists(input_video) or glob.glob(input_video) or (url_parts.scheme and requests.get(input_video).ok),
+            os.path.exists(input_video) or glob.glob(input_video) or (url_parts.scheme and requests.head(input_video).ok),
             f"Unable to find {input_video}",
         )
