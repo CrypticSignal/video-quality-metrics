@@ -48,7 +48,7 @@ def get_video_info(input_video: str, decimal_places: int) -> Tuple[str, str, str
         provider.get_framerate_fraction(),
         provider.get_framerate_float(),
         provider.get_bitrate_str(decimal_places),
-        provider.get_all()
+        provider.get_all_info()
     )
 
 

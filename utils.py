@@ -106,7 +106,7 @@ class VideoInfoProvider:
         except:
             return -1
     
-    def get_all(self):
+    def get_all_info(self):
         return probe(self._video_path)
         
 
