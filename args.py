@@ -76,19 +76,19 @@ general_args.add_argument(
     help='Specify leading ffmpeg parameter(s) without dash. (e.g. "hwaccel d3d11va" "hwaccel_output_format d3d11")',
 )
 
-# Skip libvmaf if Output File Exists
+# Skip libvmaf if output file exists
 general_args.add_argument(
-    "-m",
+    "-sl",
     "--skip-libvmaf",
     action="store_true",
     default=False,
     help="Skip libvmaf if output file exists.",
 )
 
-# Skip Encoding if output file exists
+# Skip transcoding if output file exists
 general_args.add_argument(
-    "-s",
-    "--skip",
+    "-st",
+    "--skip-transcoding",
     action="store_true",
     default=False,
     help="Skip encoding if output file exists.",
