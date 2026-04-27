@@ -61,7 +61,7 @@ def run_libvmaf(
         metric_types = f"{', '.join(metrics_list[:-1])} and {metrics_list[-1]}"
 
     line()
-    if os.path.exists(json_file_path) or args.skip_libvmaf:
+    if os.path.exists(json_file_path) and args.skip_libvmaf:
         log.info(f"{json_file_path} exists. Skipping libvmaf.")
     else:
         log.info(f"Calculating the {metric_types}{message}...\n")

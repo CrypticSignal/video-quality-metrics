@@ -31,7 +31,7 @@ def transcode_video(
     )
 
     line()
-    if os.path.exists(output_path) or args.skip_transcoding:
+    if os.path.exists(output_path) and args.skip_transcoding:
         log.info(f"{output_path} exists. Skipping transcoding.")
         return 0
     else:
