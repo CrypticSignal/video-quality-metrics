@@ -58,7 +58,7 @@ def initialize_table(args) -> PrettyTable:
     column_names = [
         "Combination" if args.combinations else args.parameter,
         "Encoder",
-        "Encoding Time (s)",
+        "Transcode Time (s)",
         "Size",
         "Bitrate",
         "Duration",
@@ -67,7 +67,7 @@ def initialize_table(args) -> PrettyTable:
     table.align['Size']="r"
     table.align['Bitrate']="r"
     table.align['Duration']="r"
-    table.align['Encoding Time (s)']="r"
+    table.align['Transcode Time (s)']="r"
     return table
 
 

@@ -96,9 +96,9 @@ class VideoInfoProvider:
         numerator, denominator = self.get_framerate_fraction().split("/")
         return int(numerator) / int(denominator)
 
-    def get_duration_str(self, decimal_places=2):
+    def get_duration_str(self, decimal_places=3):
         duration = self.get_duration()
-        return f"{duration:.0{decimal_places}f} s" if duration >= 0 else "N/A"
+        return f"{duration:.{decimal_places}f} s" if duration >= 0 else "N/A"
 
     def get_duration(self):
         try:
