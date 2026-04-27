@@ -277,7 +277,7 @@ def format_value(
         value = value / base
         index += 1
 
-    # No decimal places it's bytes or bits   
+    # No decimal places if it's bytes or bits   
     if index == 0:
         decimal_places = 0
 

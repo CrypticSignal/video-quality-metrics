@@ -103,7 +103,7 @@ general_args.add_argument(
     help="Print debug message and command line.",
 )
 
-# Skip Encoding if output file exists
+# Print the metrics table in the terminal
 general_args.add_argument(
     "-P",
     "--print",
