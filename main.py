@@ -25,7 +25,7 @@ from utils import (
     write_table_info,
     get_metrics_list,
     Timer,
-    metric_size
+    format_value
 )
 
 log = Logger("main.py")
@@ -226,7 +226,7 @@ def update_metrics(
     table: PrettyTable
 ) -> float:
     provider = VideoInfoProvider(output_path)
-    size = metric_size(
+    size = format_value(
         os.path.getsize(output_path), args.decimal_places
     )
 
@@ -299,7 +299,7 @@ def begin(args, input_video):
         get_video_info(input_video, args.decimal_places)
     )
     table = initialize_table(args)
-    row = [input_video, input_video_info['streams'][0]['codec_name'], "-", metric_size(input_video_info["format"]['size'], args.decimal_places), metric_size(input_video_info["format"]['bit_rate'], args.decimal_places, "bps"), f"{float(input_video_info['format']['duration']):.0{args.decimal_places}f} s", "-", "-", "-"]
+    row = [input_video, input_video_info['streams'][0]['codec_name'], "-", format_value(input_video_info["format"]['size'], args.decimal_places), format_value(input_video_info["format"]['bit_rate'], args.decimal_places, input_unit_type="bits"), f"{float(input_video_info['format']['duration']):.0{args.decimal_places}f} s", "-", "-", "-"]
     table.add_row(row)
 
     timer = Timer()

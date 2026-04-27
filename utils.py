@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import sys
 from time import time
+from typing import Literal
 
 from ffmpeg import probe
 import matplotlib.pyplot as plt
@@ -47,6 +48,9 @@ class Logger:
             self._logger.removeHandler(handler)
 
 
+log = Logger("utils")
+
+
 class Timer:
     def start(self):
         self._start_time = time()
@@ -66,7 +70,7 @@ class VideoInfoProvider:
     def get_bitrate_str(self, decimal_places, video_path=None):
         bitrate=self.get_bitrate(decimal_places, video_path)
         if bitrate >= 0:
-            return f"{metric_size(bitrate, decimal_places, 'bps')}"
+            return f"{format_value(bitrate, decimal_places, input_unit_type='bits')}"
         else:
             return "N/A"
 
@@ -104,9 +108,7 @@ class VideoInfoProvider:
     
     def get_all(self):
         return probe(self._video_path)
-
-log = Logger("utils")
-
+        
 
 def cut_video(filename, args, output_ext, output_folder, comparison_table):
     cut_version_filename = (
@@ -143,7 +145,7 @@ def exit_program(message):
 
 
 def force_decimal_places(value, decimal_places):
-    return f"{value:.0{decimal_places}f}"
+    return f"{value:.{decimal_places}f}"
 
 
 def line():
@@ -222,16 +224,62 @@ def get_metrics_list(args):
 
     return list(filter(None, metrics_list))
 
-def metric_size(value, decimal_places = 2, suffix="iB", default="N/A", base = 1024, seperator = " "):
-    units = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"]
-    index = 0
-    
-    if type(value) != float:
+
+def format_value(
+    value,
+    decimal_places: int = 3,
+    system: Literal["si", "iec"] = "si",
+    input_unit_type: Literal["bytes", "bits"] = "bytes",
+    output_unit_type: Literal["bytes", "bits"] = "bytes",
+    default: str = "N/A",
+    separator: str = " "
+):
+    """
+    system:
+        "si"  -> base 1000 (KB, MB, GB)
+        "iec" -> base 1024 (KiB, MiB, GiB)
+
+    """
+    if system not in ("si", "iec"):
+        raise ValueError("system must be 'si' or 'iec'")
+
+    if input_unit_type not in ("bytes", "bits") or output_unit_type not in ("bytes", "bits"):
+        raise ValueError("units must be 'bytes' or 'bits'")
+
+    try:
         value = float(value)
+    except (TypeError, ValueError):
+        return default
+
     if value < 0:
         return default
-    while value > base and index < len(units):
+
+    if input_unit_type == "bits" and output_unit_type == "bytes":
+        value = value / 8
+
+    if input_unit_type == "bytes" and output_unit_type == "bits":
+        value = value * 8
+
+    if output_unit_type == "bits":
+        suffix = "b"
+    else:
+        suffix = "B"
+
+    if system == "iec":
+        base, prefixes = 1024, ["", "Ki", "Mi", "Gi", "Ti", "Pi"]
+    else:
+        base, prefixes = 1000, ["", "K", "M", "G", "T", "P"]
+
+    units = [p + suffix for p in prefixes]
+
+    index = 0
+    while value >= base and index < len(units) - 1:
         value = value / base
-        index = index + 1
-    
-    return f"{value:.0{decimal_places}f}{seperator}{units[index]}{suffix}"
+        index += 1
+
+    # No decimal places it's bytes or bits   
+    if index == 0:
+        decimal_places = 0
+
+
+    return f"{value:.{decimal_places}f}{separator}{units[index]}"
