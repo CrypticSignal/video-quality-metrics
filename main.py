@@ -40,25 +40,14 @@ def validate_args(args) -> None:
         exit_program("Argument validation failed.")
 
 
-def get_video_info(
-    input_video: str, decimal_places: int, output_folder: Optional[str] = None
-) -> Tuple[str, str, str, str, float, str, List]:
-    filename = Path(input_video).name
-    output_folder = output_folder or filename
-    # Replace any character that is not a letter, digit, underscore or hyphen with an underscore
-    output_folder = re.sub(r"[^a-zA-Z0-9_-]", "_", output_folder)
-
-    os.makedirs(output_folder, exist_ok=True)
-
+def get_video_info(input_video: str, decimal_places: int) -> Tuple[str, str, str, str, float, str, List]:
     provider = VideoInfoProvider(input_video)
 
     return (
         input_video,
-        filename,
         provider.get_framerate_fraction(),
         provider.get_framerate_float(),
         provider.get_bitrate_str(decimal_places),
-        output_folder,
         provider.get_all()
     )
 
@@ -89,14 +78,14 @@ def handle_video_filters(args) -> None:
         line()
 
 
-def prepare_video(video_path: str, filename: str, output_folder: str, args, stat_file_prefix) -> str:
+def prepare_video(video_path: str, filename: str, output_folder: str, args) -> str:
     if args.transcode_length:
         video_path = cut_video(
             filename,
             args,
             ".mkv",
             output_folder,
-            os.path.join(output_folder, f"{stat_file_prefix}_metrics_table.txt"),
+            os.path.join(output_folder, "metrics_table.txt"),
         )
 
     if args.interval is not None:
@@ -150,8 +139,7 @@ def process_combination(
     output_folder: str,
     args,
     table: PrettyTable,
-    vmaf_scores: List[float],
-    stat_file_prefix: str
+    vmaf_scores: List[float]
 ) -> float:
     current_output_folder = os.path.join(output_folder, f"{args.encoder}_" + combination.replace(" ", "_"))
     os.makedirs(current_output_folder, exist_ok=True)
@@ -184,8 +172,7 @@ def process_combination(
         time_taken,
         combination_string,
         args,
-        table,
-        stat_file_prefix
+        table
     )
     vmaf_scores.append(vmaf_score)
     return vmaf_score
@@ -197,8 +184,7 @@ def process_parameter_value(
     output_folder: str,
     args,
     table: PrettyTable,
-    vmaf_scores: List[float],
-    stat_file_prefix: str
+    vmaf_scores: List[float]
 ) -> float:
     current_output_folder = os.path.join(output_folder, f"{args.encoder}_{args.parameter}_{value}")
     os.makedirs(current_output_folder, exist_ok=True)
@@ -223,8 +209,7 @@ def process_parameter_value(
         time_taken,
         value,
         args,
-        table,
-        stat_file_prefix
+        table
     )
     vmaf_scores.append(vmaf_score)
     return vmaf_score
@@ -238,8 +223,7 @@ def update_metrics(
     time_taken: float,
     value: str,
     args,
-    table: PrettyTable,
-    stat_file_prefix: str
+    table: PrettyTable
 ) -> float:
     provider = VideoInfoProvider(output_path)
     size = metric_size(
@@ -250,7 +234,7 @@ def update_metrics(
     duration = provider.get_duration_str(args.decimal_places)
 
     return process_metrics(
-        os.path.join(output_folder, f"{stat_file_prefix}_metrics_table.txt"),
+        os.path.join(output_folder, "metrics_table.txt"),
         json_file_path,
         args,
         args.decimal_places,
@@ -267,13 +251,12 @@ def finalise(
     output_folder: str,
     original_bitrate: str,
     args,
-    vmaf_scores: List[float],
-    stat_file_prefix: str
+    vmaf_scores: List[float]
 ) -> None:
     mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
 
     buff = write_table_info(
-        os.path.join(output_folder, f"{stat_file_prefix}_metrics_table.txt"),
+        os.path.join(output_folder, "metrics_table.txt"),
         filename,
         original_bitrate,
         args,
@@ -289,15 +272,31 @@ def finalise(
         values,
         vmaf_scores,
         mean_vmaf,
-        os.path.join(output_folder, f"{stat_file_prefix} vs VMAF"),
+          os.path.join(output_folder, f"{parameter} vs VMAF"),
         bar_graph=True,
     )
     return buff
 
+
+def define_output_folder(filename: str, args):
+    if args.output_folder:
+        output_folder = args.output_folder
+    elif args.combinations:
+        output_folder = f"{filename}_combination_mode"
+    else:
+        output_folder = filename
+
+    # Replace any character that is not a letter, digit, underscore or hyphen with an underscore
+    output_folder = re.sub(r"[^a-zA-Z0-9_-]", "_", output_folder)
+
+    os.makedirs(output_folder, exist_ok=True)
+
+    return output_folder
+
+
 def begin(args, input_video):
-    video_path, filename, fps, fps_float, original_bitrate, output_folder, input_video_info = (
-        get_video_info(input_video, args.decimal_places,
-                       args.output_folder)
+    video_path, fps, fps_float, original_bitrate, input_video_info = (
+        get_video_info(input_video, args.decimal_places)
     )
     table = initialize_table(args)
     row = [input_video, input_video_info['streams'][0]['codec_name'], "-", metric_size(input_video_info["format"]['size'], args.decimal_places), metric_size(input_video_info["format"]['bit_rate'], args.decimal_places, "bps"), f"{float(input_video_info['format']['duration']):.0{args.decimal_places}f} s", "-", "-", "-"]
@@ -308,6 +307,8 @@ def begin(args, input_video):
 
     with open("logs.log", "w"):
         pass
+
+    filename = Path(input_video).name
 
     line()
     log.info("Video Quality Metrics")
@@ -323,15 +324,14 @@ def begin(args, input_video):
     timer.start()
     handle_video_filters(args)
 
+    output_folder = define_output_folder(filename, args)
+
     if args.combinations:
         log.info("Combination Mode activated.")
-        stat_file_prefix=f"{args.encoder}_combination"
-        video_path = prepare_video(video_path, filename, output_folder, args, stat_file_prefix)
+        video_path = prepare_video(video_path, filename, output_folder, args)
 
         for combination in args.combinations.split(","):
-            process_combination(
-                combination, video_path, output_folder, args, table, vmaf_scores, stat_file_prefix
-            )
+            process_combination(combination, video_path, output_folder, args, table, vmaf_scores)
     else:
         log.info(
             f"Values of {args.encoder}'s '-{args.parameter}' parameter will be compared."
@@ -339,22 +339,19 @@ def begin(args, input_video):
         log.info(
             f"The following values will be compared: {', '.join(str(value) for value in args.values)}"
         )
-        stat_file_prefix=f"{args.encoder}_{args.parameter}"
-        video_path = prepare_video(video_path, filename, output_folder, args, stat_file_prefix)
+        video_path = prepare_video(video_path, filename, output_folder, args)
         
         for value in args.values:
-            process_parameter_value(
-                value, video_path, output_folder, args, table, vmaf_scores, stat_file_prefix
-            )
+            process_parameter_value(value, video_path, output_folder, args, table, vmaf_scores)
 
     line()
     log.info(f"Total Time Taken: {timer.stop(args.decimal_places)}s")
 
-    buff = finalise(filename, output_folder, original_bitrate, args, vmaf_scores, stat_file_prefix)
+    buff = finalise(filename, output_folder, original_bitrate, args, vmaf_scores)
 
     line()
     log.info(
-        f"All done! Check out the contents starting with '{output_folder}{os.sep}{stat_file_prefix}*'")
+        f"All done! Check out the contents of the '{output_folder}' folder.")
     log.close()
     
     if args.print:
