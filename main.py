@@ -281,6 +281,8 @@ def finalise(
 def define_output_folder(filename: str, args):
     if args.output_folder:
         output_folder = args.output_folder
+    elif args.interval:
+        output_folder = f"{filename}_overview_mode"
     elif args.combinations:
         output_folder = f"{filename}_combination_mode"
     else:
