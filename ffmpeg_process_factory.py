@@ -38,8 +38,6 @@ class EncodingArguments:
             "-y",
             "-i",
             str(self.original_video_path),
-            "-map",
-            "0:v",
             "-c:v",
             self.encoder_options.encoder,
         ]
