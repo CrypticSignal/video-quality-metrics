@@ -1,3 +1,4 @@
+import shlex
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Union
@@ -9,7 +10,6 @@ log = Logger("factory")
 @dataclass
 class EncoderOptions:
     encoder: str
-    options: Optional[str] = None
     av1_cpu_used: Optional[str] = None
 
 
@@ -21,11 +21,17 @@ class EncodingArguments:
     parameter: Optional[str] = None
     value: Optional[str] = None
     combination: Optional[List[str]] = None
-    leading: Optional[List[str]] = None
+    input_options: Optional[str] = None
+    output_options: Optional[str] = None
 
     def __post_init__(self) -> None:
         self.original_video_path = Path(self.original_video_path)
         self.output_path = Path(self.output_path)
+        # Turn into a list e.g.
+        # -c:a aac -b:a 128k to ['-c:a', 'aac', '-b:a', '128k']
+        # -x264-params keyint=123:min-keyint=20 to ['-x264-params', 'keyint=123:min-keyint=20']
+        self.input_options = shlex.split(self.input_options) if self.input_options else None
+        self.output_options = shlex.split(self.output_options) if self.output_options else None
 
         self._base_ffmpeg_arguments = [
             "ffmpeg",
@@ -38,18 +44,12 @@ class EncodingArguments:
             self.encoder_options.encoder,
         ]
 
-        i=0
-        for item in self.leading:
-            params=item.split(" ")
-            for index,param in enumerate(params):
-                if(index % 2 == 0):
-                    self._base_ffmpeg_arguments.insert(i+2, "-" + param.strip())
-                else:
-                    self._base_ffmpeg_arguments.insert(i+2, param.strip())
-                i=i+1
+        if self.input_options is not None:
+            insert_at = self._base_ffmpeg_arguments.index("-i")
+            self._base_ffmpeg_arguments[insert_at:insert_at] = self.input_options
 
-        if self.encoder_options.options is not None:
-            self._base_ffmpeg_arguments.extend(self.encoder_options.options.split())
+        if self.output_options is not None:
+            self._base_ffmpeg_arguments.extend(self.output_options)
 
     def get_arguments(self) -> List[str]:
         if self.output_path is None:

@@ -12,7 +12,6 @@ def transcode_video(
 ):
     encoder_opts = EncoderOptions(
         encoder=args.encoder,
-        options=args.encoder_options,
         av1_cpu_used=args.av1_cpu_used,
     )
 
@@ -23,7 +22,8 @@ def transcode_video(
         args.parameter,
         value,
         combination,
-        args.leading,
+        input_options=args.input_options,
+        output_options=args.output_options,
     )
 
     process = FfmpegProcess(
@@ -42,5 +42,6 @@ def transcode_video(
         time_taken = timer.stop(args.decimal_places)
         print(f"Time Taken: {time_taken}s")
         log.info(f"Output file: {output_path}")
+    
         return time_taken
-        
+    

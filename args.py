@@ -67,15 +67,6 @@ general_args.add_argument(
     help="Apply video filter(s) to the original video before calculating quality metrics. Each filter must be separated by a comma.\nExample: -vf bwdif=mode=0,crop=1920:800:0:140",
 )
 
-# FFmpeg Leading Parameters
-general_args.add_argument(
-    "-l",
-    "--leading",
-    nargs="+",
-    default=[],
-    help='Specify leading ffmpeg parameter(s) without dash. (e.g. "hwaccel d3d11va" "hwaccel_output_format d3d11")',
-)
-
 # Skip libvmaf if output file exists
 general_args.add_argument(
     "-sl",
@@ -112,6 +103,25 @@ general_args.add_argument(
     help="Print metrics table.",
 )
 
+# Input Options
+general_args.add_argument(
+    "--input-options",
+    type=str,
+    help="Set general FFmpeg input options.\n"
+    "Use FFmpeg syntax and wrap it in double quotes. Example:\n"
+    '--input-options="-hwaccel d3d11va"'
+)
+
+# Output Options
+general_args.add_argument(
+    "--output-options",
+    type=str,
+    help="Set general FFmpeg output options.\n"
+    "Use FFmpeg syntax and wrap it in double quotes. Examples:\n"
+    '--output-options="-c:a aac -b:a 128k"'
+    '--output-options="-x264-params keyint=123:min-keyint=20"'
+)
+
 # Set AV1 speed/quality ratio
 encoder_args.add_argument(
     "--av1-cpu-used",
@@ -130,16 +140,6 @@ encoder_args.add_argument(
     type=str,
     default="libx264",
     help="Specify an ffmpeg video encoder.\nExamples: libx265, h264_amf, libaom-av1",
-)
-
-# Encoder Options
-encoder_args.add_argument(
-    "-eo",
-    "--encoder-options",
-    type=str,
-    help="Set general encoder options to use for all transcodes.\n"
-    "Use FFmpeg syntax. Must be surronded in quotes. Example:\n"
-    "--encoder-options='-crf 18 -x264-params keyint=123:min-keyint=20'",
 )
 
 # Encoder Parameter
