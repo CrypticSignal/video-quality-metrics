@@ -319,8 +319,9 @@ def begin(args, input_video):
     log.info("Here's some information about the original video:")
     log.info(f"Filename: {filename}")
     log.info(f"Bitrate: {original_bitrate}")
-    log.info(f"Codec name of streams 0: {input_video_info['streams'][0]['codec_name']}")
     log.info(f"Frame rate: {fps} ({fps_float}) FPS")
+    for stream in input_video_info['streams']:
+        log.info(f"Stream {stream['index']} | {stream['codec_type']} | Codec: {stream['codec_long_name']}")
     line()
 
     timer.start()
