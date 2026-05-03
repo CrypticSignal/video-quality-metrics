@@ -1,13 +1,15 @@
+from dataclasses import dataclass
 import logging
-import numpy as np
 import os
 from pathlib import Path
+import subprocess
 import sys
-from time import time
-from typing import Literal
+from time import time, perf_counter
+from typing import Literal, Optional
 
 from ffmpeg import probe
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Logger:
@@ -57,32 +59,210 @@ class Timer:
 
     def stop(self, decimal_places):
         time_to_convert = time() - self._start_time
-        time_rounded = force_decimal_places(
-            round(time_to_convert, decimal_places), decimal_places
-        )
+        time_rounded = force_decimal_places(round(time_to_convert, decimal_places), decimal_places)
         return time_rounded
+
+
+@dataclass
+class BitrateResult:
+    bitrate: int
+    confidence: str
+    method: str
 
 
 class VideoInfoProvider:
     def __init__(self, video_path):
         self._video_path = video_path
 
-    def get_bitrate_str(self, decimal_places, video_path=None):
-        bitrate=self.get_bitrate(decimal_places, video_path)
-        if bitrate >= 0:
-            return f"{format_value(bitrate, decimal_places, input_unit_type='bits')}"
-        else:
+    def get_video_bitrate_str(self, decimal_places: int) -> str:
+        result = self.get_video_bitrate()
+
+        if result is None:
             return "N/A"
 
-    def get_bitrate(self, decimal_places, video_path=None):
+        formatted = format_value(
+            result.bitrate,
+            decimal_places,
+            input_unit_type="bits",
+            output_unit_type="bits",
+        )
+
+        return f"{formatted}ps | {result.confidence} | {result.method}"
+
+    def get_video_bitrate(self) -> Optional[BitrateResult]:
+        probe_data = self._probe_file()
+
+        if probe_data is None:
+            return None
+
+        format_info = probe_data.get("format", {})
+        streams = probe_data.get("streams", [])
+
+        duration = self._parse_duration(format_info.get("duration"))
+
+        line()
+
+        # ---------------------------
+        # Method 1
+        # ---------------------------
+        log.info(
+            "Determining video bitrate by summing video packet sizes and dividing by file duration..."
+        )
+        result = self._get_bitrate_from_packets(duration)
+        if result:
+            log.info(f"Done! Bitrate: {format_value(result.bitrate, input_unit_type='bits', output_unit_type='bits')}ps | Confidence: {result.confidence} | Method: {result.method}")
+            return result
+
+        # ---------------------------
+        # Method 2 (Video Stream Metadata)
+        # ---------------------------
+        log.info("Determining video bitrate from video stream metadata...")
+        result = self._get_bitrate_from_video_stream_metadata(streams)
+        if result:
+            log.info(f"Done! Bitrate: {format_value(result.bitrate, input_unit_type='bits', output_unit_type='bits')}ps | Confidence: {result.confidence} | Method: {result.method}")
+            return result
+
+        # ---------------------------
+        # Method 3 (overall bitrate reported by container minus reported audio bitrate(s))
+        # ---------------------------
+        log.info(
+            "Determining video bitrate from overall bitrate reported by container (minus reported audio bitrate(s))..."
+        )
+        result = self._get_bitrate_from_container_minus_audio(format_info, streams)
+        if result:
+            log.info(f"Done! Bitrate: {format_value(result.bitrate, input_unit_type='bits', output_unit_type='bits')}ps | Confidence: {result.confidence} | Method: {result.method}")
+            return result
+
+        log.info("Unable to determine video bitrate.")
+        return None
+
+    def _probe_file(self):
         try:
-            if video_path:
-                bitrate = probe(video_path)["format"]["bit_rate"]
-            else:
-                bitrate = probe(self._video_path)["format"]["bit_rate"]
-            return float(bitrate)
-        except:
-            return -1
+            return probe(self._video_path)
+        except Exception as e:
+            log.info(
+                f"Unable to probe file with FFprobe. Cannot determine video bitrate. Error:\n{e}"
+            )
+            return None
+
+    def _parse_duration(self, value) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _get_bitrate_from_packets(self, duration: float) -> Optional[BitrateResult]:
+        if duration <= 0:
+            return None
+
+        start_time = perf_counter()
+
+        try:
+            cmd = [
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "V:0",
+                "-show_entries",
+                "packet=pts_time,size",
+                "-of",
+                "csv=p=0",
+                self._video_path,
+            ]
+
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                bufsize=1,
+            )
+
+            total_bytes = 0
+            packet_count = 0
+
+            last_log_time = start_time
+            LOG_FREQUENCY_SECONDS = 1
+            last_pts_time = 0.0
+
+            for line in process.stdout:
+                try:
+                    pts_time_str, size_str = line.strip().split(",")
+                    size = int(size_str)
+                    pts_time = float(pts_time_str) if pts_time_str else 0.0
+
+                    total_bytes += size
+                    packet_count += 1
+                    last_pts_time = pts_time
+
+                    now = perf_counter()
+
+                    if now - last_log_time >= LOG_FREQUENCY_SECONDS:
+                        if last_pts_time > 0:
+                            progress = min(last_pts_time / duration, 1.0) * 100
+                            log.info(
+                                f"Processed {packet_count} packets | Progress: {progress:.1f}%"
+                            )
+
+                        last_log_time = now
+
+                except ValueError:
+                    continue
+
+            process.wait()
+
+            elapsed = perf_counter() - start_time
+
+            if packet_count == 0:
+                return None
+
+            bitrate = int((total_bytes * 8) / duration)
+
+            return BitrateResult(bitrate, "High", "Video Packet Sizes")
+
+        except Exception as e:
+            log.info(f"Unable to determine video bitrate. Error:\n{e}")
+            return None
+
+    def _get_bitrate_from_video_stream_metadata(self, streams) -> Optional[BitrateResult]:
+        for stream in streams:
+            if stream.get("codec_type") == "video":
+                bitrate = stream.get("bit_rate")
+                if bitrate:
+                    return BitrateResult(int(bitrate), "Medium", "Video Stream Metadata")
+
+        log.info("Unable to determine video bitrate.")
+        return None
+
+    def _get_bitrate_from_container_minus_audio(
+        self,
+        format_info,
+        streams,
+    ) -> Optional[BitrateResult]:
+        container_bitrate = format_info.get("bit_rate")
+
+        if not container_bitrate:
+            log.info("Unable to determine video bitrate.")
+            return None
+
+        try:
+            total_audio_bitrate = sum(
+                int(s["bit_rate"])
+                for s in streams
+                if s.get("codec_type") == "audio" and s.get("bit_rate")
+            )
+
+            video_bitrate = int(container_bitrate) - total_audio_bitrate
+
+            if video_bitrate > 0:
+                return BitrateResult(video_bitrate, "Low", "Container Derived (Minus Audio)")
+
+        except (ValueError, KeyError) as e:
+            log.info(f"Unable to determine video bitrate. Error:\n{e}")
+            return None
+
+        return None
 
     def get_framerate_fraction(self):
         r_frame_rate = [
@@ -105,15 +285,13 @@ class VideoInfoProvider:
             return float(probe(self._video_path)["format"]["duration"])
         except:
             return -1
-    
+
     def get_all_info(self):
         return probe(self._video_path)
-        
+
 
 def cut_video(filename, args, output_ext, output_folder, comparison_table):
-    cut_version_filename = (
-        f"{Path(filename).stem} [{args.transcode_length}s]{output_ext}"
-    )
+    cut_version_filename = f"{Path(filename).stem} [{args.transcode_length}s]{output_ext}"
     # Output path for the cut video.
     output_file_path = os.path.join(output_folder, cut_version_filename)
     # The reference file will be the cut version of the video.
@@ -197,11 +375,10 @@ def plot_graph(
     plt.clf()
 
 
-def write_table_info(table_path, video_filename, original_bitrate, args):
+def write_table_info(table_path, video_filename, args):
     with open(table_path, "a") as f:
         buff = (
             f"\nOriginal File: {video_filename}\n"
-            f"Original Bitrate: {original_bitrate}\n"
             f"VQM transcoded the file with the {args.encoder} encoder\n"
             f"FFmpeg output options: {args.output_options}\n"
             + (
@@ -232,7 +409,7 @@ def format_value(
     input_unit_type: Literal["bytes", "bits"] = "bytes",
     output_unit_type: Literal["bytes", "bits"] = "bytes",
     default: str = "N/A",
-    separator: str = " "
+    separator: str = " ",
 ):
     """
     system:
@@ -240,6 +417,11 @@ def format_value(
         "iec" -> base 1024 (KiB, MiB, GiB)
 
     """
+    try:
+        int(value)
+    except ValueError:
+        return value
+
     if system not in ("si", "iec"):
         raise ValueError("system must be 'si' or 'iec'")
 
@@ -277,9 +459,8 @@ def format_value(
         value = value / base
         index += 1
 
-    # No decimal places if it's bytes or bits   
+    # No decimal places if it's bytes or bits
     if index == 0:
         decimal_places = 0
-
 
     return f"{value:.{decimal_places}f}{separator}{units[index]}"

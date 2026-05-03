@@ -47,7 +47,7 @@ def get_video_info(input_video: str, decimal_places: int) -> Tuple[str, str, str
         input_video,
         provider.get_framerate_fraction(),
         provider.get_framerate_float(),
-        provider.get_bitrate_str(decimal_places),
+        provider.get_video_bitrate_str(decimal_places),
         provider.get_all_info()
     )
 
@@ -60,14 +60,11 @@ def initialize_table(args) -> PrettyTable:
         "Encoder",
         "Transcode Time (s)",
         "Size",
-        "Bitrate",
+        "Video Bitrate | Confidence | Method",
         "Duration",
     ] + metrics_list
     table.field_names = column_names
-    table.align['Size']="r"
-    table.align['Bitrate']="r"
-    table.align['Duration']="r"
-    table.align['Transcode Time (s)']="r"
+
     return table
 
 
@@ -230,7 +227,7 @@ def update_metrics(
         os.path.getsize(output_path), args.decimal_places
     )
 
-    bitrate = provider.get_bitrate_str(args.decimal_places)
+    bitrate = provider.get_video_bitrate_str(args.decimal_places)
     duration = provider.get_duration_str(args.decimal_places)
 
     return process_metrics(
@@ -249,7 +246,7 @@ def update_metrics(
 def finalise(
     filename: str,
     output_folder: str,
-    original_bitrate: str,
+    original_video_bitrate: str,
     args,
     vmaf_scores: List[float]
 ) -> None:
@@ -258,7 +255,6 @@ def finalise(
     buff = write_table_info(
         os.path.join(output_folder, "metrics_table.txt"),
         filename,
-        original_bitrate,
         args,
     )
 
@@ -297,11 +293,15 @@ def define_output_folder(filename: str, args):
 
 
 def begin(args, input_video):
-    video_path, fps, fps_float, original_bitrate, input_video_info = (
+    line()
+    log.info("Video Quality Metrics")
+    log.info("Version Date: 31st May 2025")
+
+    video_path, fps, fps_float, original_video_bitrate, input_video_info = (
         get_video_info(input_video, args.decimal_places)
     )
     table = initialize_table(args)
-    row = [input_video, input_video_info['streams'][0]['codec_name'], "-", format_value(input_video_info["format"]['size'], args.decimal_places), format_value(input_video_info["format"]['bit_rate'], args.decimal_places, input_unit_type="bits"), f"{float(input_video_info['format']['duration']):.0{args.decimal_places}f} s", "-", "-", "-"]
+    row = [input_video, input_video_info['streams'][0]['codec_name'], "-", format_value(input_video_info["format"]['size'], args.decimal_places), format_value(original_video_bitrate), f"{float(input_video_info['format']['duration']):.{args.decimal_places}f} s", "-", "-", "-"]
     table.add_row(row)
 
     timer = Timer()
@@ -313,12 +313,9 @@ def begin(args, input_video):
     filename = Path(input_video).name
 
     line()
-    log.info("Video Quality Metrics")
-    log.info("Version Date: 31st May 2025")
-    line()
     log.info("Here's some information about the original video:")
     log.info(f"Filename: {filename}")
-    log.info(f"Bitrate: {original_bitrate}")
+    log.info(f"Video Bitrate | Confidence | Method:\n{original_video_bitrate}")
     log.info(f"Frame rate: {fps} ({fps_float}) FPS")
     for stream in input_video_info['streams']:
         log.info(f"Stream {stream['index']} | {stream['codec_type']} | Codec: {stream['codec_long_name']}")
@@ -350,7 +347,7 @@ def begin(args, input_video):
     line()
     log.info(f"Total Time Taken: {timer.stop(args.decimal_places)}s")
 
-    buff = finalise(filename, output_folder, original_bitrate, args, vmaf_scores)
+    buff = finalise(filename, output_folder, original_video_bitrate, args, vmaf_scores)
 
     line()
     log.info(
