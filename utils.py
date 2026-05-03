@@ -218,8 +218,6 @@ class VideoInfoProvider:
 
             process.wait()
 
-            elapsed = perf_counter() - start_time
-
             if packet_count == 0:
                 return None
 
@@ -378,7 +376,7 @@ def plot_graph(
 
     plt.tight_layout()
     plt.savefig(save_path, bbox_inches="tight")
-    plt.clf()
+    plt.close()
 
 
 def write_supplementary_info(table_path, video_filename, args):
