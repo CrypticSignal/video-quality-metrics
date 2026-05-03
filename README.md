@@ -26,23 +26,22 @@ The table is written to a file named `metrics_table.txt` and it contains the fol
 Here's an example:
 ```
 VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
-+-----------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
-|   preset  | Transcode Time (s) |    Size   |  Bitrate   |           VMAF          |           PSNR          |          SSIM         |
-+-----------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
-|  veryslow |       20.800      | 11.670 MB | 1.554 Mbps | 89.514 | 2.488 | 97.371 | 40.715 | 4.063 | 47.691 | 0.992 | 0.001 | 0.997 |
-|   slower  |       12.712      | 12.531 MB | 1.669 Mbps | 88.464 | 2.463 | 97.401 | 40.644 | 4.041 | 47.844 | 0.993 | 0.001 | 0.998 |
-|    slow   |       5.536       | 12.409 MB | 1.653 Mbps | 89.348 | 2.506 | 97.342 | 40.871 | 4.041 | 47.800 | 0.993 | 0.001 | 0.998 |
-|   medium  |       4.109       | 12.817 MB | 1.707 Mbps | 89.529 | 2.414 | 97.490 | 40.927 | 4.023 | 47.958 | 0.993 | 0.001 | 0.998 |
-|    fast   |       3.535       | 13.286 MB | 1.769 Mbps | 89.882 | 2.465 | 97.460 | 40.954 | 3.983 | 48.016 | 0.994 | 0.001 | 0.998 |
-|   faster  |       2.620       | 13.141 MB | 1.750 Mbps | 88.592 | 2.603 | 97.257 | 40.877 | 3.989 | 48.006 | 0.994 | 0.001 | 0.998 |
-|  veryfast |       1.987       | 11.761 MB | 1.566 Mbps | 83.313 | 3.698 | 95.400 | 39.779 | 4.071 | 46.612 | 0.992 | 0.002 | 0.997 |
-| superfast |       1.465       | 16.621 MB | 2.213 Mbps | 86.385 | 2.687 | 96.859 | 40.207 | 4.335 | 47.502 | 0.992 | 0.001 | 0.997 |
-| ultrafast |       0.774       | 24.623 MB | 3.279 Mbps | 88.579 | 2.067 | 97.982 | 40.093 | 4.811 | 46.288 | 0.989 | 0.002 | 0.996 |
-+-----------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
++----------------+---------+--------------------+-----------+----------------------------------------+----------+-------------------------+-------------------------+-----------------------+
+|     preset     | Encoder | Transcode Time (s) |    Size   |  Video Bitrate | Confidence | Method   | Duration |           VMAF          |           PSNR          |          SSIM         |
++----------------+---------+--------------------+-----------+----------------------------------------+----------+-------------------------+-------------------------+-----------------------+
+| Original Video |   h264  |         -          | 12.917 MB | 1.526 Mbps | High | Video Packet Sizes | 60.070 s |            -            |            -            |           -           |
+|    veryslow    | libx264 |       23.073       | 11.016 MB | 1.358 Mbps | High | Video Packet Sizes | 60.073 s | 89.514 | 2.488 | 97.371 | 40.715 | 4.063 | 47.691 | 0.992 | 0.001 | 0.997 |
+|     slower     | libx264 |       15.238       | 11.877 MB | 1.473 Mbps | High | Video Packet Sizes | 60.073 s | 88.464 | 2.463 | 97.401 | 40.644 | 4.041 | 47.844 | 0.993 | 0.001 | 0.998 |
+|      slow      | libx264 |       6.144        | 11.755 MB | 1.456 Mbps | High | Video Packet Sizes | 60.073 s | 89.348 | 2.506 | 97.342 | 40.871 | 4.041 | 47.800 | 0.993 | 0.001 | 0.998 |
+|     medium     | libx264 |       4.360        | 12.163 MB | 1.511 Mbps | High | Video Packet Sizes | 60.073 s | 89.529 | 2.414 | 97.490 | 40.927 | 4.023 | 47.958 | 0.993 | 0.001 | 0.998 |
+|      fast      | libx264 |       3.904        | 12.632 MB | 1.573 Mbps | High | Video Packet Sizes | 60.073 s | 89.882 | 2.465 | 97.460 | 40.954 | 3.983 | 48.016 | 0.994 | 0.001 | 0.998 |
+|     faster     | libx264 |       2.999        | 12.487 MB | 1.554 Mbps | High | Video Packet Sizes | 60.073 s | 88.592 | 2.603 | 97.257 | 40.877 | 3.989 | 48.006 | 0.994 | 0.001 | 0.998 |
+|    veryfast    | libx264 |       2.303        | 11.107 MB | 1.370 Mbps | High | Video Packet Sizes | 60.073 s | 83.313 | 3.698 | 95.400 | 39.779 | 4.071 | 46.612 | 0.992 | 0.002 | 0.997 |
+|   superfast    | libx264 |       1.705        | 15.967 MB | 2.017 Mbps | High | Video Packet Sizes | 60.073 s | 86.385 | 2.687 | 96.859 | 40.207 | 4.335 | 47.502 | 0.992 | 0.001 | 0.997 |
+|   ultrafast    | libx264 |       1.185        | 23.969 MB | 3.083 Mbps | High | Video Packet Sizes | 60.073 s | 88.579 | 2.067 | 97.982 | 40.093 | 4.811 | 46.288 | 0.989 | 0.002 | 0.996 |
++----------------+---------+--------------------+-----------+----------------------------------------+----------+-------------------------+-------------------------+-----------------------+
 Original File: ForBiggerFun.mp4
-Original Bitrate: 1.720 Mbps
-VQM transcoded the file with the libx264 encoder
-Encoder options: None
+FFmpeg output options: None
 libvmaf n_subsample: 1
 ```
 _Command used: `python main.py -i ForBiggerFun.mp4 -e libx264 -p preset -v veryslow slower slow medium fast faster veryfast superfast ultrafast`_
@@ -104,12 +103,13 @@ python main.py -i "ForBiggerFun.mp4" -e libx265 -c "preset slow crf 24,preset me
 The table produced will look something like this:
 ```
 VMAF/PSNR/SSIM values are in the format: Min | Standard Deviation | Mean
-+------------------------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
-|      Combination       | Transcode Time (s) |    Size   |  Bitrate   |           VMAF          |           PSNR          |          SSIM         |
-+------------------------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
-|  -preset slow -crf 24  |       32.700      |  9.768 MB | 1.301 Mbps | 90.631 | 2.206 | 97.704 | 41.371 | 4.015 | 47.687 | 0.991 | 0.001 | 0.997 |
-| -preset medium -crf 23 |       12.680      | 10.018 MB | 1.334 Mbps | 89.330 | 2.635 | 97.069 | 41.001 | 4.017 | 47.380 | 0.991 | 0.002 | 0.997 |
-+------------------------+-------------------+-----------+------------+-------------------------+-------------------------+-----------------------+
++------------------------+---------+--------------------+-----------+----------------------------------------+----------+-------------------------+-------------------------+-----------------------+
+|      Combination       | Encoder | Transcode Time (s) |    Size   |  Video Bitrate | Confidence | Method   | Duration |           VMAF          |           PSNR          |          SSIM         |
++------------------------+---------+--------------------+-----------+----------------------------------------+----------+-------------------------+-------------------------+-----------------------+
+|     Original Video     |   h264  |         -          | 12.917 MB | 1.526 Mbps | High | Video Packet Sizes | 60.070 s |            -            |            -            |           -           |
+|  -preset slow -crf 24  | libx265 |       36.423       |  9.114 MB | 1.104 Mbps | High | Video Packet Sizes | 60.073 s | 90.631 | 2.206 | 97.704 | 41.371 | 4.015 | 47.687 | 0.991 | 0.001 | 0.997 |
+| -preset medium -crf 23 | libx265 |       14.131       |  9.364 MB | 1.138 Mbps | High | Video Packet Sizes | 60.073 s | 89.330 | 2.635 | 97.069 | 41.001 | 4.017 | 47.380 | 0.991 | 0.002 | 0.997 |
++------------------------+---------+--------------------+-----------+----------------------------------------+----------+-------------------------+-------------------------+-----------------------+
 ```
 A graph will also be produced, comparing each combination:
 
@@ -122,8 +122,8 @@ A graph will also be produced, comparing each combination:
 You can see a list of the available arguments with `python main.py -h`:
 
 ```
-usage: main.py [-h] [--disable-psnr] [--disable-ssim] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-o OUTPUT_FOLDER] [-vf VIDEO_FILTERS] [--av1-cpu-used <1-8>] [-e ENCODER] [-eo ENCODER_OPTIONS] [-p PARAMETER] [-v VALUES [VALUES ...]] [-c COMBINATIONS]
-               [-cl <1-60>] [--interval <1-600>] [-n <x>] [--n-threads N_THREADS] [--phone-model]
+usage: main.py [-h] [--disable-psnr] [--disable-ssim] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-o OUTPUT_FOLDER] [-vf VIDEO_FILTERS] [-sl] [-st] [-d] [-P] [--input-options INPUT_OPTIONS] [--output-options OUTPUT_OPTIONS] [--av1-cpu-used <1-8>] [-e ENCODER]
+               [-p PARAMETER] [-v VALUES [VALUES ...]] [-c COMBINATIONS] [-cl <1-60>] [--interval <1-600>] [-n <x>] [--n-threads N_THREADS] [--phone-model]
 
 options:
   -h, --help            show this help message and exit
@@ -134,7 +134,7 @@ General Arguments:
   -dp DECIMAL_PLACES, --decimal-places DECIMAL_PLACES
                         The number of decimal places to use for the data in the table
   -i INPUT_VIDEO, --input-video INPUT_VIDEO
-                        Input video. Can be a relative or absolute path, or a URL.
+                        Input video. Must be a relative/absolute path or a glob pattern.
                         If the path contains a space, it must be surrounded in double quotes.
   -t TRANSCODE_LENGTH, --transcode-length TRANSCODE_LENGTH
                         Create a lossless version of the original video that is just the first x seconds of the video.
@@ -145,6 +145,19 @@ General Arguments:
   -vf VIDEO_FILTERS, --video-filters VIDEO_FILTERS
                         Apply video filter(s) to the original video before calculating quality metrics. Each filter must be separated by a comma.
                         Example: -vf bwdif=mode=0,crop=1920:800:0:140
+  -sl, --skip-libvmaf   Skip libvmaf if output file exists.
+  -st, --skip-transcoding
+                        Skip encoding if output file exists.
+  -d, --debug           Print debug message and command line.
+  -P, --print           Print metrics table.
+  --input-options INPUT_OPTIONS
+                        Set general FFmpeg input options.
+                        Use FFmpeg syntax and wrap it in double quotes. Example:
+                        --input-options="-hwaccel d3d11va"
+  --output-options OUTPUT_OPTIONS
+                        Set general FFmpeg output options.
+                        Use FFmpeg syntax and wrap it in double quotes. Examples:
+                        --output-options="-c:a aac -b:a 128k"--output-options="-x264-params keyint=123:min-keyint=20"
 
 Encoder Arguments:
   --av1-cpu-used <1-8>  Only applicable if the libaom-av1 (AV1) encoder is chosen. Set the quality/encoding speed tradeoff.
@@ -152,10 +165,6 @@ Encoder Arguments:
   -e ENCODER, --encoder ENCODER
                         Specify an ffmpeg video encoder.
                         Examples: libx265, h264_amf, libaom-av1
-  -eo ENCODER_OPTIONS, --encoder-options ENCODER_OPTIONS
-                        Set general encoder options to use for all transcodes.
-                        Use FFmpeg syntax. Must be surronded in quotes. Example:
-                        --encoder-options='-crf 18 -x264-params keyint=123:min-keyint=20'
   -p PARAMETER, --parameter PARAMETER
                         The encoder parameter to compare, e.g. preset, crf, quality.
                         Example: -p preset
