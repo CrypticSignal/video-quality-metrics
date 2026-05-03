@@ -55,9 +55,7 @@ class EncodingArguments:
         encoding_arguments = []
         if self.encoder_options.encoder == "libaom-av1":
             if self.encoder_options.av1_cpu_used is None:
-                raise ValueError(
-                    "av1_cpu_used must be specified for libaom-av1 encoder"
-                )
+                raise ValueError("av1_cpu_used must be specified for libaom-av1 encoder")
             encoding_arguments = [
                 "-b:v",
                 "0",
@@ -89,9 +87,7 @@ class LibVmafArguments:
     def __post_init__(self) -> None:
         self.original_video = Path(self.original_video)
         self.distorted_video = Path(self.distorted_video)
-        self._video_filters = (
-            f"{self.video_filters}," if self.video_filters is not None else ""
-        )
+        self._video_filters = f"{self.video_filters}," if self.video_filters is not None else ""
 
     def get_arguments(self) -> List[str]:
         filtergraph = (

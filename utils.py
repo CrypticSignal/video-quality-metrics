@@ -110,7 +110,9 @@ class VideoInfoProvider:
         )
         result = self._get_bitrate_from_packets(duration)
         if result:
-            log.info(f"Done! Bitrate: {format_value(result.bitrate, input_unit_type='bits', output_unit_type='bits')}ps | Confidence: {result.confidence} | Method: {result.method}")
+            log.info(
+                f"Done! Bitrate: {format_value(result.bitrate, input_unit_type='bits', output_unit_type='bits')}ps | Confidence: {result.confidence} | Method: {result.method}"
+            )
             return result
 
         # ---------------------------
@@ -119,7 +121,9 @@ class VideoInfoProvider:
         log.info("Determining video bitrate from video stream metadata...")
         result = self._get_bitrate_from_video_stream_metadata(streams)
         if result:
-            log.info(f"Done! Bitrate: {format_value(result.bitrate, input_unit_type='bits', output_unit_type='bits')}ps | Confidence: {result.confidence} | Method: {result.method}")
+            log.info(
+                f"Done! Bitrate: {format_value(result.bitrate, input_unit_type='bits', output_unit_type='bits')}ps | Confidence: {result.confidence} | Method: {result.method}"
+            )
             return result
 
         # ---------------------------
@@ -130,7 +134,9 @@ class VideoInfoProvider:
         )
         result = self._get_bitrate_from_container_minus_audio(format_info, streams)
         if result:
-            log.info(f"Done! Bitrate: {format_value(result.bitrate, input_unit_type='bits', output_unit_type='bits')}ps | Confidence: {result.confidence} | Method: {result.method}")
+            log.info(
+                f"Done! Bitrate: {format_value(result.bitrate, input_unit_type='bits', output_unit_type='bits')}ps | Confidence: {result.confidence} | Method: {result.method}"
+            )
             return result
 
         log.info("Unable to determine video bitrate.")

@@ -24,13 +24,15 @@ from utils import (
     write_supplementary_info,
     get_metrics_list,
     Timer,
-    format_value
+    format_value,
 )
 
 log = Logger("main.py")
 
 
-def get_video_info(input_video: str, decimal_places: int) -> Tuple[str, str, str, str, float, str, List]:
+def get_video_info(
+    input_video: str, decimal_places: int
+) -> Tuple[str, str, str, str, float, str, List]:
     provider = VideoInfoProvider(input_video)
 
     return (
@@ -38,7 +40,7 @@ def get_video_info(input_video: str, decimal_places: int) -> Tuple[str, str, str
         provider.get_framerate_fraction(),
         provider.get_framerate_float(),
         provider.get_video_bitrate_str(decimal_places),
-        provider.get_all_info()
+        provider.get_all_info(),
     )
 
 
@@ -126,14 +128,14 @@ def process_combination(
     output_folder: str,
     args,
     table: PrettyTable,
-    vmaf_scores: List[float]
+    vmaf_scores: List[float],
 ) -> float:
-    current_output_folder = os.path.join(output_folder, f"{args.encoder}_" + combination.replace(" ", "_"))
+    current_output_folder = os.path.join(
+        output_folder, f"{args.encoder}_" + combination.replace(" ", "_")
+    )
     os.makedirs(current_output_folder, exist_ok=True)
 
-    output_path = os.path.join(
-        current_output_folder, f"{combination.replace(' ', '_')}.mkv"
-    )
+    output_path = os.path.join(current_output_folder, f"{combination.replace(' ', '_')}.mkv")
 
     combination_list = combination.split(" ")
 
@@ -159,7 +161,7 @@ def process_combination(
         time_taken,
         combination_string,
         args,
-        table
+        table,
     )
     vmaf_scores.append(vmaf_score)
     return vmaf_score
@@ -171,7 +173,7 @@ def process_parameter_value(
     output_folder: str,
     args,
     table: PrettyTable,
-    vmaf_scores: List[float]
+    vmaf_scores: List[float],
 ) -> float:
     current_output_folder = os.path.join(output_folder, f"{args.encoder}_{args.parameter}_{value}")
     os.makedirs(current_output_folder, exist_ok=True)
@@ -196,7 +198,7 @@ def process_parameter_value(
         time_taken,
         value,
         args,
-        table
+        table,
     )
     vmaf_scores.append(vmaf_score)
     return vmaf_score
@@ -210,12 +212,10 @@ def update_metrics(
     time_taken: float,
     value: str,
     args,
-    table: PrettyTable
+    table: PrettyTable,
 ) -> float:
     provider = VideoInfoProvider(output_path)
-    size = format_value(
-        os.path.getsize(output_path), args.decimal_places
-    )
+    size = format_value(os.path.getsize(output_path), args.decimal_places)
 
     bitrate = provider.get_video_bitrate_str(args.decimal_places)
     duration = provider.get_duration_str(args.decimal_places)
@@ -234,11 +234,7 @@ def update_metrics(
 
 
 def finalise(
-    filename: str,
-    output_folder: str,
-    original_video_bitrate: str,
-    args,
-    vmaf_scores: List[float]
+    filename: str, output_folder: str, original_video_bitrate: str, args, vmaf_scores: List[float]
 ) -> None:
     mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
 
@@ -258,7 +254,7 @@ def finalise(
         values,
         vmaf_scores,
         mean_vmaf,
-          os.path.join(output_folder, f"{parameter} vs VMAF"),
+        os.path.join(output_folder, f"{parameter} vs VMAF"),
         bar_graph=True,
     )
 
@@ -284,11 +280,21 @@ def define_output_folder(filename: str, args):
 
 
 def begin(args, input_video):
-    video_path, fps, fps_float, original_video_bitrate, input_video_info = (
-        get_video_info(input_video, args.decimal_places)
+    video_path, fps, fps_float, original_video_bitrate, input_video_info = get_video_info(
+        input_video, args.decimal_places
     )
     table = initialize_table(args)
-    row = [input_video, input_video_info['streams'][0]['codec_name'], "-", format_value(input_video_info["format"]['size'], args.decimal_places), format_value(original_video_bitrate), f"{float(input_video_info['format']['duration']):.{args.decimal_places}f} s", "-", "-", "-"]
+    row = [
+        input_video,
+        input_video_info["streams"][0]["codec_name"],
+        "-",
+        format_value(input_video_info["format"]["size"], args.decimal_places),
+        format_value(original_video_bitrate),
+        f"{float(input_video_info['format']['duration']):.{args.decimal_places}f} s",
+        "-",
+        "-",
+        "-",
+    ]
     table.add_row(row)
 
     timer = Timer()
@@ -301,8 +307,10 @@ def begin(args, input_video):
     log.info(f"Filename: {filename}")
     log.info(f"Video Bitrate | Confidence | Method:\n{original_video_bitrate}")
     log.info(f"Frame rate: {fps} ({fps_float}) FPS")
-    for stream in input_video_info['streams']:
-        log.info(f"Stream {stream['index']} | {stream['codec_type']} | Codec: {stream['codec_long_name']}")
+    for stream in input_video_info["streams"]:
+        log.info(
+            f"Stream {stream['index']} | {stream['codec_type']} | Codec: {stream['codec_long_name']}"
+        )
     line()
 
     timer.start()
@@ -317,26 +325,25 @@ def begin(args, input_video):
         for combination in args.combinations.split(","):
             process_combination(combination, video_path, output_folder, args, table, vmaf_scores)
     else:
-        log.info(
-            f"Values of {args.encoder}'s '-{args.parameter}' parameter will be compared."
-        )
+        log.info(f"Values of {args.encoder}'s '-{args.parameter}' parameter will be compared.")
         log.info(
             f"The following values will be compared: {', '.join(str(value) for value in args.values)}"
         )
         video_path = prepare_video(video_path, filename, output_folder, args)
-        
+
         for value in args.values:
             process_parameter_value(value, video_path, output_folder, args, table, vmaf_scores)
 
     line()
     log.info(f"Total Time Taken: {timer.stop(args.decimal_places)}s")
 
-    supplementary_info = finalise(filename, output_folder, original_video_bitrate, args, vmaf_scores)
+    supplementary_info = finalise(
+        filename, output_folder, original_video_bitrate, args, vmaf_scores
+    )
 
     line()
-    log.info(
-        f"Check out the contents of the '{output_folder}' folder.")
-    
+    log.info(f"Check out the contents of the '{output_folder}' folder.")
+
     if args.print:
         print(table.get_string())
         print(supplementary_info)
@@ -352,9 +359,7 @@ def resolve_input_videos(input_path: str) -> list[str]:
 def main():
     if len(sys.argv) == 1:
         line()
-        log.info(
-            'For more details about the available arguments, enter "python main.py -h"'
-        )
+        log.info('For more details about the available arguments, enter "python main.py -h"')
         line()
         return
 
@@ -376,5 +381,6 @@ def main():
         begin(args, input_video)
 
     log.close()
-    
+
+
 main()

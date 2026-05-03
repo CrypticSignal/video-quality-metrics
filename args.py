@@ -109,7 +109,7 @@ general_args.add_argument(
     type=str,
     help="Set general FFmpeg input options.\n"
     "Use FFmpeg syntax and wrap it in double quotes. Example:\n"
-    '--input-options="-hwaccel d3d11va"'
+    '--input-options="-hwaccel d3d11va"',
 )
 
 # Output Options
@@ -119,7 +119,7 @@ general_args.add_argument(
     help="Set general FFmpeg output options.\n"
     "Use FFmpeg syntax and wrap it in double quotes. Examples:\n"
     '--output-options="-c:a aac -b:a 128k"'
-    '--output-options="-x264-params keyint=123:min-keyint=20"'
+    '--output-options="-x264-params keyint=123:min-keyint=20"',
 )
 
 # Set AV1 speed/quality ratio
@@ -214,6 +214,4 @@ vmaf_args.add_argument(
 )
 
 # Phone Model
-vmaf_args.add_argument(
-    "--phone-model", action="store_true", help="Enable VMAF phone model"
-)
+vmaf_args.add_argument("--phone-model", action="store_true", help="Enable VMAF phone model")

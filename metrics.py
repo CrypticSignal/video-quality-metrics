@@ -35,9 +35,7 @@ def load_frame_data(json_file_path: str) -> Tuple[List[Dict], List[int]]:
             return frames, frame_numbers
 
 
-def calculate_metric_scores(
-    metric_scores: List[float], decimal_places: int
-) -> MetricScores:
+def calculate_metric_scores(metric_scores: List[float], decimal_places: int) -> MetricScores:
     """Calculate statistical scores for a given metric."""
     return MetricScores(
         min=force_decimal_places(min(metric_scores), decimal_places),
@@ -77,11 +75,11 @@ def process_metric(
         return scores
 
 
-def write_table_to_file(
-    table_path: str, table: PrettyTable, metric_types: List[str]
-) -> None:
+def write_table_to_file(table_path: str, table: PrettyTable, metric_types: List[str]) -> None:
     collected_metric_types = "/".join(metric_types)
-    table_title = f"{collected_metric_types} values are in the format: Min | Standard Deviation | Mean"
+    table_title = (
+        f"{collected_metric_types} values are in the format: Min | Standard Deviation | Mean"
+    )
 
     with open(table_path, "w") as f:
         f.write(f"{table_title}\n")

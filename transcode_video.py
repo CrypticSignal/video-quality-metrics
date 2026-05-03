@@ -7,9 +7,7 @@ import os
 log = Logger("transcode_video.py")
 
 
-def transcode_video(
-    original_video_path, args, value, output_path, message, combination=None
-):
+def transcode_video(original_video_path, args, value, output_path, message, combination=None):
     encoder_opts = EncoderOptions(
         encoder=args.encoder,
         av1_cpu_used=args.av1_cpu_used,
@@ -26,9 +24,7 @@ def transcode_video(
         output_options=args.output_options,
     )
 
-    process = FfmpegProcess(
-        encoding_args.get_arguments(), print_detected_duration=False
-    )
+    process = FfmpegProcess(encoding_args.get_arguments(), print_detected_duration=False)
 
     line()
     if os.path.exists(output_path) and args.skip_transcoding:
@@ -42,6 +38,5 @@ def transcode_video(
         time_taken = timer.stop(args.decimal_places)
         print(f"Time Taken: {time_taken}s")
         log.info(f"Output file: {output_path}")
-    
+
         return time_taken
-    

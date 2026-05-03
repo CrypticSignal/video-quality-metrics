@@ -121,9 +121,7 @@ def create_overview_video(input_video, output_folder, interval_seconds, clip_len
     os.makedirs(output_folder, exist_ok=True)
     extension = Path(input_video).suffix
     try:
-        txt_file_path = create_clips(
-            input_video, output_folder, interval_seconds, clip_length
-        )
+        txt_file_path = create_clips(input_video, output_folder, interval_seconds, clip_length)
         output_file = concatenate_clips(txt_file_path, output_folder, extension)
         result = True
     except ClipError as err:
