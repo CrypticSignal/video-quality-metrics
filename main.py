@@ -22,7 +22,7 @@ from utils import (
     Logger,
     plot_graph,
     VideoInfoProvider,
-    write_table_info,
+    write_supplementary_info,
     get_metrics_list,
     Timer,
     format_value
@@ -252,7 +252,7 @@ def finalise(
 ) -> None:
     mean_vmaf = force_decimal_places(np.mean(vmaf_scores), args.decimal_places)
 
-    buff = write_table_info(
+    supplementary_info = write_supplementary_info(
         os.path.join(output_folder, "metrics_table.txt"),
         filename,
         args,
@@ -271,7 +271,8 @@ def finalise(
           os.path.join(output_folder, f"{parameter} vs VMAF"),
         bar_graph=True,
     )
-    return buff
+
+    return supplementary_info
 
 
 def define_output_folder(filename: str, args):
@@ -347,7 +348,7 @@ def begin(args, input_video):
     line()
     log.info(f"Total Time Taken: {timer.stop(args.decimal_places)}s")
 
-    buff = finalise(filename, output_folder, original_video_bitrate, args, vmaf_scores)
+    supplementary_info = finalise(filename, output_folder, original_video_bitrate, args, vmaf_scores)
 
     line()
     log.info(
@@ -356,7 +357,7 @@ def begin(args, input_video):
     
     if args.print:
         print(table.get_string())
-        print(buff)
+        print(supplementary_info)
 
 def main():
     if len(sys.argv) == 1:

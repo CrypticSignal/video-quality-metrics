@@ -375,9 +375,9 @@ def plot_graph(
     plt.clf()
 
 
-def write_table_info(table_path, video_filename, args):
+def write_supplementary_info(table_path, video_filename, args):
     with open(table_path, "a") as f:
-        buff = (
+        supplementary_info = (
             f"\nOriginal File: {video_filename}\n"
             f"VQM transcoded the file with the {args.encoder} encoder\n"
             f"FFmpeg output options: {args.output_options}\n"
@@ -388,8 +388,8 @@ def write_table_info(table_path, video_filename, args):
             )
             + f"libvmaf n_subsample: {args.n_subsample}"
         )
-        f.write(buff)
-        return buff
+        f.write(supplementary_info)
+        return supplementary_info
 
 
 def get_metrics_list(args):
