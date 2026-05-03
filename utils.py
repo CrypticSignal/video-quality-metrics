@@ -383,7 +383,6 @@ def write_supplementary_info(table_path, video_filename, args):
     with open(table_path, "a") as f:
         supplementary_info = (
             f"\nOriginal File: {video_filename}\n"
-            f"VQM transcoded the file with the {args.encoder} encoder\n"
             f"FFmpeg output options: {args.output_options}\n"
             + (
                 f"Filter(s) applied to original video before quality metrics calculation: {args.video_filters}\n"
