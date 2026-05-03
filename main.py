@@ -9,7 +9,6 @@ import numpy as np
 from prettytable import PrettyTable
 
 from args import parser
-from arguments_validator import ArgumentsValidator
 from transcode_video import transcode_video
 from libvmaf import run_libvmaf
 from metrics import process_metrics
@@ -29,15 +28,6 @@ from utils import (
 )
 
 log = Logger("main.py")
-
-
-def validate_args(args) -> None:
-    validator = ArgumentsValidator()
-    result, errors = validator.validate(args)
-    if not result:
-        for error in errors:
-            log.info(f"Error: {error}")
-        exit_program("Argument validation failed.")
 
 
 def get_video_info(input_video: str, decimal_places: int) -> Tuple[str, str, str, str, float, str, List]:
@@ -113,7 +103,7 @@ def transcode_and_analyse(
         args,
         value,
         output_path,
-        f"Transcoding the video using {description}",
+        f"Transcoding {video_path} using {description}",
         combination_list,
     )
 
@@ -294,10 +284,6 @@ def define_output_folder(filename: str, args):
 
 
 def begin(args, input_video):
-    line()
-    log.info("Video Quality Metrics")
-    log.info("Version Date: 31st May 2025")
-
     video_path, fps, fps_float, original_video_bitrate, input_video_info = (
         get_video_info(input_video, args.decimal_places)
     )
@@ -307,9 +293,6 @@ def begin(args, input_video):
 
     timer = Timer()
     vmaf_scores = []
-
-    with open("logs.log", "w"):
-        pass
 
     filename = Path(input_video).name
 
@@ -352,12 +335,19 @@ def begin(args, input_video):
 
     line()
     log.info(
-        f"All done! Check out the contents of the '{output_folder}' folder.")
-    log.close()
+        f"Check out the contents of the '{output_folder}' folder.")
     
     if args.print:
         print(table.get_string())
         print(supplementary_info)
+
+
+def resolve_input_videos(input_path: str) -> list[str]:
+    if os.path.exists(input_path):
+        return [input_path]
+
+    return glob.glob(input_path)
+
 
 def main():
     if len(sys.argv) == 1:
@@ -368,17 +358,23 @@ def main():
         line()
         return
 
-    args = parser.parse_args()
-    validate_args(args)
+    line()
+    log.info("Video Quality Metrics")
+    log.info("Version Date: 3rd May 2026")
 
-    if os.path.exists(args.input_video):
-        begin(args, args.input_video)
-    else:
-        input_videos=glob.glob(args.input_video)
-        if input_videos:
-            for input_video in input_videos:
-                begin(args, input_video)
-        else:
-            log.warning(f"Input file {args.input_video} not found")
+    open("logs.log", "w").close()
+
+    args = parser.parse_args()
+
+    input_videos = resolve_input_videos(args.input_video)
+
+    if not input_videos:
+        log.info(f"No file(s) found at the specified path or glob pattern: {args.input_video}")
+        return
+
+    for input_video in input_videos:
+        begin(args, input_video)
+
+    log.close()
     
 main()
