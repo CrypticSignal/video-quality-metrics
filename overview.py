@@ -68,7 +68,9 @@ def create_clips(input_video, output_folder, interval_seconds, clip_length):
                 "-t",
                 clip_length,
                 "-c:V",
-                "copy",
+                "libx264",
+                "-crf",
+                "0",
                 clip_output_path,
             ]
 

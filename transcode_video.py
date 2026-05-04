@@ -1,13 +1,22 @@
-from ffmpeg_process_factory import EncodingArguments, EncoderOptions
-from utils import line, Logger, Timer
+import os
+from typing import Any, Optional
 
 from better_ffmpeg_progress import FfmpegProcess
-import os
+
+from ffmpeg_process_factory import EncoderOptions, EncodingArguments
+from utils import Logger, Timer, force_decimal_places, line
 
 log = Logger("transcode_video.py")
 
 
-def transcode_video(original_video_path, args, value, output_path, message, combination=None):
+def transcode_video(
+    original_video_path: str,
+    args: Any,
+    value: Optional[str],
+    output_path: str,
+    message: str,
+    combination: Optional[list[str]] = None,
+) -> float:
     encoder_opts = EncoderOptions(
         encoder=args.encoder,
         av1_cpu_used=args.av1_cpu_used,
@@ -29,14 +38,14 @@ def transcode_video(original_video_path, args, value, output_path, message, comb
     line()
     if os.path.exists(output_path) and args.skip_transcoding:
         log.info(f"{output_path} exists. Skipping transcoding.")
-        return 0
+        return 0.0
     else:
         log.info(f"{message}...\n")
         timer = Timer()
         timer.start()
         process.run(print_command=args.debug)
         time_taken = timer.stop(args.decimal_places)
-        print(f"Time Taken: {time_taken}s")
+        log.info(f"Time Taken: {force_decimal_places(time_taken, args.decimal_places)}s")
         log.info(f"Output file: {output_path}")
 
         return time_taken

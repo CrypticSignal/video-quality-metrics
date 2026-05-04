@@ -63,8 +63,7 @@ class EncodingArguments:
                 str(self.encoder_options.av1_cpu_used),
             ]
         if self.combination:
-            self.combination.append(str(self.output_path))
-            encoding_arguments += self.combination
+            encoding_arguments += self.combination + [str(self.output_path)]
         elif self.parameter and self.value:
             encoding_arguments += [
                 f"-{self.parameter}",

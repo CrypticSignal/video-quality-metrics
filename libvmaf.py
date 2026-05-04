@@ -1,9 +1,10 @@
 import os
-
-from ffmpeg_process_factory import LibVmafArguments
-from utils import line, Logger, get_metrics_list, Timer
+from typing import Any
 
 from better_ffmpeg_progress import FfmpegProcess
+
+from ffmpeg_process_factory import LibVmafArguments
+from utils import Logger, Timer, force_decimal_places, get_metrics_list, line
 
 log = Logger("libvmaf.py")
 
@@ -12,12 +13,12 @@ model_file_path = "vmaf_models/vmaf_v0.6.1.json"
 
 
 def run_libvmaf(
-    transcode_output_path,
-    args,
-    json_file_path,
-    original_video_path,
-    message="",
-):
+    transcode_output_path: str,
+    args: Any,
+    json_file_path: str,
+    original_video_path: str,
+    message: str = "",
+) -> None:
     n_subsample = args.n_subsample if args.n_subsample else "1"
 
     model_params = [
@@ -33,15 +34,19 @@ def run_libvmaf(
     # Escape any single quotes
     json_file_path_escaped = json_file_path_str.replace("'", "\\'")
 
-    features = [
-        "name=psnr" if not args.disable_psnr else None,
-        "name=float_ssim" if not args.disable_ssim else None,
-    ]
-    feature_string = f":feature={'|'.join(features)}"
+    features = []
+    if not args.disable_psnr:
+        features.append("name=psnr")
+    if not args.disable_ssim:
+        features.append("name=float_ssim")
 
-    # On Windows, escape the pipe character
-    if os.name == "nt":
-        feature_string = feature_string.replace("|", "^|")
+    if features:
+        feature_string = f":feature={'|'.join(features)}"
+        # On Windows, escape the pipe character
+        if os.name == "nt":
+            feature_string = feature_string.replace("|", "^|")
+    else:
+        feature_string = ""
 
     vmaf_options = f"{model_string}:log_fmt=json:log_path='{json_file_path_escaped}':n_subsample={n_subsample}:n_threads={args.n_threads}{feature_string}"
 
@@ -69,4 +74,5 @@ def run_libvmaf(
         timer = Timer()
         timer.start()
         process.run(print_command=args.debug)
-        log.info(f"Time Taken: {timer.stop(args.decimal_places)}s")
+        time_taken = timer.stop(args.decimal_places)
+        log.info(f"Time Taken: {force_decimal_places(time_taken, args.decimal_places)}s")
