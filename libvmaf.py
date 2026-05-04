@@ -66,13 +66,9 @@ def run_libvmaf(
         metric_types = f"{', '.join(metrics_list[:-1])} and {metrics_list[-1]}"
 
     line()
-    if os.path.exists(json_file_path) and args.skip_libvmaf:
-        log.info(f"{json_file_path} exists. Skipping libvmaf.")
-    else:
-        log.info(f"Calculating the {metric_types}{message}...\n")
-
-        timer = Timer()
-        timer.start()
-        process.run(print_command=args.debug)
-        time_taken = timer.stop(args.decimal_places)
-        log.info(f"Time Taken: {force_decimal_places(time_taken, args.decimal_places)}s")
+    log.info(f"Calculating the {metric_types}{message}...\n")
+    timer = Timer()
+    timer.start()
+    process.run(print_command=args.debug)
+    time_taken = timer.stop(args.decimal_places)
+    log.info(f"Time Taken: {force_decimal_places(time_taken, args.decimal_places)}s")

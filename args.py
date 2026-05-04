@@ -73,7 +73,7 @@ general_args.add_argument(
     "--skip-libvmaf",
     action="store_true",
     default=False,
-    help="Skip libvmaf if output file exists.",
+    help="Skip quality metrics calculation if output file exists.",
 )
 
 # Skip transcoding if output file exists
@@ -82,7 +82,7 @@ general_args.add_argument(
     "--skip-transcoding",
     action="store_true",
     default=False,
-    help="Skip encoding if output file exists.",
+    help="Skip transcoding if output file exists.",
 )
 
 # Show debug information

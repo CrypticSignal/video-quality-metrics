@@ -73,13 +73,17 @@ def build_output_paths(output_folder: str, subfolder: str, filename: str) -> Tup
 def transcode_and_analyse(
     video_path: str,
     output_path: str,
-    output_folder: str,
+    json_file_path: str,
     args: Any,
     value: Optional[str],
     combination_list: Optional[List[str]],
     description: str,
 ) -> Tuple[float, str]:
-    time_taken = transcode_video(
+    if os.path.exists(output_path) and args.skip_transcoding:
+        log.info(f"{output_path} exists. Skipping transcoding.")  #
+        return 0.0
+
+    time_taken_to_transcode = transcode_video(
         video_path,
         args,
         value,
@@ -88,7 +92,9 @@ def transcode_and_analyse(
         combination_list,
     )
 
-    json_file_path = str(Path(output_folder) / "per_frame_metrics.json")
+    if os.path.exists(json_file_path) and args.skip_libvmaf:
+        log.info(f"{json_file_path} exists. Skipping quality metrics calculation.")
+        return time_taken_to_transcode
 
     run_libvmaf(
         output_path,
@@ -98,7 +104,7 @@ def transcode_and_analyse(
         f" achieved with {description}",
     )
 
-    return time_taken, json_file_path
+    return time_taken_to_transcode
 
 
 def update_metrics(
@@ -149,10 +155,12 @@ def run_pipeline(
     output_folder: str,
     table: PrettyTable,
 ) -> float:
+    json_file_path = str(Path(output_folder) / "per_frame_metrics.json")
+
     time_taken, json_file_path = transcode_and_analyse(
         video_path,
         output_path,
-        current_output_folder,
+        json_file_path,
         args,
         value,
         combination_list,

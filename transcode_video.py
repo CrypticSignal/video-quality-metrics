@@ -36,16 +36,12 @@ def transcode_video(
     process = FfmpegProcess(encoding_args.get_arguments(), print_detected_duration=False)
 
     line()
-    if os.path.exists(output_path) and args.skip_transcoding:
-        log.info(f"{output_path} exists. Skipping transcoding.")
-        return 0.0
-    else:
-        log.info(f"{message}...\n")
-        timer = Timer()
-        timer.start()
-        process.run(print_command=args.debug)
-        time_taken = timer.stop(args.decimal_places)
-        log.info(f"Time Taken: {force_decimal_places(time_taken, args.decimal_places)}s")
-        log.info(f"Output file: {output_path}")
+    log.info(f"{message}...\n")
+    timer = Timer()
+    timer.start()
+    process.run(print_command=args.debug)
+    time_taken = timer.stop(args.decimal_places)
+    log.info(f"Time Taken: {force_decimal_places(time_taken, args.decimal_places)}s")
+    log.info(f"Output file: {output_path}")
 
-        return time_taken
+    return time_taken
