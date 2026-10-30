@@ -7,17 +7,13 @@ from typing import NoReturn
 log = logging.getLogger("vqm")
 
 
-def setup_logging(log_file: str = "logs.log") -> None:
-    """Log to the terminal and to a log file, which is overwritten on each run."""
+def setup_logging() -> None:
+    """Log to the terminal."""
     log.setLevel(logging.INFO)
 
     terminal_handler = logging.StreamHandler()
     terminal_handler.setFormatter(logging.Formatter("%(message)s"))
     log.addHandler(terminal_handler)
-
-    file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")
-    file_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
-    log.addHandler(file_handler)
 
 
 def line() -> None:
