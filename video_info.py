@@ -48,7 +48,7 @@ def get_frame_rate(info: dict) -> str:
 def describe_video_bitrate(video_path: str | Path, info: dict, decimal_places: int) -> str:
     """
     Return the video bitrate, how confident we are in it and the method used to find it,
-    e.g. "1.526 Mbps | High | Video Packet Sizes".
+    e.g. "1.526 Mbps | high | video packet sizes".
 
     The most accurate method is tried first, falling back to less reliable methods.
     """
@@ -56,21 +56,24 @@ def describe_video_bitrate(video_path: str | Path, info: dict, decimal_places: i
     streams = info["streams"]
 
     def describe(bitrate: float, confidence: str, method: str) -> str:
-        description = f"{format_si(bitrate, 'bps', decimal_places)} | {confidence} | {method}"
-        log.info(f"Video bitrate: {description}")
-        return description
+        formatted_bitrate = format_si(bitrate, "bps", decimal_places)
+        log.info(
+            f"Video Bitrate: {formatted_bitrate} | Confidence: {confidence} | Method: {method}"
+        )
+        # The table's column header already names each part.
+        return f"{formatted_bitrate} | {confidence} | {method}"
 
     # Method 1: Total size of the video packets divided by the duration.
     if duration > 0:
         log.info(f"Calculating the video bitrate of {video_path} from its packet sizes...")
         total_bytes = sum_video_packet_sizes(video_path, duration)
         if total_bytes > 0:
-            return describe(total_bytes * 8 / duration, "High", "Video Packet Sizes")
+            return describe(total_bytes * 8 / duration, "high", "video packet sizes")
 
     # Method 2: The bitrate reported in the video stream's metadata.
     for stream in streams:
         if stream["codec_type"] == "video" and stream.get("bit_rate"):
-            return describe(int(stream["bit_rate"]), "Medium", "Video Stream Metadata")
+            return describe(int(stream["bit_rate"]), "medium", "video stream metadata")
 
     # Method 3: The container's overall bitrate minus the bitrate of any audio streams.
     container_bitrate = info["format"].get("bit_rate")
@@ -82,7 +85,7 @@ def describe_video_bitrate(video_path: str | Path, info: dict, decimal_places: i
         )
         video_bitrate = int(container_bitrate) - audio_bitrate
         if video_bitrate > 0:
-            return describe(video_bitrate, "Low", "Container Derived (Minus Audio)")
+            return describe(video_bitrate, "low", "container derived (minus audio)")
 
     log.info("Unable to determine the video bitrate.")
     return "N/A"
