@@ -136,7 +136,10 @@ def calculate_quality_metrics(
     filtergraph = (
         f"[0:V]{video_filters}setpts=PTS-STARTPTS[reference];"
         f"[1:V]setpts=PTS-STARTPTS[distorted];"
-        f"[distorted][reference]libvmaf={vmaf_options}"
+        # libvmaf needs both videos to have the same resolution, so if the transcode was scaled
+        # (e.g. with --output-options), scale it back. This does nothing if they already match.
+        f"[distorted][reference]scale2ref=flags=bicubic[distorted_scaled][reference_scaled];"
+        f"[distorted_scaled][reference_scaled]libvmaf={vmaf_options}"
     )
 
     command = [
