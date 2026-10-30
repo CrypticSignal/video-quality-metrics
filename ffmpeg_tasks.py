@@ -87,7 +87,8 @@ def calculate_quality_metrics(
     model_path = backslash_escape(VMAF_MODEL_PATH.as_posix(), "':=")
     model = f"path={model_path}"
     if args.phone_model:
-        model += "|enable_transform=true"
+        # A colon adds an option to the same model, whereas "|" would start a second model.
+        model += ":enable_transform=true"
 
     # libvmaf expects forward slashes and escaped single quotes in the log path.
     log_path = str(json_path).replace("\\", "/").replace("'", "\\'")
