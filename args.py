@@ -1,5 +1,5 @@
-from argparse import ArgumentParser, RawTextHelpFormatter
 import os
+from argparse import ArgumentParser, RawTextHelpFormatter
 
 parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 
@@ -8,21 +8,18 @@ encoder_args = parser.add_argument_group("Encoder Arguments")
 overview_mode_args = parser.add_argument_group("Overview Mode Arguments")
 vmaf_args = parser.add_argument_group("VMAF Arguments")
 
-# Disable PSNR calculation.
 general_args.add_argument(
     "--disable-psnr",
     action="store_true",
     help="Disable PSNR calculation.",
 )
 
-# Disable SSIM calculation.
 general_args.add_argument(
     "--disable-ssim",
     action="store_true",
     help="Disable SSIM calculation.",
 )
 
-# Number of decimal places to use for the data.
 general_args.add_argument(
     "-dp",
     "--decimal-places",
@@ -31,7 +28,6 @@ general_args.add_argument(
     help="The number of decimal places to use for the data in the table",
 )
 
-# Input Video
 general_args.add_argument(
     "-i",
     "--input-video",
@@ -41,7 +37,6 @@ general_args.add_argument(
     "If the path contains a space, it must be surrounded in double quotes.",
 )
 
-# Use only the first x seconds of the original video.
 general_args.add_argument(
     "-t",
     "--transcode-length",
@@ -59,7 +54,6 @@ general_args.add_argument(
     "If you want the name of the output folder to contain a space, the string must be surrounded in double quotes",
 )
 
-# FFmpeg Video Filter(s)
 general_args.add_argument(
     "-vf",
     "--video-filters",
@@ -67,7 +61,6 @@ general_args.add_argument(
     help="Apply video filter(s) to the original video before calculating quality metrics. Each filter must be separated by a comma.\nExample: -vf bwdif=mode=0,crop=1920:800:0:140",
 )
 
-# Skip libvmaf if output file exists
 general_args.add_argument(
     "-sl",
     "--skip-libvmaf",
@@ -76,7 +69,6 @@ general_args.add_argument(
     help="Skip quality metrics calculation if output file exists.",
 )
 
-# Skip transcoding if output file exists
 general_args.add_argument(
     "-st",
     "--skip-transcoding",
@@ -85,7 +77,6 @@ general_args.add_argument(
     help="Skip transcoding if output file exists.",
 )
 
-# Show debug information
 general_args.add_argument(
     "-d",
     "--debug",
@@ -94,7 +85,6 @@ general_args.add_argument(
     help="Print debug message and command line.",
 )
 
-# Print the metrics table in the terminal
 general_args.add_argument(
     "-P",
     "--print",
@@ -103,7 +93,6 @@ general_args.add_argument(
     help="Print metrics table.",
 )
 
-# Input Options
 general_args.add_argument(
     "--input-options",
     type=str,
@@ -112,17 +101,15 @@ general_args.add_argument(
     '--input-options="-hwaccel d3d11va"',
 )
 
-# Output Options
 general_args.add_argument(
     "--output-options",
     type=str,
     help="Set general FFmpeg output options.\n"
     "Use FFmpeg syntax and wrap it in double quotes. Examples:\n"
-    '--output-options="-c:a aac -b:a 128k"'
+    '--output-options="-c:a aac -b:a 128k"\n'
     '--output-options="-x264-params keyint=123:min-keyint=20"',
 )
 
-# Set AV1 speed/quality ratio
 encoder_args.add_argument(
     "--av1-cpu-used",
     type=int,
@@ -133,7 +120,6 @@ encoder_args.add_argument(
     "Lower values mean slower encoding but better quality, and vice-versa",
 )
 
-# Encoder
 encoder_args.add_argument(
     "-e",
     "--encoder",
@@ -142,7 +128,6 @@ encoder_args.add_argument(
     help="Specify an ffmpeg video encoder.\nExamples: libx265, h264_amf, libaom-av1",
 )
 
-# Encoder Parameter
 encoder_args.add_argument(
     "-p",
     "--parameter",
@@ -150,7 +135,6 @@ encoder_args.add_argument(
     help="The encoder parameter to compare, e.g. preset, crf, quality.\nExample: -p preset",
 )
 
-# Encoder Parameter Values
 encoder_args.add_argument(
     "-v",
     "--values",
@@ -161,7 +145,6 @@ encoder_args.add_argument(
     "Compare h264_amf quality levels: -p quality -v balanced speed",
 )
 
-# Combination Mode
 encoder_args.add_argument(
     "-c",
     "--combinations",
@@ -172,7 +155,6 @@ encoder_args.add_argument(
     "-c 'preset veryslow crf 18,preset slower crf 16'",
 )
 
-# The length of each clip for Overview Mode.
 overview_mode_args.add_argument(
     "-cl",
     "--clip-length",
@@ -184,7 +166,6 @@ overview_mode_args.add_argument(
     "Specify a value for X (in the range 1-60)",
 )
 
-# The time interval for Overview Mode.
 overview_mode_args.add_argument(
     "--interval",
     type=int,
@@ -195,7 +176,6 @@ overview_mode_args.add_argument(
     "Overview Mode creates a lossless overview video by grabbing a --clip-length long segment every X seconds from the original video.\nSpecify a value for X (in the range 1-600)",
 )
 
-# libvmaf n_subsample
 vmaf_args.add_argument(
     "-n",
     "--n-subsample",
@@ -205,7 +185,6 @@ vmaf_args.add_argument(
     help="Set a value for libvmaf's n_subsample option if you only want the VMAF/PSNR to be calculated for every nth frame.\nWithout this argument, VMAF/PSNR scores will be calculated for every frame.",
 )
 
-# Set the number of threads to be used when computing VMAF.
 vmaf_args.add_argument(
     "--n-threads",
     type=str,
@@ -213,5 +192,4 @@ vmaf_args.add_argument(
     help="Specify the number of threads to use when calculating VMAF",
 )
 
-# Phone Model
 vmaf_args.add_argument("--phone-model", action="store_true", help="Enable VMAF phone model")

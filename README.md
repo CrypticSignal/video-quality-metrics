@@ -10,6 +10,7 @@ VQM will compare the VMAF, SSIM and PSNR achieved with different values of the s
 - [Available Arguments](#available-arguments)
 - [FFmpeg Builds](#ffmpeg-builds)
 - [About the model files](#about-the-model-files)
+- [Code Structure](#code-structure)
 
 # What does VQM produce?
 VQM produces a table to show the metrics, and graphs that show the per-frame VMAF, SSIM and PSNR.
@@ -197,7 +198,7 @@ VMAF Arguments:
 ```
 
 # Requirements
-1. Python **3.7+** installed and in your PATH.
+1. Python **3.10+** installed and in your PATH.
 2. `pip install -r requirements.txt --upgrade`
 3. FFmpeg and FFprobe installed and in your PATH (or in the same directory as this program). Your build of FFmpeg must support v2.1.1 (or above) of the `libvmaf` filter and the encoders you wish you test.
 
@@ -219,7 +220,7 @@ Alternatively, you can install FFmpeg using Homebrew - `brew install ffmpeg`
 Download the _git master_ build. Installation instructions, as well as how to add FFmpeg and FFprobe to your PATH, can be found [here](https://www.johnvansickle.com/ffmpeg/faq/).
 
 # About the model files
-Two model files are provided, `vmaf_v0.6.1.json` and `vmaf_4k_v0.6.1.json`. There is also the phone model that can be enabled by using the `-pm` argument.
+Two model files are provided, `vmaf_v0.6.1.json` and `vmaf_4k_v0.6.1.json`. There is also the phone model that can be enabled by using the `--phone-model` argument.
 
 This program uses the `vmaf_v0.6.1.json` model file by default, which is "based on the assumption that the viewers sit in front of a 1080p display in a living room-like environment with the viewing distance of 3x the screen height (3H)."
 
@@ -230,6 +231,18 @@ The 4K model (`vmaf_4k_v0.6.1.json`) "predicts the subjective quality of video d
 The source of the quoted text, plus additional information about VMAF (such as the correct way to calculate VMAF), can be found [here](https://netflixtechblog.com/vmaf-the-journey-continues-44b51ee9ed12).
 
 **Notes:**
-- If you are transcoding a video that will be viewed on a mobile phone, you can add the `-pm` argument which will enable the [phone model](https://github.com/Netflix/vmaf/blob/master/resource/doc/models.md/#predict-quality-on-a-cellular-phone-screen).
+- If you are transcoding a video that will be viewed on a mobile phone, you can add the `--phone-model` argument which will enable the [phone model](https://github.com/Netflix/vmaf/blob/master/resource/doc/models.md/#predict-quality-on-a-cellular-phone-screen).
 
-- If you are transcoding a video that will be viewed on a 4K display, the default model (`vmaf_v0.6.1.json`) is fine if you are only interested in relative VMAF scores, i.e. the score differences between different encoder parameter values, but if you are interested in absolute scores, it may be better to use the 4K model file which predicts the subjective quality of video displayed on a 4K screen at a distance of 1.5x the height of the screen. To use the 4K model, replace the value of the `model_file_path` variable in libvmaf.py with `'vmaf_models/vmaf_4k_v0.6.1.json'`.
+- If you are transcoding a video that will be viewed on a 4K display, the default model (`vmaf_v0.6.1.json`) is fine if you are only interested in relative VMAF scores, i.e. the score differences between different encoder parameter values, but if you are interested in absolute scores, it may be better to use the 4K model file which predicts the subjective quality of video displayed on a 4K screen at a distance of 1.5x the height of the screen. To use the 4K model, replace the value of the `VMAF_MODEL_PATH` variable in ffmpeg_tasks.py with `'vmaf_models/vmaf_4k_v0.6.1.json'`.
+
+# Code Structure
+| File | Purpose |
+| --- | --- |
+| `main.py` | Entry point. Validates the arguments, then for each input video: transcodes it with each parameter value/combination, calculates the quality metrics and writes the table and graphs. |
+| `args.py` | The command line arguments. |
+| `reference_video.py` | Optionally creates a shorter reference video (`-t` or Overview Mode). |
+| `ffmpeg_tasks.py` | The FFmpeg commands that transcode the video and run libvmaf. |
+| `metrics.py` | Reads libvmaf's per-frame JSON log and summarises the scores. |
+| `video_info.py` | Uses FFprobe to get the duration, frame rate and video bitrate. |
+| `graphs.py` | Plots the per-frame graphs and the mean VMAF bar graph. |
+| `utils.py` | Logging and formatting helpers. |
