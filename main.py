@@ -23,6 +23,11 @@ from video_info import (
 )
 
 
+def sanitise(name: str) -> str:
+    """Replace any character that may not be valid in a file or folder name."""
+    return re.sub(r"[^a-zA-Z0-9_-]", "_", name)
+
+
 @dataclass
 class Comparison:
     """One set of encoder options to test, e.g. "-crf 23" or "-preset slow -crf 24"."""
@@ -41,12 +46,16 @@ def get_comparisons(args: Namespace) -> list[Comparison]:
             # e.g. ["preset", "slow", "crf", "24"] -> ["-preset", "slow", "-crf", "24"]
             options = [f"-{word}" if i % 2 == 0 else word for i, word in enumerate(words)]
             name = "_".join(words)
-            comparisons.append(Comparison(" ".join(options), options, f"{args.encoder}_{name}"))
+            comparisons.append(
+                Comparison(" ".join(options), options, sanitise(f"{args.encoder}_{name}"))
+            )
         return comparisons
 
     return [
         Comparison(
-            value, [f"-{args.parameter}", value], f"{args.encoder}_{args.parameter}_{value}"
+            value,
+            [f"-{args.parameter}", value],
+            sanitise(f"{args.encoder}_{args.parameter}_{value}"),
         )
         for value in args.values
     ]
@@ -59,9 +68,6 @@ def get_output_folder(filename: str, args: Namespace, multiple_inputs: bool) -> 
         name = f"{filename}_combination_mode"
     else:
         name = filename
-
-    def sanitise(folder_name: str) -> str:
-        return re.sub(r"[^a-zA-Z0-9_-]", "_", folder_name)
 
     if not args.output_folder:
         output_folder = Path(sanitise(name))
