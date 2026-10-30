@@ -8,7 +8,7 @@ def plot_per_frame_graph(
     frame_numbers: list[int],
     scores: list[float],
     mean_score: str,
-    n_subsample: str,
+    n_subsample: int,
     save_path: Path,
 ) -> None:
     plt.figure(figsize=(10, 6))

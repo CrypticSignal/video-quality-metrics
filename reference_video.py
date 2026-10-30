@@ -8,11 +8,12 @@ from utils import exit_program, line, log
 from video_info import get_duration, probe
 
 
-def cut_video(video_path: str, output_folder: Path, length: str) -> Path:
+def cut_video(video_path: str, output_folder: Path, length: float) -> Path:
     """Losslessly create a copy of the video that is just the first `length` seconds."""
-    output_path = output_folder / f"{Path(video_path).stem} [{length}s].mkv"
+    # :g shows e.g. 10.0 as "10" and 2.5 as "2.5".
+    output_path = output_folder / f"{Path(video_path).stem} [{length:g}s].mkv"
 
-    log.info(f"Cutting the video to a length of {length} seconds...")
+    log.info(f"Cutting the video to a length of {length:g} seconds...")
     subprocess.run(
         [
             "ffmpeg",
@@ -22,7 +23,7 @@ def cut_video(video_path: str, output_folder: Path, length: str) -> Path:
             "-i",
             video_path,
             "-t",
-            length,
+            str(length),
             "-map",
             "0",
             "-c",

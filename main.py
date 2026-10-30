@@ -191,7 +191,11 @@ def process_video(input_video: str, args: Namespace, multiple_inputs: bool) -> N
 
     supplementary_info = (
         f"\nOriginal File: {filename}\n"
-        + (f"Only the first {args.transcode_length}s was used.\n" if args.transcode_length else "")
+        + (
+            f"Only the first {args.transcode_length:g}s was used.\n"
+            if args.transcode_length
+            else ""
+        )
         + f"FFmpeg output options: {args.output_options}\n"
         + (
             f"Filter(s) applied to original video before quality metrics calculation: "

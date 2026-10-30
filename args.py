@@ -1,5 +1,30 @@
+import math
 import os
-from argparse import ArgumentParser, RawTextHelpFormatter
+from argparse import ArgumentParser, ArgumentTypeError, RawTextHelpFormatter
+from collections.abc import Callable
+
+
+def number(number_type: type, minimum: float, exclusive: bool = False) -> Callable[[str], float]:
+    """Return an argparse type that converts the value to number_type and checks its minimum.
+
+    If exclusive is True, the value must be greater than the minimum rather than at least it.
+    """
+
+    def parse(value: str) -> float:
+        try:
+            converted = number_type(value)
+        except ValueError:
+            kind = "whole number" if number_type is int else "number"
+            raise ArgumentTypeError(f"'{value}' is not a {kind}") from None
+        if not math.isfinite(converted):
+            raise ArgumentTypeError(f"'{value}' is not a finite number")
+        if converted < minimum or (exclusive and converted == minimum):
+            comparison = "greater than" if exclusive else "at least"
+            raise ArgumentTypeError(f"must be {comparison} {minimum}, not {value}")
+        return converted
+
+    return parse
+
 
 parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 
@@ -23,7 +48,7 @@ general_args.add_argument(
 general_args.add_argument(
     "-dp",
     "--decimal-places",
-    type=int,
+    type=number(int, 0),
     default=3,
     help="The number of decimal places to use for the data in the table",
 )
@@ -40,7 +65,7 @@ general_args.add_argument(
 general_args.add_argument(
     "-t",
     "--transcode-length",
-    type=str,
+    type=number(float, 0, exclusive=True),
     help="Create a lossless version of the original video that is just the first x seconds of the video.\n"
     "This cut version of the original video is what will be transcoded and used as the reference video.\n"
     "You cannot use this option in conjunction with the --interval or -cl argument.",
@@ -180,16 +205,17 @@ overview_mode_args.add_argument(
 vmaf_args.add_argument(
     "-n",
     "--n-subsample",
-    type=str,
-    default="1",
+    type=number(int, 1),
+    default=1,
     metavar="<x>",
     help="Set a value for libvmaf's n_subsample option if you only want the VMAF/PSNR to be calculated for every nth frame.\nWithout this argument, VMAF/PSNR scores will be calculated for every frame.",
 )
 
 vmaf_args.add_argument(
     "--n-threads",
-    type=str,
-    default=str(os.cpu_count()),
+    type=number(int, 1),
+    # os.cpu_count() returns None if the number of CPUs can't be determined.
+    default=os.cpu_count() or 1,
     help="Specify the number of threads to use when calculating VMAF",
 )
 
