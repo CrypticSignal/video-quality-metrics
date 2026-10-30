@@ -14,7 +14,13 @@ from graphs import plot_mean_vmaf_graph, plot_per_frame_graph
 from metrics import enabled_metrics, read_per_frame_scores, summarise
 from reference_video import create_overview_video, cut_video
 from utils import format_si, line, log, setup_logging
-from video_info import describe_video_bitrate, get_duration, get_frame_rate, probe
+from video_info import (
+    describe_video_bitrate,
+    get_duration,
+    get_frame_rate,
+    get_video_stream,
+    probe,
+)
 
 
 @dataclass
@@ -134,7 +140,8 @@ def process_video(input_video: str, args: Namespace, multiple_inputs: bool) -> N
     line()
     log.info(f"Here's some information about {filename}:")
     info = probe(input_video)
-    codec = info["streams"][0].get("codec_name", "N/A")
+    video_stream = get_video_stream(info)
+    codec = video_stream.get("codec_name", "N/A") if video_stream else "N/A"
     original_video_details = describe_video(input_video, info, args)
     log.info(f"Frame rate: {get_frame_rate(info)} FPS")
     for stream in info["streams"]:

@@ -31,13 +31,18 @@ def get_duration(info: dict) -> float:
     return float(info["format"].get("duration", 0))
 
 
+def get_video_stream(info: dict) -> dict | None:
+    """Return the first video stream, or None if there isn't one."""
+    return next((stream for stream in info["streams"] if stream["codec_type"] == "video"), None)
+
+
 def get_frame_rate(info: dict) -> str:
     """Return the frame rate of the first video stream, e.g. "24000/1001 (23.976)"."""
-    for stream in info["streams"]:
-        if stream["codec_type"] == "video":
-            fraction = stream["r_frame_rate"]
-            return f"{fraction} ({float(Fraction(fraction)):.3f})"
-    return "N/A"
+    video_stream = get_video_stream(info)
+    if video_stream is None:
+        return "N/A"
+    fraction = video_stream["r_frame_rate"]
+    return f"{fraction} ({float(Fraction(fraction)):.3f})"
 
 
 def describe_video_bitrate(video_path: str | Path, info: dict, decimal_places: int) -> str:
