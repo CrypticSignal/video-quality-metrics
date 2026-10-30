@@ -282,7 +282,7 @@ def main() -> None:
     setup_logging()
     line()
     log.info("Video Quality Metrics")
-    log.info("Version Date: 3rd May 2026")
+    log.info("Version Date: 30th October 2026")
     check_ffmpeg()
 
     for input_video in input_videos:
