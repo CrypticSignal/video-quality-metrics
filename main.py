@@ -46,18 +46,26 @@ def get_comparisons(args: Namespace) -> list[Comparison]:
     ]
 
 
-def get_output_folder(filename: str, args: Namespace) -> Path:
-    if args.output_folder:
-        name = args.output_folder
-    elif args.interval:
+def get_output_folder(filename: str, args: Namespace, multiple_inputs: bool) -> Path:
+    if args.interval:
         name = f"{filename}_overview_mode"
     elif args.combinations:
         name = f"{filename}_combination_mode"
     else:
         name = filename
 
-    output_folder = Path(re.sub(r"[^a-zA-Z0-9_-]", "_", name))
-    output_folder.mkdir(exist_ok=True)
+    def sanitise(folder_name: str) -> str:
+        return re.sub(r"[^a-zA-Z0-9_-]", "_", folder_name)
+
+    if not args.output_folder:
+        output_folder = Path(sanitise(name))
+    elif multiple_inputs:
+        # Give each video its own subfolder so that the results don't overwrite each other.
+        output_folder = Path(sanitise(args.output_folder)) / sanitise(name)
+    else:
+        output_folder = Path(sanitise(args.output_folder))
+
+    output_folder.mkdir(parents=True, exist_ok=True)
     return output_folder
 
 
@@ -119,7 +127,7 @@ def run_comparison(
     return row, fmean(scores["VMAF"])
 
 
-def process_video(input_video: str, args: Namespace) -> None:
+def process_video(input_video: str, args: Namespace, multiple_inputs: bool) -> None:
     filename = Path(input_video).name
     metrics = enabled_metrics(args)
 
@@ -140,7 +148,7 @@ def process_video(input_video: str, args: Namespace) -> None:
         log.info(f"The following filter(s) will be used:\n{args.video_filters}")
         line()
 
-    output_folder = get_output_folder(filename, args)
+    output_folder = get_output_folder(filename, args, multiple_inputs)
 
     # The reference video is what gets transcoded and what the transcodes are compared against.
     reference_video = input_video
@@ -233,7 +241,7 @@ def main() -> None:
     log.info("Version Date: 3rd May 2026")
 
     for input_video in input_videos:
-        process_video(input_video, args)
+        process_video(input_video, args, len(input_videos) > 1)
 
 
 if __name__ == "__main__":
