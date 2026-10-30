@@ -78,7 +78,7 @@ def transcode_and_analyse(
     value: Optional[str],
     combination_list: Optional[List[str]],
     description: str,
-) -> Tuple[float, str]:
+) -> float:
     if os.path.exists(output_path) and args.skip_transcoding:
         log.info(f"{output_path} exists. Skipping transcoding.")  #
         return 0.0
@@ -155,9 +155,9 @@ def run_pipeline(
     output_folder: str,
     table: PrettyTable,
 ) -> float:
-    json_file_path = str(Path(output_folder) / "per_frame_metrics.json")
+    json_file_path = str(Path(current_output_folder) / "per_frame_metrics.json")
 
-    time_taken, json_file_path = transcode_and_analyse(
+    time_taken = transcode_and_analyse(
         video_path,
         output_path,
         json_file_path,
