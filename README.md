@@ -82,7 +82,7 @@ Overview Mode can be activated by specifying the `--interval` and `--clip-length
 
 Example: `python main.py -i ForBiggerFun.mp4 -p crf -v 17 18 19 --interval 5 --clip-length 2`
 
-In the example above, an overview video is created by concatenating 2-second-long* clips (`--clip-length 2`) every 5s* (`--interval 5`) from the original video. In this example, a one-minute-long video is turned into an overview video that is 20 seconds long. Transcoding and calculating the quality metrics of a video that is 20 seconds long is quicker than doing so with a one-minute-long video.
+In the example above, an overview video is created by concatenating 2-second-long* clips (`--clip-length 2`) every 5s* (`--interval 5`) from the original video. In this example, a one-minute-long video is turned into an overview video that is 24 seconds long (12 clips). Transcoding and calculating the quality metrics of a video that is 24 seconds long is quicker than doing so with a one-minute-long video.
 
 _Sections marked with an asterisk will not be exact as FFmpeg will use the closest I-frames._
 

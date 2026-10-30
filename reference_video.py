@@ -46,6 +46,10 @@ def create_overview_video(
     duration = get_duration(probe(video_path))
     if interval > duration:
         exit_program(f"The interval ({interval}s) may not be longer than the video ({duration}s).")
+    if clip_length > duration:
+        exit_program(
+            f"The clip length ({clip_length}s) may not be longer than the video ({duration}s)."
+        )
 
     clips_folder = output_folder / "clips"
     clips_folder.mkdir(exist_ok=True)
@@ -54,10 +58,12 @@ def create_overview_video(
     log.info(f"Creating a {clip_length} second clip every {interval} seconds from {video_path}...")
     line()
 
-    for clip_number in range(1, int(duration // interval)):
+    # Clips start at 0s, interval s, 2 * interval s, etc., as long as the whole clip fits.
+    clip_count = int((duration - clip_length) // interval) + 1
+    for clip_number in range(1, clip_count + 1):
         clip_name = f"clip{clip_number}.mkv"
         clip_names.append(clip_name)
-        log.info(f"Creating clip {clip_number}...")
+        log.info(f"Creating clip {clip_number} of {clip_count}...")
         subprocess.run(
             [
                 "ffmpeg",
@@ -66,7 +72,7 @@ def create_overview_video(
                 "-stats",
                 "-y",
                 "-ss",
-                str(clip_number * interval),
+                str((clip_number - 1) * interval),
                 "-i",
                 video_path,
                 "-map",
