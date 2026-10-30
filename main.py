@@ -237,6 +237,12 @@ def main() -> None:
         )
     if args.transcode_length and args.interval:
         parser.error("You cannot use -t/--transcode-length together with Overview Mode.")
+    if args.interval and args.clip_length > args.interval:
+        # The clips would overlap, so some frames would be in the overview video twice.
+        parser.error(
+            f"The clip length ({args.clip_length}s) may not be longer than the interval "
+            f"({args.interval}s)."
+        )
 
     # The input can be a path or a glob pattern.
     if Path(args.input_video).exists():
