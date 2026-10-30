@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from typing import NoReturn
 
 # The single logger used throughout the program.
 log = logging.getLogger("vqm")
@@ -28,7 +29,7 @@ def line() -> None:
     log.info("-" * width)
 
 
-def exit_program(message: str) -> None:
+def exit_program(message: str) -> NoReturn:
     line()
     log.error(f"{message}\nThis program will now exit.")
     line()

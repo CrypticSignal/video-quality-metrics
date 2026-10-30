@@ -4,26 +4,29 @@ from fractions import Fraction
 from pathlib import Path
 from time import perf_counter
 
-from utils import format_si, log
+from utils import exit_program, format_si, log
 
 
 def probe(video_path: str | Path) -> dict:
     """Return FFprobe's information about the container ("format") and its "streams"."""
-    result = subprocess.run(
-        [
-            "ffprobe",
-            "-v",
-            "error",
-            "-show_format",
-            "-show_streams",
-            "-of",
-            "json",
-            str(video_path),
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_format",
+                "-show_streams",
+                "-of",
+                "json",
+                str(video_path),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as error:
+        exit_program(f"FFprobe was unable to read {video_path}:\n{error.stderr.strip()}")
     return json.loads(result.stdout)
 
 

@@ -8,13 +8,21 @@ from utils import exit_program, line, log
 from video_info import get_duration, probe
 
 
+def run_ffmpeg(command: list[str]) -> None:
+    """Run an FFmpeg command, which prints its own errors, and exit if it fails."""
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError:
+        exit_program("FFmpeg failed. Its error message is above.")
+
+
 def cut_video(video_path: str, output_folder: Path, length: float) -> Path:
     """Losslessly create a copy of the video that is just the first `length` seconds."""
     # :g shows e.g. 10.0 as "10" and 2.5 as "2.5".
     output_path = output_folder / f"{Path(video_path).stem} [{length:g}s].mkv"
 
     log.info(f"Cutting the video to a length of {length:g} seconds...")
-    subprocess.run(
+    run_ffmpeg(
         [
             "ffmpeg",
             "-loglevel",
@@ -29,8 +37,7 @@ def cut_video(video_path: str, output_folder: Path, length: float) -> Path:
             "-c",
             "copy",
             str(output_path),
-        ],
-        check=True,
+        ]
     )
     log.info("Done!")
     return output_path
@@ -65,11 +72,11 @@ def create_overview_video(
         clip_name = f"clip{clip_number}.mkv"
         clip_names.append(clip_name)
         log.info(f"Creating clip {clip_number} of {clip_count}...")
-        subprocess.run(
+        run_ffmpeg(
             [
                 "ffmpeg",
                 "-loglevel",
-                "quiet",
+                "error",
                 "-stats",
                 "-y",
                 "-ss",
@@ -85,8 +92,7 @@ def create_overview_video(
                 "-crf",
                 "0",
                 str(clips_folder / clip_name),
-            ],
-            check=True,
+            ]
         )
 
     # FFmpeg's concat demuxer reads the list of clips from a text file.
@@ -97,11 +103,11 @@ def create_overview_video(
 
     line()
     log.info("Concatenating the clips to create the overview video...")
-    subprocess.run(
+    run_ffmpeg(
         [
             "ffmpeg",
             "-loglevel",
-            "quiet",
+            "error",
             "-stats",
             "-y",
             "-f",
@@ -113,8 +119,7 @@ def create_overview_video(
             "-c",
             "copy",
             str(overview_video),
-        ],
-        check=True,
+        ]
     )
     shutil.rmtree(clips_folder)
     log.info("Done! The clips have been deleted as they are no longer needed.")

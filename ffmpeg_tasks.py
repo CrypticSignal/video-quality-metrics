@@ -5,10 +5,10 @@ from argparse import Namespace
 from pathlib import Path
 from time import perf_counter
 
-from better_ffmpeg_progress import FfmpegProcess
+from better_ffmpeg_progress import FfmpegProcess, FfmpegProcessError
 
 from metrics import enabled_metrics
-from utils import line, log
+from utils import exit_program, line, log
 
 # Change this if you want to use a different VMAF model file.
 # It is relative to this file so that the program works from any directory.
@@ -39,7 +39,11 @@ def run_ffmpeg(command: list[str], message: str, args: Namespace) -> float:
     log.info(f"{message}...\n")
 
     start_time = perf_counter()
-    FfmpegProcess(command).run(print_command=args.debug)
+    try:
+        FfmpegProcess(command).run(print_command=args.debug)
+    except FfmpegProcessError as error:
+        # The error names the log file that contains FFmpeg's output.
+        exit_program(str(error))
     time_taken = round(perf_counter() - start_time, args.decimal_places)
 
     log.info(f"Time Taken: {time_taken:.{args.decimal_places}f}s")
