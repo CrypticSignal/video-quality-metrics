@@ -90,11 +90,11 @@ def calculate_quality_metrics(
         # A colon adds an option to the same model, whereas "|" would start a second model.
         model += ":enable_transform=true"
 
-    # libvmaf expects forward slashes and escaped single quotes in the log path.
-    log_path = str(json_path).replace("\\", "/").replace("'", "\\'")
+    # libvmaf expects forward slashes in the log path.
+    log_path = quote_filter_option(json_path.as_posix())
 
     vmaf_options = (
-        f"model={quote_filter_option(model)}:log_fmt=json:log_path='{log_path}'"
+        f"model={quote_filter_option(model)}:log_fmt=json:log_path={log_path}"
         f":n_subsample={args.n_subsample}:n_threads={args.n_threads}"
     )
 
