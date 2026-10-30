@@ -91,7 +91,8 @@ def create_overview_video(
     # FFmpeg's concat demuxer reads the list of clips from a text file.
     clips_list = clips_folder / "clips.txt"
     clips_list.write_text("".join(f"file '{name}'\n" for name in clip_names))
-    overview_video = output_folder / f"Overview_Video{Path(video_path).suffix}"
+    # The clips are H.264, which some containers (e.g. WebM) do not support, so use MKV.
+    overview_video = output_folder / "Overview_Video.mkv"
 
     line()
     log.info("Concatenating the clips to create the overview video...")
