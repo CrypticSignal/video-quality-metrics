@@ -39,6 +39,30 @@ def get_video_stream(info: dict) -> dict | None:
     return next((stream for stream in info["streams"] if stream["codec_type"] == "video"), None)
 
 
+def count_video_frames(video_path: str | Path) -> int | None:
+    """Return the number of frames in the first video stream, or None if it can't be counted."""
+    # Each packet of a video stream holds one frame. Counting them is much faster than decoding.
+    result = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "V:0",
+            "-count_packets",
+            "-show_entries",
+            "stream=nb_read_packets",
+            "-of",
+            "csv=p=0",
+            str(video_path),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    output = result.stdout.strip()
+    return int(output) if output.isdigit() else None
+
+
 def get_frame_rate(info: dict) -> str:
     """Return the frame rate of the first video stream, e.g. "24000/1001 (23.976)"."""
     video_stream = get_video_stream(info)

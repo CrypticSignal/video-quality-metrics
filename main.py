@@ -15,6 +15,7 @@ from metrics import enabled_metrics, read_per_frame_scores, summarise
 from reference_video import create_overview_video, cut_video
 from utils import format_si, line, log, setup_logging
 from video_info import (
+    count_video_frames,
     describe_video_bitrate,
     get_duration,
     get_frame_rate,
@@ -98,6 +99,7 @@ def write_table(table: PrettyTable, table_path: Path, metrics: list[str]) -> Non
 def run_comparison(
     comparison: Comparison,
     reference_video: str | Path,
+    reference_frame_count: int | None,
     output_folder: Path,
     metrics: list[str],
     args: Namespace,
@@ -117,6 +119,15 @@ def run_comparison(
     else:
         transcode_time = transcode(
             reference_video, comparison.encoder_options, transcoded_video, args
+        )
+
+    # libvmaf compares the frames in order, so a frame that was dropped or duplicated when
+    # transcoding means that every frame after it is compared against the wrong frame.
+    frame_count = count_video_frames(transcoded_video)
+    if reference_frame_count and frame_count and frame_count != reference_frame_count:
+        log.warning(
+            f"Warning: {transcoded_video} has {frame_count} frames but the reference video has "
+            f"{reference_frame_count}, so the quality metrics may be inaccurate."
         )
 
     # The scores are only reused if they were calculated after the video was last transcoded.
@@ -192,11 +203,14 @@ def process_video(input_video: str, args: Namespace, multiple_inputs: bool) -> N
     table.add_row(["Original Video", codec, "-"] + original_video_details + ["-"] * len(metrics))
     table_path = output_folder / "metrics_table.txt"
 
+    reference_frame_count = count_video_frames(reference_video)
     comparisons = get_comparisons(args)
     log.info(f"Comparing: {', '.join(c.label for c in comparisons)}")
     mean_vmafs = []
     for comparison in comparisons:
-        row, mean_vmaf = run_comparison(comparison, reference_video, output_folder, metrics, args)
+        row, mean_vmaf = run_comparison(
+            comparison, reference_video, reference_frame_count, output_folder, metrics, args
+        )
         table.add_row(row)
         mean_vmafs.append(mean_vmaf)
         # Write the table after each comparison so that results are kept if the program stops.
