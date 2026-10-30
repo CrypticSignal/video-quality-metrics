@@ -1,6 +1,7 @@
 """The FFmpeg commands that transcode the video and calculate the quality metrics."""
 
 import shlex
+import subprocess
 from argparse import Namespace
 from pathlib import Path
 from time import perf_counter
@@ -13,6 +14,27 @@ from utils import exit_program, line, log
 # Change this if you want to use a different VMAF model file.
 # It is relative to this file so that the program works from any directory.
 VMAF_MODEL_PATH = Path(__file__).parent / "vmaf_models" / "vmaf_v0.6.1.json"
+
+
+def check_ffmpeg() -> None:
+    """Exit if FFmpeg or FFprobe can't be run, or if FFmpeg doesn't have the libvmaf filter."""
+    for program in ("ffmpeg", "ffprobe"):
+        try:
+            subprocess.run([program, "-version"], capture_output=True, check=True)
+        except (OSError, subprocess.CalledProcessError):
+            exit_program(
+                f"Unable to run {program}. Make sure that it is installed and in your PATH."
+            )
+
+    filters = subprocess.run(
+        ["ffmpeg", "-hide_banner", "-filters"], capture_output=True, text=True
+    ).stdout
+    # Each line is e.g. " ... libvmaf  VV->V  Calculate the VMAF between two video streams."
+    if not any(line.split()[1:2] == ["libvmaf"] for line in filters.splitlines()):
+        exit_program(
+            "Your build of FFmpeg does not have the libvmaf filter.\n"
+            "Builds that have it are listed in the FFmpeg Builds section of the README."
+        )
 
 
 def backslash_escape(value: str, special_characters: str) -> str:

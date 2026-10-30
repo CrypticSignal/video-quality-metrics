@@ -9,7 +9,7 @@ from statistics import fmean
 from prettytable import PrettyTable
 
 from args import parser
-from ffmpeg_tasks import calculate_quality_metrics, transcode
+from ffmpeg_tasks import calculate_quality_metrics, check_ffmpeg, transcode
 from graphs import plot_mean_vmaf_graph, plot_per_frame_graph
 from metrics import enabled_metrics, read_per_frame_scores, summarise
 from reference_video import create_overview_video, cut_video
@@ -262,6 +262,7 @@ def main() -> None:
     line()
     log.info("Video Quality Metrics")
     log.info("Version Date: 3rd May 2026")
+    check_ffmpeg()
 
     for input_video in input_videos:
         process_video(input_video, args, len(input_videos) > 1)
