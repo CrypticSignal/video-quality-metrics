@@ -68,7 +68,7 @@ general_args.add_argument(
     type=number(float, 0, exclusive=True),
     help="Create a lossless version of the original video that is just the first x seconds of the video.\n"
     "This cut version of the original video is what will be transcoded and used as the reference video.\n"
-    "You cannot use this option in conjunction with the --interval or -cl argument.",
+    "You cannot use this option in conjunction with Overview Mode (--interval).",
 )
 
 general_args.add_argument(

@@ -140,7 +140,7 @@ General Arguments:
   -t TRANSCODE_LENGTH, --transcode-length TRANSCODE_LENGTH
                         Create a lossless version of the original video that is just the first x seconds of the video.
                         This cut version of the original video is what will be transcoded and used as the reference video.
-                        You cannot use this option in conjunction with the --interval or -cl argument.
+                        You cannot use this option in conjunction with Overview Mode (--interval).
   -o OUTPUT_FOLDER, --output-folder OUTPUT_FOLDER
                         Use this argument if you want a specific name for the output folder. If you want the name of the output folder to contain a space, the string must be surrounded in double quotes.
                         If the input is a glob pattern that matches multiple videos, each video's results are saved in a subfolder of this folder.
