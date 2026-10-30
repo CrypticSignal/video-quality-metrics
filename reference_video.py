@@ -32,8 +32,12 @@ def cut_video(video_path: str, output_folder: Path, length: float) -> Path:
             video_path,
             "-t",
             str(length),
+            # Only the video and audio, because MKV can't hold some streams that MP4/MOV can,
+            # e.g. timecode (tmcd) tracks.
             "-map",
-            "0",
+            "0:V",
+            "-map",
+            "0:a?",
             "-c",
             "copy",
             str(output_path),
