@@ -11,7 +11,26 @@ from metrics import enabled_metrics
 from utils import line, log
 
 # Change this if you want to use a different VMAF model file.
-VMAF_MODEL_PATH = "vmaf_models/vmaf_v0.6.1.json"
+# It is relative to this file so that the program works from any directory.
+VMAF_MODEL_PATH = Path(__file__).parent / "vmaf_models" / "vmaf_v0.6.1.json"
+
+
+def backslash_escape(value: str, special_characters: str) -> str:
+    """Put a backslash before each backslash and each of the special characters."""
+    for character in "\\" + special_characters:
+        value = value.replace(character, f"\\{character}")
+    return value
+
+
+def quote_filter_option(value: str) -> str:
+    """Quote and escape a filter option's value so that FFmpeg reads it unchanged.
+
+    FFmpeg parses the value twice: once as part of the filtergraph and then
+    as one of the filter's colon-separated options. In the quotes, each
+    apostrophe must end the quote, be escaped and then start a new quote.
+    """
+    escaped = backslash_escape(value, "':")
+    return "'" + escaped.replace("'", "'\\''") + "'"
 
 
 def run_ffmpeg(command: list[str], message: str, args: Namespace) -> float:
@@ -63,7 +82,10 @@ def calculate_quality_metrics(
 
     The per-frame scores are saved to json_path.
     """
-    model = f"path={VMAF_MODEL_PATH}"
+    # The model option is parsed again by libvmaf, as key=value pairs separated by colons.
+    # This matters for absolute paths, e.g. "C:/Users" or "/Users/Sam's Mac".
+    model_path = backslash_escape(VMAF_MODEL_PATH.as_posix(), "':=")
+    model = f"path={model_path}"
     if args.phone_model:
         model += "|enable_transform=true"
 
@@ -71,7 +93,7 @@ def calculate_quality_metrics(
     log_path = str(json_path).replace("\\", "/").replace("'", "\\'")
 
     vmaf_options = (
-        f"model={model}:log_fmt=json:log_path='{log_path}'"
+        f"model={quote_filter_option(model)}:log_fmt=json:log_path='{log_path}'"
         f":n_subsample={args.n_subsample}:n_threads={args.n_threads}"
     )
 
