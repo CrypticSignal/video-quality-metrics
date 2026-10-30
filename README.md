@@ -147,7 +147,7 @@ General Arguments:
   -vf VIDEO_FILTERS, --video-filters VIDEO_FILTERS
                         Apply video filter(s) to the original video before calculating quality metrics. Each filter must be separated by a comma.
                         Example: -vf bwdif=mode=0,crop=1920:800:0:140
-  -sl, --skip-libvmaf   Skip libvmaf if output file exists.
+  -sl, --skip-libvmaf   Skip quality metrics calculation if its output file exists and is newer than the transcoded video.
   -st, --skip-transcoding
                         Skip encoding if output file exists.
   -d, --debug           Print debug message and command line.

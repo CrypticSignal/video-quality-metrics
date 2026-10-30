@@ -119,9 +119,16 @@ def run_comparison(
             reference_video, comparison.encoder_options, transcoded_video, args
         )
 
-    if args.skip_libvmaf and json_path.exists():
+    # The scores are only reused if they were calculated after the video was last transcoded.
+    if (
+        args.skip_libvmaf
+        and json_path.exists()
+        and json_path.stat().st_mtime > transcoded_video.stat().st_mtime
+    ):
         log.info(f"{json_path} exists. Skipping quality metrics calculation.")
     else:
+        if args.skip_libvmaf and json_path.exists():
+            log.info(f"{json_path} is older than {transcoded_video}, so it will be replaced.")
         calculate_quality_metrics(reference_video, transcoded_video, json_path, args)
 
     frame_numbers, scores = read_per_frame_scores(json_path, metrics)

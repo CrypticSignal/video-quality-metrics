@@ -92,7 +92,7 @@ general_args.add_argument(
     "--skip-libvmaf",
     action="store_true",
     default=False,
-    help="Skip quality metrics calculation if output file exists.",
+    help="Skip quality metrics calculation if its output file exists and is newer than the transcoded video.",
 )
 
 general_args.add_argument(
