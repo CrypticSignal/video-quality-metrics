@@ -54,7 +54,7 @@ def get_columns(first_column: str, metrics: list[str], decimal_places: int) -> l
     return [
         Column(first_column, lambda row: row.label, lambda row: row.label),
         Column(
-            "Transcode Time (s)",
+            "Time Taken (s)",
             lambda row: row.transcode_time,
             lambda row: number(row.transcode_time),
         ),
