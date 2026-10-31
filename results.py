@@ -72,7 +72,7 @@ def get_columns(first_column: str, metrics: list[str], decimal_places: int) -> l
             lambda row: (
                 "N/A" if row.bitrate is None else format_si(row.bitrate, "bps", decimal_places)
             ),
-            "lower",
+            # A lower bitrate isn't necessarily better, because it usually means lower quality.
         ),
         Column("Duration (s)", lambda row: row.duration, lambda row: number(row.duration)),
     ] + [metric_column(metric) for metric in metrics]
