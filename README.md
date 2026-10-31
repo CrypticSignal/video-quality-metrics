@@ -13,18 +13,26 @@ VQM will compare the VMAF, SSIM and PSNR achieved with different values of the s
 - [Code Structure](#code-structure)
 
 # What does VQM produce?
-VQM produces a report named `report.html`, which you can open in any web browser. It contains a table to show the metrics, and graphs that show the per-frame VMAF, SSIM and PSNR. The graphs are embedded in the report, so it is a single file that you can share. In the report, the highest VMAF, PSNR and SSIM values are highlighted in green, and you can click a column's heading to sort the transcodes by it.
+VQM produces a report named `report.html`, which you can open in any web browser. When VQM finishes, it prints the path of the report. The report contains:
+- A table of the results (see below). The highest VMAF, PSNR and SSIM values are highlighted in green, and you can click a column's heading to sort the transcodes by it.
+- Notes underneath the table, such as the codec of the original video, the encoder used to transcode it and the FFmpeg options used.
+- A bar graph of the mean VMAF achieved with each encoder parameter value or combination.
+- Graphs of the per-frame VMAF, PSNR and SSIM of each transcode. Each transcode's graphs can be expanded by clicking its name.
 
-If you use the `-P` argument, the table is also printed in the terminal. It contains the following for each value of the specified encoder parameter:
+The graphs are embedded in the report, so `report.html` is a single file that you can share.
+
+The table contains the following for the original video and each value of the specified encoder parameter:
 - Parameter value
 - Time taken to transcode the video (seconds)
-- Filesize (MB)
-- Bitrate (Mbps)
-- [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf)
-- Structural Similarity Index (SSIM)
-- Peak Signal-to-Noise-Ratio (PSNR)
+- Size of the video
+- Video bitrate
+- Mean [Video Multimethod Assessment Fusion (VMAF)](https://github.com/Netflix/vmaf)
+- Mean Peak Signal-to-Noise-Ratio (PSNR)
+- Mean Structural Similarity Index (SSIM)
 
-Here's an example, as printed with `-P`:
+If you use the `-t` argument or Overview Mode, the table also contains a row for the reference video, i.e. the shorter video that was transcoded.
+
+If you use the `-P` argument, the table is also printed in the terminal. Here's an example of the table, as printed with `-P`:
 ```
 ┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
 ┃ preset         ┃ Time Taken (s) ┃      Size ┃ Video Bitrate ┃   VMAF ┃   PSNR ┃  SSIM ┃
@@ -51,6 +59,13 @@ libvmaf n_subsample: 1
 ```
 _Command used: `python main.py -i ForBiggerFun.mp4 -e libx264 -p preset -v veryslow slower slow medium fast faster veryfast superfast ultrafast`_
 
+## Output folder
+The results are saved in a folder named after the input video (e.g. `ForBiggerFun_mp4`), unless you specify one with `-o`. It contains:
+- `report.html`
+- A subfolder for each encoder parameter value or combination, containing the transcoded video and `per_frame_metrics.json` (libvmaf's per-frame scores, which `-sl` reuses).
+- The reference video, if you use the `-t` argument or Overview Mode.
+
+## Graphs
 In addition to the table, the report contains two types of graphs:
 - A graph (type 1) for each encoder parameter value, showing the per-frame VMAF, SSIM and PSNR.
 - A graph (type 2) where the average VMAF is plotted against the value of the encoder parameter.
@@ -80,6 +95,8 @@ python main.py -i ForBiggerFun.mp4 -e libx264 -p crf -v 22 23 24
 ```
 python main.py -i ForBiggerFun.mp4 -e h264_amf -p quality -v balanced speed quality
 ```
+
+When VQM finishes, open `report.html` in the output folder to see the results.
 
 # Overview Mode
 Overview Mode can be activated by specifying the `--interval` and `--clip-length` arguments. The benefit of this mode is especially apparent with long videos, such as movies. What this mode does is create an overview video by grabbing a `<clip length>` seconds long segment every `<interval>` seconds from the original video. As the overview video can be much shorter than the original, the process of transcoding and calculating the quality metrics is quicker.
@@ -117,7 +134,7 @@ The table produced will look something like this:
 └────────────────────────┴────────────────┴───────────┴───────────────┴────────┴────────┴───────┘
 VMAF/PSNR/SSIM values are the mean of the per-frame scores. The best values are in green.
 ```
-A graph will also be produced, comparing each combination:
+The report will also contain a graph comparing each combination:
 
 ![Combination vs VMAF](https://github.com/CrypticSignal/video-quality-metrics/blob/master/example_graphs/Combination%20vs%20VMAF.png?raw=true)
 
