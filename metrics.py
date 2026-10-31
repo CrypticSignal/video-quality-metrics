@@ -1,7 +1,6 @@
 import json
 from argparse import Namespace
 from pathlib import Path
-from statistics import fmean, pstdev
 
 # The name that libvmaf uses for each metric in its JSON log.
 LIBVMAF_NAMES = {"VMAF": "vmaf", "PSNR": "psnr_y", "SSIM": "float_ssim"}
@@ -32,10 +31,3 @@ def read_per_frame_scores(
         metric: [frame["metrics"][LIBVMAF_NAMES[metric]] for frame in frames] for metric in metrics
     }
     return frame_numbers, scores
-
-
-def summarise(scores: list[float], decimal_places: int) -> str:
-    """Return the scores in the format "Min | Standard Deviation | Mean"."""
-    return " | ".join(
-        f"{value:.{decimal_places}f}" for value in (min(scores), pstdev(scores), fmean(scores))
-    )

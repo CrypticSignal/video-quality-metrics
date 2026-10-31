@@ -17,7 +17,7 @@ from ffmpeg_tasks import (
     transcode,
 )
 from graphs import plot_mean_vmaf_graph, plot_per_frame_graph
-from metrics import enabled_metrics, read_per_frame_scores, summarise
+from metrics import enabled_metrics, read_per_frame_scores
 from reference_video import create_overview_video, cut_video
 from utils import format_si, line, log, setup_logging
 from video_info import (
@@ -119,7 +119,10 @@ def describe_video(video_path: str | Path, info: dict, args: Namespace) -> list[
 
 def write_table(table: PrettyTable, table_path: Path, metrics: list[str]) -> None:
     with open(table_path, "w", encoding="utf-8") as f:
-        f.write(f"{'/'.join(metrics)} values are in the format: Min | Standard Deviation | Mean\n")
+        f.write(
+            f"{'/'.join(metrics)} values are the mean of the per-frame scores. "
+            "See the per-frame graphs for dips in quality.\n"
+        )
         f.write(table.get_string())
 
 
@@ -221,7 +224,7 @@ def run_comparison(
     row = (
         [comparison.label, args.encoder, transcode_time]
         + describe_video(transcoded_video, transcoded_info, args)
-        + [summarise(scores[metric], args.decimal_places) for metric in metrics]
+        + [f"{mean_scores[metric]:.{args.decimal_places}f}" for metric in metrics]
     )
     return row, mean_scores["VMAF"]
 
