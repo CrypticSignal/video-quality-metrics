@@ -19,14 +19,16 @@ from ffmpeg_tasks import (
 from graphs import plot_mean_vmaf_graph, plot_per_frame_graph
 from metrics import enabled_metrics, read_per_frame_scores
 from reference_video import create_overview_video, cut_video
-from utils import format_si, line, log, setup_logging
+from report import write_report
+from results import ResultRow, describe_bitrate_sources, get_columns
+from utils import line, log, setup_logging
 from video_info import (
     count_video_frames,
-    describe_video_bitrate,
     get_duration,
     get_filtered_resolution,
     get_frame_rate,
     get_resolution,
+    get_video_bitrate,
     get_video_stream,
     probe,
 )
@@ -109,40 +111,58 @@ def get_output_folder(filename: str, args: Namespace, multiple_inputs: bool) -> 
     return output_folder
 
 
-def describe_video(
-    video_path: str | Path, info: dict, args: Namespace
-) -> tuple[list[str], str | None]:
-    """Return the size, bitrate and duration of the video, for the table, and the confidence
-    and method of the bitrate, for underneath the table."""
-    size = format_si(int(info["format"]["size"]), "B", args.decimal_places)
-    bitrate, bitrate_source = describe_video_bitrate(video_path, info, args.decimal_places)
-    duration = f"{get_duration(info):.{args.decimal_places}f}"
-    return [size, bitrate, duration], bitrate_source
-
-
-def describe_bitrate_sources(bitrate_sources: dict[str, str | None]) -> str:
-    """Describe how each row's video bitrate was found, e.g.
-    "Video bitrate confidence = high, method = video packet sizes".
-
-    If the rows differ, each row is listed so that a less reliable bitrate stands out.
-    """
-    known_sources = {label: source for label, source in bitrate_sources.items() if source}
-    if not known_sources:
-        return ""
-    if len(set(known_sources.values())) == 1:
-        return f"Video bitrate {next(iter(known_sources.values()))}\n"
-    return "Video bitrate:\n" + "".join(
-        f"  {label}: {source}\n" for label, source in known_sources.items()
+def video_row(
+    label: str, encoder: str, video_path: str | Path, info: dict, args: Namespace
+) -> ResultRow:
+    """Return the table row of a video, without any quality metrics."""
+    bitrate, bitrate_source = get_video_bitrate(video_path, info, args.decimal_places)
+    return ResultRow(
+        label, encoder, int(info["format"]["size"]), bitrate, bitrate_source, get_duration(info)
     )
 
 
-def write_table(table: PrettyTable, table_path: Path, metrics: list[str]) -> None:
+def get_codec(info: dict) -> str:
+    video_stream = get_video_stream(info)
+    return video_stream.get("codec_name", "N/A") if video_stream else "N/A"
+
+
+def text_table(
+    first_column: str, metrics: list[str], rows: list[ResultRow], args: Namespace
+) -> str:
+    columns = get_columns(first_column, metrics, args.decimal_places)
+    text_table = PrettyTable()
+    text_table.field_names = [column.name for column in columns]
+    for row in rows:
+        text_table.add_row([column.text(row) for column in columns])
+    return text_table.get_string()
+
+
+def write_table(table_path: Path, table: str, notes: list[str], metrics: list[str]) -> None:
     with open(table_path, "w", encoding="utf-8") as f:
         f.write(
             f"{'/'.join(metrics)} values are the mean of the per-frame scores. "
-            "See the per-frame graphs for dips in quality.\n"
+            "See the per-frame graphs in report.html for dips in quality.\n"
         )
-        f.write(table.get_string())
+        f.write(table + "\n" + "\n".join(notes))
+
+
+def get_notes(filename: str, rows: list[ResultRow], args: Namespace) -> list[str]:
+    """Return the notes that go underneath the table."""
+    notes = describe_bitrate_sources(rows) + [f"Original File: {filename}"]
+    if args.transcode_length:
+        notes.append(f"Only the first {args.transcode_length:g}s was used.")
+    if args.interval:
+        notes.append(
+            f"Overview Mode: a {args.clip_length}s clip was taken every {args.interval}s."
+        )
+    notes.append(f"FFmpeg output options: {args.output_options}")
+    if args.video_filters:
+        notes.append(
+            "Filter(s) applied to original video before quality metrics calculation: "
+            f"{args.video_filters}"
+        )
+    notes.append(f"libvmaf n_subsample: {args.n_subsample}")
+    return notes
 
 
 # The key that the settings used to calculate the quality metrics are saved under, in libvmaf's
@@ -182,11 +202,8 @@ def run_comparison(
     output_folder: Path,
     metrics: list[str],
     args: Namespace,
-) -> tuple[list, float, str | None]:
-    """Transcode the reference video and calculate the quality metrics.
-
-    Returns the table row, the mean VMAF and the confidence and method of the video bitrate.
-    """
+) -> ResultRow:
+    """Transcode the reference video, calculate the quality metrics and return the table row."""
     folder = output_folder / comparison.name
     folder.mkdir(exist_ok=True)
     transcoded_video = folder / f"{comparison.name}.mkv"
@@ -194,7 +211,7 @@ def run_comparison(
 
     if args.skip_transcoding and transcoded_video.exists():
         log.info(f"{transcoded_video} exists. Skipping transcoding.")
-        transcode_time = "-"
+        transcode_time = None
     else:
         transcode_time = transcode(
             reference_video, comparison.encoder_options, transcoded_video, args
@@ -240,24 +257,18 @@ def run_comparison(
         save_settings(json_path, settings)
 
     frame_numbers, scores = read_per_frame_scores(json_path, metrics)
-    mean_scores = {metric: fmean(scores[metric]) for metric in metrics}
+    row = video_row(comparison.label, args.encoder, transcoded_video, transcoded_info, args)
+    row.transcode_time = transcode_time
     for metric in metrics:
-        plot_per_frame_graph(
+        row.mean_scores[metric] = fmean(scores[metric])
+        row.per_frame_graphs[metric] = plot_per_frame_graph(
             metric,
             frame_numbers,
             scores[metric],
-            f"{mean_scores[metric]:.{args.decimal_places}f}",
+            f"{row.mean_scores[metric]:.{args.decimal_places}f}",
             args.n_subsample,
-            folder / metric,
         )
-
-    details, bitrate_source = describe_video(transcoded_video, transcoded_info, args)
-    row = (
-        [comparison.label, args.encoder, transcode_time]
-        + details
-        + [f"{mean_scores[metric]:.{args.decimal_places}f}" for metric in metrics]
-    )
-    return row, mean_scores["VMAF"], bitrate_source
+    return row
 
 
 def process_video(
@@ -269,9 +280,7 @@ def process_video(
     line()
     log.info(f"Here's some information about {filename}:")
     info = probe(input_video)
-    video_stream = get_video_stream(info)
-    codec = video_stream.get("codec_name", "N/A") if video_stream else "N/A"
-    original_video_details, original_bitrate_source = describe_video(input_video, info, args)
+    rows = [video_row("Original Video", get_codec(info), input_video, info, args)]
     log.info(f"Frame rate: {get_frame_rate(info)} FPS")
     for stream in info["streams"]:
         log.info(
@@ -296,30 +305,36 @@ def process_video(
             input_video, output_folder, args.interval, args.clip_length
         )
 
-    table = PrettyTable()
-    table.field_names = [
-        "Combination" if args.combinations else args.parameter,
-        "Encoder",
-        "Transcode Time (s)",
-        "Size",
-        "Video Bitrate",
-        "Duration (s)",
-    ] + metrics
-    table.add_row(["Original Video", codec, "-"] + original_video_details + ["-"] * len(metrics))
-    bitrate_sources = {"Original Video": original_bitrate_source}
     if reference_video != input_video:
         # The transcodes are made from the cut or overview video, so their size and duration
         # should be compared with it rather than with the whole original video.
         reference_info = probe(reference_video)
-        reference_stream = get_video_stream(reference_info)
-        reference_codec = reference_stream.get("codec_name", "N/A") if reference_stream else "N/A"
-        reference_details, bitrate_sources["Reference Video"] = describe_video(
-            reference_video, reference_info, args
+        rows.append(
+            video_row(
+                "Reference Video", get_codec(reference_info), reference_video, reference_info, args
+            )
         )
-        table.add_row(
-            ["Reference Video", reference_codec, "-"] + reference_details + ["-"] * len(metrics)
-        )
+
+    first_column = "Combination" if args.combinations else args.parameter
+    title = f"Video Quality Metrics: {filename}"
+    report_path = output_folder / "report.html"
     table_path = output_folder / "metrics_table.txt"
+
+    def write_results(mean_vmaf_graph: str | None = None) -> str:
+        notes = get_notes(filename, rows, args)
+        table = text_table(first_column, metrics, rows, args)
+        write_table(table_path, table, notes, metrics)
+        write_report(
+            report_path,
+            title,
+            first_column,
+            metrics,
+            rows,
+            notes,
+            mean_vmaf_graph,
+            args.decimal_places,
+        )
+        return table + "\n" + "\n".join(notes)
 
     reference_frame_count = count_video_frames(reference_video)
     if args.video_filters:
@@ -328,63 +343,35 @@ def process_video(
         reference_resolution = get_resolution(probe(reference_video))
     comparisons = get_comparisons(args)
     log.info(f"Comparing: {', '.join(c.label for c in comparisons)}")
-    mean_vmafs = []
     for comparison in comparisons:
-        row, mean_vmaf, bitrate_sources[comparison.label] = run_comparison(
-            comparison,
-            reference_video,
-            reference_frame_count,
-            reference_resolution,
-            output_folder,
-            metrics,
-            args,
+        rows.append(
+            run_comparison(
+                comparison,
+                reference_video,
+                reference_frame_count,
+                reference_resolution,
+                output_folder,
+                metrics,
+                args,
+            )
         )
-        table.add_row(row)
-        mean_vmafs.append(mean_vmaf)
-        # Write the table after each comparison so that results are kept if the program stops.
-        write_table(table, table_path, metrics)
+        # Write the results after each comparison so that they are kept if the program stops.
+        write_results()
 
-    supplementary_info = (
-        "\n"
-        + describe_bitrate_sources(bitrate_sources)
-        + f"Original File: {filename}\n"
-        + (
-            f"Only the first {args.transcode_length:g}s was used.\n"
-            if args.transcode_length
-            else ""
-        )
-        + (
-            f"Overview Mode: a {args.clip_length}s clip was taken every {args.interval}s.\n"
-            if args.interval
-            else ""
-        )
-        + f"FFmpeg output options: {args.output_options}\n"
-        + (
-            f"Filter(s) applied to original video before quality metrics calculation: "
-            f"{args.video_filters}\n"
-            if args.video_filters
-            else ""
-        )
-        + f"libvmaf n_subsample: {args.n_subsample}"
-    )
-    with open(table_path, "a", encoding="utf-8") as f:
-        f.write(supplementary_info)
-
-    x_label = "Combination" if args.combinations else args.parameter
-    plot_mean_vmaf_graph(
-        x_label,
-        [c.label for c in comparisons],
-        mean_vmafs,
+    transcodes = [row for row in rows if row.is_transcode]
+    mean_vmaf_graph = plot_mean_vmaf_graph(
+        first_column,
+        [row.label for row in transcodes],
+        [row.mean_scores["VMAF"] for row in transcodes],
         args.decimal_places,
-        output_folder / f"{x_label} vs VMAF",
     )
+    results = write_results(mean_vmaf_graph)
 
     line()
-    log.info(f"Check out the contents of the '{output_folder}' folder.")
+    log.info(f"Open {report_path} in a web browser to see the results.")
 
     if args.print:
-        print(table.get_string())
-        print(supplementary_info)
+        print(results)
 
 
 def main() -> None:

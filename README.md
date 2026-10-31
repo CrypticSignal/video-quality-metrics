@@ -13,9 +13,9 @@ VQM will compare the VMAF, SSIM and PSNR achieved with different values of the s
 - [Code Structure](#code-structure)
 
 # What does VQM produce?
-VQM produces a table to show the metrics, and graphs that show the per-frame VMAF, SSIM and PSNR.
+VQM produces a report named `report.html`, which you can open in any web browser. It contains a table to show the metrics, and graphs that show the per-frame VMAF, SSIM and PSNR. The graphs are embedded in the report, so it is a single file that you can share. In the report, the best value in each column of the table is highlighted, and you can click a column's heading to sort the transcodes by it.
 
-The table is written to a file named `metrics_table.txt` and it contains the following for each value of the specified encoder parameter:
+The table is also written to a file named `metrics_table.txt`. It contains the following for each value of the specified encoder parameter:
 - Parameter value
 - Time taken to transcode the video (seconds)
 - Filesize (MB)
@@ -48,7 +48,7 @@ libvmaf n_subsample: 1
 ```
 _Command used: `python main.py -i ForBiggerFun.mp4 -e libx264 -p preset -v veryslow slower slow medium fast faster veryfast superfast ultrafast`_
 
-In addition to the table, two types of graphs are created:
+In addition to the table, the report contains two types of graphs:
 - A graph (type 1) for each encoder parameter value, showing the per-frame VMAF, SSIM and PSNR.
 - A graph (type 2) where the average VMAF is plotted against the value of the encoder parameter.
 
@@ -246,11 +246,13 @@ The source of the quoted text, plus additional information about VMAF (such as t
 # Code Structure
 | File | Purpose |
 | --- | --- |
-| `main.py` | Entry point. Validates the arguments, then for each input video: transcodes it with each parameter value/combination, calculates the quality metrics and writes the table and graphs. |
+| `main.py` | Entry point. Validates the arguments, then for each input video: transcodes it with each parameter value/combination, calculates the quality metrics and writes the results. |
 | `args.py` | The command line arguments. |
 | `reference_video.py` | Optionally creates a shorter reference video (`-t` or Overview Mode). |
 | `ffmpeg_tasks.py` | The FFmpeg commands that transcode the video and run libvmaf. |
 | `metrics.py` | Reads the per-frame scores from libvmaf's JSON log. |
 | `video_info.py` | Uses FFprobe to get the duration, frame rate and video bitrate. |
-| `graphs.py` | Plots the per-frame graphs and the mean VMAF bar graph. |
+| `results.py` | The rows of the results table, and how each column is shown. |
+| `report.py` | Writes the HTML report. |
+| `graphs.py` | Plots the per-frame graphs and the mean VMAF bar graph, for the report. |
 | `utils.py` | Logging and formatting helpers. |

@@ -1,6 +1,14 @@
-from pathlib import Path
+"""Plots the graphs as PNG data URIs, so that they can be embedded in the HTML report."""
 
-import matplotlib.pyplot as plt
+from base64 import b64encode
+from io import BytesIO
+
+import matplotlib
+
+# The graphs are only saved, never shown in a window, so no GUI backend is needed.
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt  # noqa: E402
 
 
 def plot_per_frame_graph(
@@ -9,20 +17,19 @@ def plot_per_frame_graph(
     scores: list[float],
     mean_score: str,
     n_subsample: int,
-    save_path: Path,
-) -> None:
+) -> str:
     plt.figure(figsize=(10, 6))
     plt.suptitle(f"{metric}\nlibvmaf n_subsample: {n_subsample}")
     plt.xlabel("Frame Number")
     plt.ylabel(metric)
     plt.plot(frame_numbers, scores, label=f"{metric} ({mean_score})")
     plt.legend(loc="lower right")
-    save(save_path)
+    return to_data_uri()
 
 
 def plot_mean_vmaf_graph(
-    x_label: str, labels: list[str], mean_vmafs: list[float], decimal_places: int, save_path: Path
-) -> None:
+    x_label: str, labels: list[str], mean_vmafs: list[float], decimal_places: int
+) -> str:
     """Plot a bar graph of the mean VMAF achieved with each parameter value/combination."""
     plt.figure(figsize=(10, 6))
     plt.suptitle(f"{x_label} vs VMAF")
@@ -42,10 +49,13 @@ def plot_mean_vmaf_graph(
     for position, vmaf in zip(positions, mean_vmafs):
         plt.text(position, (y_min + vmaf) / 2, f"{vmaf:.{decimal_places}f}", ha="center")
 
-    save(save_path)
+    return to_data_uri()
 
 
-def save(save_path: Path) -> None:
+def to_data_uri() -> str:
+    """Return the current figure as a PNG data URI, and close it."""
+    buffer = BytesIO()
     plt.tight_layout()
-    plt.savefig(save_path, bbox_inches="tight")
+    plt.savefig(buffer, format="png", bbox_inches="tight")
     plt.close()
+    return "data:image/png;base64," + b64encode(buffer.getvalue()).decode("ascii")
