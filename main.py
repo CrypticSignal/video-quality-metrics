@@ -248,6 +248,17 @@ def process_video(input_video: str, args: Namespace, multiple_inputs: bool) -> N
         "Duration",
     ] + metrics
     table.add_row(["Original Video", codec, "-"] + original_video_details + ["-"] * len(metrics))
+    if reference_video != input_video:
+        # The transcodes are made from the cut or overview video, so their size and duration
+        # should be compared with it rather than with the whole original video.
+        reference_info = probe(reference_video)
+        reference_stream = get_video_stream(reference_info)
+        reference_codec = reference_stream.get("codec_name", "N/A") if reference_stream else "N/A"
+        table.add_row(
+            ["Reference Video", reference_codec, "-"]
+            + describe_video(reference_video, reference_info, args)
+            + ["-"] * len(metrics)
+        )
     table_path = output_folder / "metrics_table.txt"
 
     reference_frame_count = count_video_frames(reference_video)
@@ -278,6 +289,11 @@ def process_video(input_video: str, args: Namespace, multiple_inputs: bool) -> N
         + (
             f"Only the first {args.transcode_length:g}s was used.\n"
             if args.transcode_length
+            else ""
+        )
+        + (
+            f"Overview Mode: a {args.clip_length}s clip was taken every {args.interval}s.\n"
+            if args.interval
             else ""
         )
         + f"FFmpeg output options: {args.output_options}\n"
