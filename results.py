@@ -1,7 +1,11 @@
 """The rows of the results table, and how each column is shown."""
 
+import os
+import shutil
+import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from io import StringIO
 
 from rich.console import Console
 from rich.table import Table
@@ -113,10 +117,12 @@ def print_results(
     notes: list[str],
     decimal_places: int,
 ) -> None:
-    """Print the results and the notes underneath them in the terminal.
+    """Show the results and the notes underneath them in the terminal.
 
-    They are printed as a table, unless the terminal is too narrow for it, in which case they
-    are printed as a list so that no values are split or cut off.
+    In a terminal, they are shown in the less pager, so that the table isn't broken when the
+    terminal is resized. Otherwise, or if less isn't available (e.g. on Windows), they are
+    printed. A printed table is fitted to the terminal, or printed as a list if the terminal is
+    too narrow, so that no values are split or cut off.
     """
     columns = get_columns(first_column, metrics, decimal_places)
     caption = (
@@ -135,6 +141,23 @@ def print_results(
         max(len(column.name), *(len(text[index]) for text in texts))
         for index, column in enumerate(columns)
     ]
+    # Each column has a border and a space on either side, and the table has a border at the end.
+    borders_width = 3 * len(columns) + 1
+    full_width = max(sum(widths) + borders_width, len(caption), *(len(note) for note in notes))
+
+    console = Console()
+    if console.is_terminal:
+        # The pager is given the table at its full width with its colours, and it shows as much
+        # of each line as fits, so that resizing the terminal doesn't break the table.
+        pager_console = Console(
+            file=StringIO(), force_terminal=True, color_system=console.color_system
+        )
+        pager_console.width = full_width
+        pager_console.print(build_table(columns, rows, widths, cell, caption))
+        pager_console.print("\n".join(notes), markup=False, highlight=False)
+        if show_in_pager(pager_console.file.getvalue()):
+            return
+
     # To fit a narrow terminal, the headings and the labels in the first column can wrap at
     # spaces, but the other values are never split. So each column's minimum width is its
     # longest word or value.
@@ -145,10 +168,7 @@ def print_results(
         )
         for index, column in enumerate(columns)
     ]
-
-    console = Console()
-    # Each column has a border and a space on either side, and the table has a border at the end.
-    available_width = console.width - 3 * len(columns) - 1
+    available_width = console.width - borders_width
     if console.is_terminal and sum(min_widths) > available_width:
         print_list(console, columns, rows, cell, caption)
     else:
@@ -161,23 +181,49 @@ def print_results(
         else:
             # Rich assumes a width of 80 characters if the output isn't a terminal (e.g. it is
             # redirected to a file), so the table is printed at its full width instead.
-            console.width = max(console.width, sum(widths) + 3 * len(columns) + 1)
-
-        table = Table(caption=caption, caption_justify="left")
-        for index, (column, width) in enumerate(zip(columns, widths)):
-            # The first two columns are text, and the rest are numbers.
-            table.add_column(column.name, justify="left" if index < 2 else "right", width=width)
-        fixed_rows = [row for row in rows if not row.is_transcode]
-        for row in rows:
-            # A line separates the original and reference videos from the transcodes.
-            table.add_row(
-                *(cell(column, row) for column in columns),
-                style=None if row.is_transcode else "dim",
-                end_section=bool(fixed_rows) and row is fixed_rows[-1],
-            )
-        console.print(table)
+            console.width = max(console.width, full_width)
+        console.print(build_table(columns, rows, widths, cell, caption))
 
     console.print("\n".join(notes), markup=False, highlight=False)
+
+
+def show_in_pager(text: str) -> bool:
+    """Show the text in less. Returns False if less isn't available or fails."""
+    less = shutil.which("less")
+    if less is None:
+        return False
+    # -R shows the colours, and -S cuts off lines that are wider than the terminal, which can
+    # be scrolled to with the arrow keys, rather than wrapping them.
+    env = {**os.environ, "LESSCHARSET": os.environ.get("LESSCHARSET", "utf-8")}
+    try:
+        result = subprocess.run(
+            [less, "-R", "-S"], input=text, text=True, encoding="utf-8", env=env
+        )
+    except OSError:
+        return False
+    return result.returncode == 0
+
+
+def build_table(
+    columns: list[Column],
+    rows: list[ResultRow],
+    widths: list[int],
+    cell: Callable[[Column, ResultRow], Text],
+    caption: str,
+) -> Table:
+    table = Table(caption=caption, caption_justify="left")
+    for index, (column, width) in enumerate(zip(columns, widths)):
+        # The first two columns are text, and the rest are numbers.
+        table.add_column(column.name, justify="left" if index < 2 else "right", width=width)
+    fixed_rows = [row for row in rows if not row.is_transcode]
+    for row in rows:
+        # A line separates the original and reference videos from the transcodes.
+        table.add_row(
+            *(cell(column, row) for column in columns),
+            style=None if row.is_transcode else "dim",
+            end_section=bool(fixed_rows) and row is fixed_rows[-1],
+        )
+    return table
 
 
 def print_list(

@@ -118,7 +118,8 @@ general_args.add_argument(
     "--print",
     action="store_true",
     default=False,
-    help="Print metrics table.",
+    help="Show the metrics table in the terminal. In a terminal, it is shown in the less pager\n"
+    "(if it is installed), where long lines can be scrolled with the arrow keys. Press q to exit.",
 )
 
 general_args.add_argument(
