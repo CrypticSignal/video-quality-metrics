@@ -108,12 +108,10 @@ def get_output_folder(filename: str, args: Namespace, multiple_inputs: bool) -> 
     return output_folder
 
 
-def video_row(
-    label: str, encoder: str, video_path: str | Path, info: dict, args: Namespace
-) -> ResultRow:
+def video_row(label: str, video_path: str | Path, info: dict, args: Namespace) -> ResultRow:
     """Return the table row of a video, without any quality metrics."""
     bitrate, bitrate_source = get_video_bitrate(video_path, info, args.decimal_places)
-    return ResultRow(label, encoder, int(info["format"]["size"]), bitrate, bitrate_source)
+    return ResultRow(label, get_codec(info), int(info["format"]["size"]), bitrate, bitrate_source)
 
 
 def get_codec(info: dict) -> str:
@@ -124,12 +122,17 @@ def get_codec(info: dict) -> str:
 def get_notes(filename: str, rows: list[ResultRow], args: Namespace) -> list[str]:
     """Return the notes that go underneath the table."""
     notes = describe_bitrate_sources(rows) + [f"Original File: {filename}"]
+    # e.g. "Original video codec: h264". The transcodes' codec is shown as the encoder below.
+    notes += [
+        f"{row.label.capitalize()} codec: {row.codec}" for row in rows if not row.is_transcode
+    ]
     if args.transcode_length:
         notes.append(f"Only the first {args.transcode_length:g}s was used.")
     if args.interval:
         notes.append(
             f"Overview Mode: a {args.clip_length}s clip was taken every {args.interval}s."
         )
+    notes.append(f"Encoder: {args.encoder}")
     notes.append(f"FFmpeg output options: {args.output_options}")
     if args.video_filters:
         notes.append(
@@ -232,7 +235,7 @@ def run_comparison(
         save_settings(json_path, settings)
 
     frame_numbers, scores = read_per_frame_scores(json_path, metrics)
-    row = video_row(comparison.label, args.encoder, transcoded_video, transcoded_info, args)
+    row = video_row(comparison.label, transcoded_video, transcoded_info, args)
     row.transcode_time = transcode_time
     for metric in metrics:
         row.mean_scores[metric] = fmean(scores[metric])
@@ -255,7 +258,7 @@ def process_video(
     line()
     log.info(f"Here's some information about {filename}:")
     info = probe(input_video)
-    rows = [video_row("Original Video", get_codec(info), input_video, info, args)]
+    rows = [video_row("Original Video", input_video, info, args)]
     log.info(f"Frame rate: {get_frame_rate(info)} FPS")
     for stream in info["streams"]:
         log.info(
@@ -284,11 +287,7 @@ def process_video(
         # The transcodes are made from the cut or overview video, so their size should be
         # compared with it rather than with the whole original video.
         reference_info = probe(reference_video)
-        rows.append(
-            video_row(
-                "Reference Video", get_codec(reference_info), reference_video, reference_info, args
-            )
-        )
+        rows.append(video_row("Reference Video", reference_video, reference_info, args))
 
     first_column = "Combination" if args.combinations else args.parameter
     title = f"Video Quality Metrics: {filename}"

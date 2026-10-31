@@ -19,7 +19,7 @@ class ResultRow:
     """One row of the table: the original video, the reference video or a transcode."""
 
     label: str
-    encoder: str  # For the original and reference videos, this is their codec.
+    codec: str  # The video codec, which is listed under the table for the original and reference.
     size: int  # In bytes.
     bitrate: float | None  # The video bitrate in bits per second, if it could be found.
     bitrate_source: str | None  # The bitrate's confidence and method.
@@ -57,7 +57,6 @@ def get_columns(first_column: str, metrics: list[str], decimal_places: int) -> l
 
     return [
         Column(first_column, lambda row: row.label, lambda row: row.label),
-        Column("Encoder", lambda row: row.encoder, lambda row: row.encoder),
         Column(
             "Transcode Time (s)",
             lambda row: row.transcode_time,
@@ -213,8 +212,8 @@ def build_table(
 ) -> Table:
     table = Table(caption=caption, caption_justify="left")
     for index, (column, width) in enumerate(zip(columns, widths)):
-        # The first two columns are text, and the rest are numbers.
-        table.add_column(column.name, justify="left" if index < 2 else "right", width=width)
+        # The first column is the labels, and the rest are numbers.
+        table.add_column(column.name, justify="left" if index == 0 else "right", width=width)
     fixed_rows = [row for row in rows if not row.is_transcode]
     for row in rows:
         # A line separates the original and reference videos from the transcodes.
