@@ -193,11 +193,13 @@ def show_in_pager(text: str) -> bool:
     if less is None:
         return False
     # -R shows the colours, and -S cuts off lines that are wider than the terminal, which can
-    # be scrolled to with the arrow keys, rather than wrapping them.
+    # be scrolled to with the arrow keys, rather than wrapping them. -Ps replaces less's prompt
+    # (":" or "(END)") with how to use it. "." must be escaped in a prompt.
+    prompt = r"-PsPress q to exit\. Use the arrow keys to scroll\."
     env = {**os.environ, "LESSCHARSET": os.environ.get("LESSCHARSET", "utf-8")}
     try:
         result = subprocess.run(
-            [less, "-R", "-S"], input=text, text=True, encoding="utf-8", env=env
+            [less, "-R", "-S", prompt], input=text, text=True, encoding="utf-8", env=env
         )
     except OSError:
         return False
