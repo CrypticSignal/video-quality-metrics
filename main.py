@@ -145,17 +145,29 @@ def write_table(table: PrettyTable, table_path: Path, metrics: list[str]) -> Non
         f.write(table.get_string())
 
 
-def reason_to_recalculate(
-    json_path: Path, settings_path: Path, transcoded_video: Path, settings: dict
-) -> str | None:
+# The key that the settings used to calculate the quality metrics are saved under, in libvmaf's
+# JSON log.
+SETTINGS_KEY = "vqm_settings"
+
+
+def save_settings(json_path: Path, settings: dict) -> None:
+    """Add the settings used to calculate the quality metrics to libvmaf's JSON log."""
+    data = json.loads(json_path.read_text(encoding="utf-8"))
+    data[SETTINGS_KEY] = settings
+    json_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def reason_to_recalculate(json_path: Path, transcoded_video: Path, settings: dict) -> str | None:
     """Return why the saved quality metrics can't be reused, or None if they can."""
     if not json_path.exists():
         return "it does not exist"
     if json_path.stat().st_mtime <= transcoded_video.stat().st_mtime:
         return "it is older than the transcoded video"
     try:
-        saved_settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        saved_settings = json.loads(json_path.read_text(encoding="utf-8")).get(SETTINGS_KEY)
     except (OSError, ValueError):
+        return "it could not be read"
+    if saved_settings is None:
         return "the settings used to calculate it are unknown"
     if saved_settings != settings:
         return "it was calculated with different settings"
@@ -215,18 +227,17 @@ def run_comparison(
     # The scores are only reused if they were calculated after the video was last transcoded,
     # and with the same settings. Otherwise, e.g. a metric that was disabled last time would be
     # missing, or scores calculated with a different model would be shown.
-    settings_path = folder / "per_frame_metrics_settings.json"
     settings = quality_metrics_settings(args)
     reason = None
     if args.skip_libvmaf:
-        reason = reason_to_recalculate(json_path, settings_path, transcoded_video, settings)
+        reason = reason_to_recalculate(json_path, transcoded_video, settings)
     if args.skip_libvmaf and reason is None:
         log.info(f"{json_path} exists. Skipping quality metrics calculation.")
     else:
         if reason:
             log.info(f"Not reusing {json_path} because {reason}.")
         calculate_quality_metrics(reference_video, transcoded_video, json_path, args)
-        settings_path.write_text(json.dumps(settings, indent=2), encoding="utf-8")
+        save_settings(json_path, settings)
 
     frame_numbers, scores = read_per_frame_scores(json_path, metrics)
     mean_scores = {metric: fmean(scores[metric]) for metric in metrics}
