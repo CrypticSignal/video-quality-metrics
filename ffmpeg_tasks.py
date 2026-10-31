@@ -11,9 +11,14 @@ from better_ffmpeg_progress import FfmpegProcess, FfmpegProcessError
 from metrics import enabled_metrics
 from utils import exit_program, line, log
 
-# Change this if you want to use a different VMAF model file.
-# It is relative to this file so that the program works from any directory.
-VMAF_MODEL_PATH = Path(__file__).parent / "vmaf_models" / "vmaf_v0.6.1.json"
+# The model files are relative to this file so that the program works from any directory.
+VMAF_MODELS_FOLDER = Path(__file__).parent / "vmaf_models"
+
+
+def vmaf_model_path(args: Namespace) -> Path:
+    """Return the path of the VMAF model file to use."""
+    model_file = "vmaf_4k_v0.6.1.json" if args.four_k_model else "vmaf_v0.6.1.json"
+    return VMAF_MODELS_FOLDER / model_file
 
 
 def check_ffmpeg() -> None:
@@ -103,7 +108,7 @@ def quality_metrics_settings(args: Namespace) -> dict:
     reused if they were calculated with the same settings."""
     return {
         "metrics": enabled_metrics(args),
-        "model": VMAF_MODEL_PATH.name,
+        "model": vmaf_model_path(args).name,
         "phone_model": args.phone_model,
         "n_subsample": args.n_subsample,
         "video_filters": args.video_filters,
@@ -122,7 +127,7 @@ def calculate_quality_metrics(
     """
     # The model option is parsed again by libvmaf, as key=value pairs separated by colons.
     # This matters for absolute paths, e.g. "C:/Users" or "/Users/Sam's Mac".
-    model_path = backslash_escape(VMAF_MODEL_PATH.as_posix(), "':=")
+    model_path = backslash_escape(vmaf_model_path(args).as_posix(), "':=")
     model = f"path={model_path}"
     if args.phone_model:
         # A colon adds an option to the same model, whereas "|" would start a second model.

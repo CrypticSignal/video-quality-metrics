@@ -291,6 +291,10 @@ def main() -> None:
         parser.error(
             "You must specify either combinations (-c) or a parameter (-p) and values (-v)."
         )
+    if args.phone_model and args.four_k_model:
+        # The phone model is a transform defined in the default model file, which the 4K
+        # model file does not have.
+        parser.error("You cannot use --phone-model together with --4k-model.")
     if args.transcode_length and args.interval:
         parser.error("You cannot use -t/--transcode-length together with Overview Mode.")
     if args.interval and args.clip_length > args.interval:

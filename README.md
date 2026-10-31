@@ -125,6 +125,7 @@ You can see a list of the available arguments with `python main.py -h`:
 ```
 usage: main.py [-h] [--disable-psnr] [--disable-ssim] [-dp DECIMAL_PLACES] -i INPUT_VIDEO [-t TRANSCODE_LENGTH] [-o OUTPUT_FOLDER] [-vf VIDEO_FILTERS] [-sl] [-st] [-d] [-P] [--input-options INPUT_OPTIONS] [--output-options OUTPUT_OPTIONS] [--av1-cpu-used <1-8>] [-e ENCODER]
                [-p PARAMETER] [-v VALUES [VALUES ...]] [-c COMBINATIONS] [-cl <1-60>] [--interval <1-600>] [-n <x>] [--n-threads N_THREADS] [--phone-model]
+               [--4k-model]
 
 options:
   -h, --help            show this help message and exit
@@ -198,6 +199,8 @@ VMAF Arguments:
   --n-threads N_THREADS
                         Specify the number of threads to use when calculating VMAF
   --phone-model         Enable VMAF phone model
+  --4k-model            Use the VMAF 4K model, which predicts the quality of video viewed on a 4K display.
+                        It cannot be used with --phone-model.
 ```
 
 # Requirements
@@ -236,7 +239,7 @@ The source of the quoted text, plus additional information about VMAF (such as t
 **Notes:**
 - If you are transcoding a video that will be viewed on a mobile phone, you can add the `--phone-model` argument which will enable the [phone model](https://github.com/Netflix/vmaf/blob/master/resource/doc/models.md/#predict-quality-on-a-cellular-phone-screen).
 
-- If you are transcoding a video that will be viewed on a 4K display, the default model (`vmaf_v0.6.1.json`) is fine if you are only interested in relative VMAF scores, i.e. the score differences between different encoder parameter values, but if you are interested in absolute scores, it may be better to use the 4K model file which predicts the subjective quality of video displayed on a 4K screen at a distance of 1.5x the height of the screen. To use the 4K model, replace the value of the `VMAF_MODEL_PATH` variable in ffmpeg_tasks.py with `'vmaf_models/vmaf_4k_v0.6.1.json'`.
+- If you are transcoding a video that will be viewed on a 4K display, the default model (`vmaf_v0.6.1.json`) is fine if you are only interested in relative VMAF scores, i.e. the score differences between different encoder parameter values, but if you are interested in absolute scores, it may be better to use the 4K model file which predicts the subjective quality of video displayed on a 4K screen at a distance of 1.5x the height of the screen. To use the 4K model, add the `--4k-model` argument. It cannot be used together with `--phone-model`.
 
 # Code Structure
 | File | Purpose |

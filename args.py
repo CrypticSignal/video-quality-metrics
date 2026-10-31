@@ -221,3 +221,11 @@ vmaf_args.add_argument(
 )
 
 vmaf_args.add_argument("--phone-model", action="store_true", help="Enable VMAF phone model")
+
+vmaf_args.add_argument(
+    "--4k-model",
+    dest="four_k_model",
+    action="store_true",
+    help="Use the VMAF 4K model, which predicts the quality of video viewed on a 4K display.\n"
+    "It cannot be used with --phone-model.",
+)
