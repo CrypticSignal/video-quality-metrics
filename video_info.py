@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 from fractions import Fraction
 from pathlib import Path
@@ -37,6 +38,46 @@ def get_duration(info: dict) -> float:
 def get_video_stream(info: dict) -> dict | None:
     """Return the first video stream, or None if there isn't one."""
     return next((stream for stream in info["streams"] if stream["codec_type"] == "video"), None)
+
+
+def get_resolution(info: dict) -> tuple[int, int] | None:
+    """Return the width and height of the first video stream, or None if there isn't one."""
+    video_stream = get_video_stream(info)
+    if video_stream is None or "width" not in video_stream:
+        return None
+    return video_stream["width"], video_stream["height"]
+
+
+def get_filtered_resolution(video_path: str | Path, video_filters: str) -> tuple[int, int] | None:
+    """Return the resolution of the video after the filters are applied to it, e.g. a crop.
+
+    Returns None if it can't be found, e.g. because a filter is invalid.
+    """
+    # The showinfo filter logs each frame's size, e.g. " s:1920x800 ".
+    result = subprocess.run(
+        [
+            "ffmpeg",
+            "-hide_banner",
+            "-nostats",
+            "-loglevel",
+            "info",
+            "-i",
+            str(video_path),
+            "-map",
+            "0:V:0",
+            "-frames:v",
+            "1",
+            "-vf",
+            f"{video_filters},showinfo",
+            "-f",
+            "null",
+            "-",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    match = re.search(r" s:(\d+)x(\d+) ", result.stderr)
+    return (int(match[1]), int(match[2])) if match else None
 
 
 def count_video_frames(video_path: str | Path) -> int | None:

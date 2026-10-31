@@ -24,7 +24,9 @@ from video_info import (
     count_video_frames,
     describe_video_bitrate,
     get_duration,
+    get_filtered_resolution,
     get_frame_rate,
+    get_resolution,
     get_video_stream,
     probe,
 )
@@ -125,6 +127,7 @@ def run_comparison(
     comparison: Comparison,
     reference_video: str | Path,
     reference_frame_count: int | None,
+    reference_resolution: tuple[int, int] | None,
     output_folder: Path,
     metrics: list[str],
     args: Namespace,
@@ -155,6 +158,21 @@ def run_comparison(
             f"{reference_frame_count}, so the quality metrics may be inaccurate."
         )
 
+    # The transcode is scaled to the reference's resolution so that libvmaf can compare them.
+    # This is expected if the transcode was scaled on purpose, but it also happens if e.g. the
+    # reference was cropped with -vf and the transcode wasn't, which makes the scores meaningless.
+    transcoded_info = probe(transcoded_video)
+    resolution = get_resolution(transcoded_info)
+    if reference_resolution and resolution and resolution != reference_resolution:
+        log.warning(
+            f"Warning: {transcoded_video} is {resolution[0]}x{resolution[1]} but the reference "
+            f"video is {reference_resolution[0]}x{reference_resolution[1]}"
+            + (" after the -vf filter(s)" if args.video_filters else "")
+            + ", so the transcode will be scaled to that resolution before the quality metrics "
+            "are calculated. If you didn't intend to change the resolution, check that the "
+            "same filters were applied to the transcode (e.g. with --output-options)."
+        )
+
     # The scores are only reused if they were calculated after the video was last transcoded,
     # and with the same settings. Otherwise, e.g. a metric that was disabled last time would be
     # missing, or scores calculated with a different model would be shown.
@@ -180,7 +198,7 @@ def run_comparison(
 
     row = (
         [comparison.label, args.encoder, transcode_time]
-        + describe_video(transcoded_video, probe(transcoded_video), args)
+        + describe_video(transcoded_video, transcoded_info, args)
         + [summarise(scores[metric], args.decimal_places) for metric in metrics]
     )
     return row, fmean(scores["VMAF"])
@@ -233,12 +251,22 @@ def process_video(input_video: str, args: Namespace, multiple_inputs: bool) -> N
     table_path = output_folder / "metrics_table.txt"
 
     reference_frame_count = count_video_frames(reference_video)
+    if args.video_filters:
+        reference_resolution = get_filtered_resolution(reference_video, args.video_filters)
+    else:
+        reference_resolution = get_resolution(probe(reference_video))
     comparisons = get_comparisons(args)
     log.info(f"Comparing: {', '.join(c.label for c in comparisons)}")
     mean_vmafs = []
     for comparison in comparisons:
         row, mean_vmaf = run_comparison(
-            comparison, reference_video, reference_frame_count, output_folder, metrics, args
+            comparison,
+            reference_video,
+            reference_frame_count,
+            reference_resolution,
+            output_folder,
+            metrics,
+            args,
         )
         table.add_row(row)
         mean_vmafs.append(mean_vmaf)
