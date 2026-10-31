@@ -59,6 +59,7 @@ general_args.add_argument(
     type=str,
     required=True,
     help="Input video. Must be a relative/absolute path or a glob pattern.\n"
+    'Use ** to match any number of subfolders, e.g. "videos/**/*.mp4"\n'
     "If the path contains a space, it must be surrounded in double quotes.",
 )
 

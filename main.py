@@ -70,6 +70,20 @@ def get_comparisons(args: Namespace) -> list[Comparison]:
     ]
 
 
+def get_folder_names(input_videos: list[str]) -> dict[str, str]:
+    """Return the name to base each video's output folder on.
+
+    This is the filename, unless another input video has the same filename (e.g. a/clip.mp4 and
+    b/clip.mp4), in which case the whole path is used so that the results don't overwrite each
+    other.
+    """
+    filenames = [Path(video).name for video in input_videos]
+    return {
+        video: filename if filenames.count(filename) == 1 else video
+        for video, filename in zip(input_videos, filenames)
+    }
+
+
 def get_output_folder(filename: str, args: Namespace, multiple_inputs: bool) -> Path:
     if args.interval:
         name = f"{filename}_overview_mode"
@@ -204,7 +218,9 @@ def run_comparison(
     return row, fmean(scores["VMAF"])
 
 
-def process_video(input_video: str, args: Namespace, multiple_inputs: bool) -> None:
+def process_video(
+    input_video: str, folder_name: str, args: Namespace, multiple_inputs: bool
+) -> None:
     filename = Path(input_video).name
     metrics = enabled_metrics(args)
 
@@ -226,7 +242,7 @@ def process_video(input_video: str, args: Namespace, multiple_inputs: bool) -> N
         log.info(f"The following filter(s) will be used:\n{args.video_filters}")
         line()
 
-    output_folder = get_output_folder(filename, args, multiple_inputs)
+    output_folder = get_output_folder(folder_name, args, multiple_inputs)
 
     # The reference video is what gets transcoded and what the transcodes are compared against.
     reference_video = input_video
@@ -352,7 +368,10 @@ def main() -> None:
     if Path(args.input_video).exists():
         input_videos = [args.input_video]
     else:
-        input_videos = sorted(glob.glob(args.input_video))
+        # recursive=True makes "**" match any number of subfolders, e.g. "videos/**/*.mp4".
+        input_videos = sorted(
+            path for path in glob.glob(args.input_video, recursive=True) if Path(path).is_file()
+        )
     if not input_videos:
         parser.error(f"No file(s) found at the specified path or glob pattern: {args.input_video}")
 
@@ -362,8 +381,9 @@ def main() -> None:
     log.info("Version Date: 30th October 2026")
     check_ffmpeg()
 
+    folder_names = get_folder_names(input_videos)
     for input_video in input_videos:
-        process_video(input_video, args, len(input_videos) > 1)
+        process_video(input_video, folder_names[input_video], args, len(input_videos) > 1)
 
 
 if __name__ == "__main__":

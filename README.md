@@ -137,6 +137,7 @@ General Arguments:
                         The number of decimal places to use for the data in the table
   -i INPUT_VIDEO, --input-video INPUT_VIDEO
                         Input video. Must be a relative/absolute path or a glob pattern.
+                        Use ** to match any number of subfolders, e.g. "videos/**/*.mp4"
                         If the path contains a space, it must be surrounded in double quotes.
   -t TRANSCODE_LENGTH, --transcode-length TRANSCODE_LENGTH
                         Create a lossless version of the original video that is just the first x seconds of the video.
