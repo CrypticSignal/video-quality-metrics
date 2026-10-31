@@ -104,6 +104,10 @@ def describe_bitrate_sources(rows: list[ResultRow]) -> list[str]:
     return ["Video bitrate:"] + [f"  {label}: {source}" for label, source in known_sources.items()]
 
 
+def longest_word(text: str) -> int:
+    return max((len(word) for word in text.split()), default=len(text))
+
+
 def print_results(
     first_column: str,
     metrics: list[str],
@@ -111,37 +115,87 @@ def print_results(
     notes: list[str],
     decimal_places: int,
 ) -> None:
-    """Print the table and the notes underneath it in the terminal."""
+    """Print the results and the notes underneath them in the terminal.
+
+    They are printed as a table, unless the terminal is too narrow for it, in which case they
+    are printed as a list so that no values are split or cut off.
+    """
     columns = get_columns(first_column, metrics, decimal_places)
-    table = Table(
-        caption=f"{'/'.join(metrics)} values are the mean of the per-frame scores. "
-        "The best values are in bold.",
-        caption_justify="left",
+    caption = (
+        f"{'/'.join(metrics)} values are the mean of the per-frame scores. "
+        "The best values are in bold."
     )
-    for index, column in enumerate(columns):
-        # The first two columns are text, and the rest are numbers.
-        table.add_column(column.name, justify="left" if index < 2 else "right")
 
-    fixed_rows = [row for row in rows if not row.is_transcode]
-    for row in rows:
+    def cell(column: Column, row: ResultRow) -> Text:
         # Text objects are used so that e.g. "[" in a label isn't read as Rich's markup.
-        cells = [
-            Text(column.text(row), style="bold green" if is_best(column, row, rows) else "")
-            for column in columns
-        ]
-        # A line separates the original and reference videos from the transcodes.
-        table.add_row(
-            *cells,
-            style=None if row.is_transcode else "dim",
-            end_section=bool(fixed_rows) and row is fixed_rows[-1],
-        )
+        best = is_best(column, row, rows)
+        return Text(column.text(row), style="bold green" if best else "")
 
-    # Rich squashes a table that is wider than the terminal, which cuts values off, and assumes
-    # a width of 80 characters if the output isn't a terminal (e.g. it is redirected to a file).
-    # So the table is always printed at its full width, like any other long line.
+    texts = [[column.text(row) for column in columns] for row in rows]
+    # The width that each column needs to fit its heading and values on one line.
+    widths = [
+        max(len(column.name), *(len(text[index]) for text in texts))
+        for index, column in enumerate(columns)
+    ]
+    # To fit a narrow terminal, the headings and the labels in the first column can wrap at
+    # spaces, but the other values are never split. So each column's minimum width is its
+    # longest word or value.
+    min_widths = [
+        max(
+            longest_word(column.name),
+            *(longest_word(text[0]) if index == 0 else len(text[index]) for text in texts),
+        )
+        for index, column in enumerate(columns)
+    ]
+
     console = Console()
-    # measure() is limited to the console's width unless it is given a wider one.
-    full_width = console.measure(table, options=console.options.update_width(10_000)).maximum
-    console.width = max(console.width, full_width)
-    console.print(table)
+    # Each column has a border and a space on either side, and the table has a border at the end.
+    available_width = console.width - 3 * len(columns) - 1
+    if console.is_terminal and sum(min_widths) > available_width:
+        print_list(console, columns, rows, cell, caption)
+    else:
+        if console.is_terminal:
+            # Narrow the column that can lose the most width, one character at a time, until
+            # the table fits. Rich's own way of fitting a table can cut values off.
+            while sum(widths) > available_width:
+                index = max(range(len(columns)), key=lambda i: widths[i] - min_widths[i])
+                widths[index] -= 1
+        else:
+            # Rich assumes a width of 80 characters if the output isn't a terminal (e.g. it is
+            # redirected to a file), so the table is printed at its full width instead.
+            console.width = max(console.width, sum(widths) + 3 * len(columns) + 1)
+
+        table = Table(caption=caption, caption_justify="left")
+        for index, (column, width) in enumerate(zip(columns, widths)):
+            # The first two columns are text, and the rest are numbers.
+            table.add_column(column.name, justify="left" if index < 2 else "right", width=width)
+        fixed_rows = [row for row in rows if not row.is_transcode]
+        for row in rows:
+            # A line separates the original and reference videos from the transcodes.
+            table.add_row(
+                *(cell(column, row) for column in columns),
+                style=None if row.is_transcode else "dim",
+                end_section=bool(fixed_rows) and row is fixed_rows[-1],
+            )
+        console.print(table)
+
     console.print("\n".join(notes), markup=False, highlight=False)
+
+
+def print_list(
+    console: Console,
+    columns: list[Column],
+    rows: list[ResultRow],
+    cell: Callable[[Column, ResultRow], Text],
+    caption: str,
+) -> None:
+    """Print each row as a heading followed by its values, one per line."""
+    for row in rows:
+        console.print(Text(row.label, style="bold" if row.is_transcode else "bold dim"))
+        for column in columns[1:]:
+            value = cell(column, row)
+            # The original and reference videos have no quality metrics, so they are skipped.
+            if value.plain != "-":
+                console.print(Text(f"  {column.name}: ") + value)
+        console.print()
+    console.print(caption, markup=False, highlight=False)
