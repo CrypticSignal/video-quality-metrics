@@ -7,8 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from statistics import fmean
 
-from prettytable import PrettyTable
-
 from args import parser
 from ffmpeg_tasks import (
     calculate_quality_metrics,
@@ -20,7 +18,7 @@ from graphs import plot_mean_vmaf_graph, plot_per_frame_graph
 from metrics import enabled_metrics, read_per_frame_scores
 from reference_video import create_overview_video, cut_video
 from report import write_report
-from results import ResultRow, describe_bitrate_sources, get_columns
+from results import ResultRow, describe_bitrate_sources, print_results
 from utils import line, log, setup_logging
 from video_info import (
     count_video_frames,
@@ -124,17 +122,6 @@ def video_row(
 def get_codec(info: dict) -> str:
     video_stream = get_video_stream(info)
     return video_stream.get("codec_name", "N/A") if video_stream else "N/A"
-
-
-def text_table(
-    first_column: str, metrics: list[str], rows: list[ResultRow], args: Namespace
-) -> str:
-    columns = get_columns(first_column, metrics, args.decimal_places)
-    text_table = PrettyTable()
-    text_table.field_names = [column.name for column in columns]
-    for row in rows:
-        text_table.add_row([column.text(row) for column in columns])
-    return text_table.get_string()
 
 
 def get_notes(filename: str, rows: list[ResultRow], args: Namespace) -> list[str]:
@@ -357,8 +344,9 @@ def process_video(
     log.info(f"Open {report_path} in a web browser to see the results.")
 
     if args.print:
-        print(text_table(first_column, metrics, rows, args))
-        print("\n".join(get_notes(filename, rows, args)))
+        print_results(
+            first_column, metrics, rows, get_notes(filename, rows, args), args.decimal_places
+        )
 
 
 def main() -> None:

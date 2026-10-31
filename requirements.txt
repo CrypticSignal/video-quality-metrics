@@ -1,4 +1,4 @@
 # 5.4.1+ is needed so that the libvmaf command is not run through a shell.
 better-ffmpeg-progress>=5.4.1
 matplotlib
-prettytable
+rich

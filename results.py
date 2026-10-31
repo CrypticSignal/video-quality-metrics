@@ -3,6 +3,10 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
+from rich.console import Console
+from rich.table import Table
+from rich.text import Text
+
 from utils import format_si
 
 
@@ -98,3 +102,46 @@ def describe_bitrate_sources(rows: list[ResultRow]) -> list[str]:
     if len(set(known_sources.values())) == 1:
         return [f"Video bitrate {next(iter(known_sources.values()))}"]
     return ["Video bitrate:"] + [f"  {label}: {source}" for label, source in known_sources.items()]
+
+
+def print_results(
+    first_column: str,
+    metrics: list[str],
+    rows: list[ResultRow],
+    notes: list[str],
+    decimal_places: int,
+) -> None:
+    """Print the table and the notes underneath it in the terminal."""
+    columns = get_columns(first_column, metrics, decimal_places)
+    table = Table(
+        caption=f"{'/'.join(metrics)} values are the mean of the per-frame scores. "
+        "The best values are in bold.",
+        caption_justify="left",
+    )
+    for index, column in enumerate(columns):
+        # The first two columns are text, and the rest are numbers.
+        table.add_column(column.name, justify="left" if index < 2 else "right")
+
+    fixed_rows = [row for row in rows if not row.is_transcode]
+    for row in rows:
+        # Text objects are used so that e.g. "[" in a label isn't read as Rich's markup.
+        cells = [
+            Text(column.text(row), style="bold green" if is_best(column, row, rows) else "")
+            for column in columns
+        ]
+        # A line separates the original and reference videos from the transcodes.
+        table.add_row(
+            *cells,
+            style=None if row.is_transcode else "dim",
+            end_section=bool(fixed_rows) and row is fixed_rows[-1],
+        )
+
+    # Rich squashes a table that is wider than the terminal, which cuts values off, and assumes
+    # a width of 80 characters if the output isn't a terminal (e.g. it is redirected to a file).
+    # So the table is always printed at its full width, like any other long line.
+    console = Console()
+    # measure() is limited to the console's width unless it is given a wider one.
+    full_width = console.measure(table, options=console.options.update_width(10_000)).maximum
+    console.width = max(console.width, full_width)
+    console.print(table)
+    console.print("\n".join(notes), markup=False, highlight=False)
