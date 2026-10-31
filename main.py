@@ -132,7 +132,7 @@ def get_notes(filename: str, rows: list[ResultRow], args: Namespace) -> list[str
         notes.append(
             f"Overview Mode: a {args.clip_length}s clip was taken every {args.interval}s."
         )
-    notes.append(f"Encoder: {args.encoder}")
+    notes.append(f"Transcoded with: {args.encoder}")
     notes.append(f"FFmpeg output options: {args.output_options}")
     if args.video_filters:
         notes.append(

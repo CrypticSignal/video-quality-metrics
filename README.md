@@ -45,7 +45,7 @@ VMAF/PSNR/SSIM values are the mean of the per-frame scores. The best values are 
 Video bitrate confidence = high, method = video packet sizes
 Original File: ForBiggerFun.mp4
 Original video codec: h264
-Encoder: libx264
+Transcoded with: libx264
 FFmpeg output options: None
 libvmaf n_subsample: 1
 ```
