@@ -15,7 +15,7 @@ VQM will compare the VMAF, SSIM and PSNR achieved with different values of the s
 # What does VQM produce?
 VQM produces a report named `report.html`, which you can open in any web browser. It contains a table to show the metrics, and graphs that show the per-frame VMAF, SSIM and PSNR. The graphs are embedded in the report, so it is a single file that you can share. In the report, the highest VMAF, PSNR and SSIM values are highlighted in green, and you can click a column's heading to sort the transcodes by it.
 
-If you use the `-P` argument, the table is also shown in the terminal. It is shown in the `less` pager if it is installed, so that resizing the terminal doesn't break the table; press `q` to exit. It contains the following for each value of the specified encoder parameter:
+If you use the `-P` argument, the table is also printed in the terminal. It contains the following for each value of the specified encoder parameter:
 - Parameter value
 - Time taken to transcode the video (seconds)
 - Filesize (MB)
@@ -24,7 +24,7 @@ If you use the `-P` argument, the table is also shown in the terminal. It is sho
 - Structural Similarity Index (SSIM)
 - Peak Signal-to-Noise-Ratio (PSNR)
 
-Here's an example, as shown with `-P`:
+Here's an example, as printed with `-P`:
 ```
 ┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
 ┃ preset         ┃ Transcode Time (s) ┃      Size ┃ Video Bitrate ┃   VMAF ┃   PSNR ┃  SSIM ┃
@@ -160,8 +160,7 @@ General Arguments:
   -st, --skip-transcoding
                         Skip encoding if output file exists.
   -d, --debug           Print debug message and command line.
-  -P, --print           Show the metrics table in the terminal. In a terminal, it is shown in the less pager
-                        (if it is installed), where long lines can be scrolled with the arrow keys. Press q to exit.
+  -P, --print           Print the metrics table in the terminal.
   --input-options INPUT_OPTIONS
                         Set general FFmpeg input options.
                         Use FFmpeg syntax and wrap it in double quotes. Example:
