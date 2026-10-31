@@ -22,7 +22,6 @@ from results import ResultRow, describe_bitrate_sources, print_results
 from utils import line, log, setup_logging
 from video_info import (
     count_video_frames,
-    get_duration,
     get_filtered_resolution,
     get_frame_rate,
     get_resolution,
@@ -114,9 +113,7 @@ def video_row(
 ) -> ResultRow:
     """Return the table row of a video, without any quality metrics."""
     bitrate, bitrate_source = get_video_bitrate(video_path, info, args.decimal_places)
-    return ResultRow(
-        label, encoder, int(info["format"]["size"]), bitrate, bitrate_source, get_duration(info)
-    )
+    return ResultRow(label, encoder, int(info["format"]["size"]), bitrate, bitrate_source)
 
 
 def get_codec(info: dict) -> str:
@@ -284,8 +281,8 @@ def process_video(
         )
 
     if reference_video != input_video:
-        # The transcodes are made from the cut or overview video, so their size and duration
-        # should be compared with it rather than with the whole original video.
+        # The transcodes are made from the cut or overview video, so their size should be
+        # compared with it rather than with the whole original video.
         reference_info = probe(reference_video)
         rows.append(
             video_row(

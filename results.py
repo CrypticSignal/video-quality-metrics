@@ -23,7 +23,6 @@ class ResultRow:
     size: int  # In bytes.
     bitrate: float | None  # The video bitrate in bits per second, if it could be found.
     bitrate_source: str | None  # The bitrate's confidence and method.
-    duration: float  # In seconds.
     transcode_time: float | None = None  # None if the video wasn't transcoded this time.
     mean_scores: dict[str, float] = field(default_factory=dict)  # Only set for transcodes.
     per_frame_graphs: dict[str, str] = field(default_factory=dict)  # Metric -> PNG data URI.
@@ -76,7 +75,6 @@ def get_columns(first_column: str, metrics: list[str], decimal_places: int) -> l
                 "N/A" if row.bitrate is None else format_si(row.bitrate, "bps", decimal_places)
             ),
         ),
-        Column("Duration (s)", lambda row: row.duration, lambda row: number(row.duration)),
     ] + [metric_column(metric) for metric in metrics]
 
 
