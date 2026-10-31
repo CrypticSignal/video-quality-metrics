@@ -91,10 +91,13 @@ def create_overview_video(
                 "0:V",
                 "-t",
                 str(clip_length),
+                # FFV1 is lossless for far more pixel formats than x264's -crf 0 (e.g. RGB and
+                # 12-bit video), and is much faster to encode. Every frame is a keyframe, so the
+                # clips can be concatenated without re-encoding. Level 3 allows multithreading.
                 "-c:V",
-                "libx264",
-                "-crf",
-                "0",
+                "ffv1",
+                "-level",
+                "3",
                 str(clips_folder / clip_name),
             ]
         )
@@ -102,7 +105,7 @@ def create_overview_video(
     # FFmpeg's concat demuxer reads the list of clips from a text file.
     clips_list = clips_folder / "clips.txt"
     clips_list.write_text("".join(f"file '{name}'\n" for name in clip_names))
-    # The clips are H.264, which some containers (e.g. WebM) do not support, so use MKV.
+    # The clips are FFV1, which most containers (e.g. MP4 and WebM) do not support, so use MKV.
     overview_video = output_folder / "Overview_Video.mkv"
 
     line()
