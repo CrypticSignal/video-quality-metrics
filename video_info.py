@@ -116,8 +116,8 @@ def get_frame_rate(info: dict) -> str:
 def describe_video_bitrate(
     video_path: str | Path, info: dict, decimal_places: int
 ) -> tuple[str, str | None]:
-    """Return the video bitrate and how it was found, e.g. ("1.526 Mbps", "high | video packet
-    sizes"), where the second part is the confidence and the method.
+    """Return the video bitrate and how it was found, e.g. ("1.526 Mbps",
+    "confidence = high, method = video packet sizes").
 
     The most accurate method is tried first, falling back to less reliable methods. The second
     part is None if the bitrate couldn't be determined.
@@ -130,7 +130,7 @@ def describe_video_bitrate(
         log.info(
             f"Video Bitrate: {formatted_bitrate} | Confidence: {confidence} | Method: {method}"
         )
-        return formatted_bitrate, f"{confidence} | {method}"
+        return formatted_bitrate, f"confidence = {confidence}, method = {method}"
 
     # Method 1: Total size of the video packets divided by the duration.
     if duration > 0:

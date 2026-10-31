@@ -122,17 +122,16 @@ def describe_video(
 
 def describe_bitrate_sources(bitrate_sources: dict[str, str | None]) -> str:
     """Describe how each row's video bitrate was found, e.g.
-    "Video bitrate confidence | method: high | video packet sizes".
+    "Video bitrate confidence = high, method = video packet sizes".
 
     If the rows differ, each row is listed so that a less reliable bitrate stands out.
     """
     known_sources = {label: source for label, source in bitrate_sources.items() if source}
     if not known_sources:
         return ""
-    heading = "Video bitrate confidence | method"
     if len(set(known_sources.values())) == 1:
-        return f"{heading}: {next(iter(known_sources.values()))}\n"
-    return f"{heading}:\n" + "".join(
+        return f"Video bitrate {next(iter(known_sources.values()))}\n"
+    return "Video bitrate:\n" + "".join(
         f"  {label}: {source}\n" for label, source in known_sources.items()
     )
 
