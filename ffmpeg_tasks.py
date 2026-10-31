@@ -156,7 +156,7 @@ def calculate_quality_metrics(
         # libvmaf needs both videos to have the same resolution, so if the transcode was scaled
         # (e.g. with --output-options), scale it back. This does nothing if they already match.
         f"[distorted][reference]scale2ref=flags=bicubic[distorted_scaled][reference_scaled];"
-        f"[distorted_scaled][reference_scaled]libvmaf={vmaf_options}"
+        f"[distorted_scaled][reference_scaled]libvmaf={vmaf_options}[vmaf]"
     )
 
     # As an input option, -r makes FFmpeg ignore the timestamps in the file and give the frames
@@ -173,12 +173,13 @@ def calculate_quality_metrics(
         "24",
         "-i",
         str(distorted_video),
-        "-map",
-        "0:V",
-        "-map",
-        "1:V",
         "-lavfi",
         filtergraph,
+        # Only libvmaf's output is mapped. Mapping the input videos as well (-map 0:V -map 1:V)
+        # adds each of them as an extra output stream, so they are decoded twice, and the extra
+        # outputs can make FFmpeg 7 fail with "Assertion best_input >= 0 failed".
+        "-map",
+        "[vmaf]",
         "-f",
         "null",
         "-",
