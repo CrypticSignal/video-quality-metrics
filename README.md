@@ -27,20 +27,20 @@ The table is written to a file named `metrics_table.txt` and it contains the fol
 Here's an example:
 ```
 VMAF/PSNR/SSIM values are the mean of the per-frame scores. See the per-frame graphs for dips in quality.
-+----------------+---------+--------------------+-----------+----------------------------------------+----------+--------+--------+-------+
-|     preset     | Encoder | Transcode Time (s) |    Size   |  Video Bitrate | Confidence | Method   | Duration |  VMAF  |  PSNR  |  SSIM |
-+----------------+---------+--------------------+-----------+----------------------------------------+----------+--------+--------+-------+
-| Original Video |   h264  |         -          | 12.917 MB | 1.526 Mbps | high | video packet sizes | 60.070 s |   -    |   -    |   -   |
-|    veryslow    | libx264 |       23.073       | 11.016 MB | 1.358 Mbps | high | video packet sizes | 60.073 s | 97.371 | 47.691 | 0.997 |
-|     slower     | libx264 |       15.238       | 11.877 MB | 1.473 Mbps | high | video packet sizes | 60.073 s | 97.401 | 47.844 | 0.998 |
-|      slow      | libx264 |       6.144        | 11.755 MB | 1.456 Mbps | high | video packet sizes | 60.073 s | 97.342 | 47.800 | 0.998 |
-|     medium     | libx264 |       4.360        | 12.163 MB | 1.511 Mbps | high | video packet sizes | 60.073 s | 97.490 | 47.958 | 0.998 |
-|      fast      | libx264 |       3.904        | 12.632 MB | 1.573 Mbps | high | video packet sizes | 60.073 s | 97.460 | 48.016 | 0.998 |
-|     faster     | libx264 |       2.999        | 12.487 MB | 1.554 Mbps | high | video packet sizes | 60.073 s | 97.257 | 48.006 | 0.998 |
-|    veryfast    | libx264 |       2.303        | 11.107 MB | 1.370 Mbps | high | video packet sizes | 60.073 s | 95.400 | 46.612 | 0.997 |
-|   superfast    | libx264 |       1.705        | 15.967 MB | 2.017 Mbps | high | video packet sizes | 60.073 s | 96.859 | 47.502 | 0.997 |
-|   ultrafast    | libx264 |       1.185        | 23.969 MB | 3.083 Mbps | high | video packet sizes | 60.073 s | 97.982 | 46.288 | 0.996 |
-+----------------+---------+--------------------+-----------+----------------------------------------+----------+--------+--------+-------+
++----------------+---------+--------------------+-----------+---------------+----------+--------+--------+-------+
+|     preset     | Encoder | Transcode Time (s) |    Size   | Video Bitrate | Duration |  VMAF  |  PSNR  |  SSIM |
++----------------+---------+--------------------+-----------+---------------+----------+--------+--------+-------+
+| Original Video |   h264  |         -          | 12.917 MB |   1.526 Mbps  | 60.070 s |   -    |   -    |   -   |
+|    veryslow    | libx264 |       23.073       | 11.016 MB |   1.358 Mbps  | 60.073 s | 97.371 | 47.691 | 0.997 |
+|     slower     | libx264 |       15.238       | 11.877 MB |   1.473 Mbps  | 60.073 s | 97.401 | 47.844 | 0.998 |
+|      slow      | libx264 |       6.144        | 11.755 MB |   1.456 Mbps  | 60.073 s | 97.342 | 47.800 | 0.998 |
+|     medium     | libx264 |       4.360        | 12.163 MB |   1.511 Mbps  | 60.073 s | 97.490 | 47.958 | 0.998 |
+|      fast      | libx264 |       3.904        | 12.632 MB |   1.573 Mbps  | 60.073 s | 97.460 | 48.016 | 0.998 |
+|     faster     | libx264 |       2.999        | 12.487 MB |   1.554 Mbps  | 60.073 s | 97.257 | 48.006 | 0.998 |
+|    veryfast    | libx264 |       2.303        | 11.107 MB |   1.370 Mbps  | 60.073 s | 95.400 | 46.612 | 0.997 |
+|   superfast    | libx264 |       1.705        | 15.967 MB |   2.017 Mbps  | 60.073 s | 96.859 | 47.502 | 0.997 |
+|   ultrafast    | libx264 |       1.185        | 23.969 MB |   3.083 Mbps  | 60.073 s | 97.982 | 46.288 | 0.996 |
++----------------+---------+--------------------+-----------+---------------+----------+--------+--------+-------+
 Original File: ForBiggerFun.mp4
 FFmpeg output options: None
 libvmaf n_subsample: 1
@@ -104,13 +104,13 @@ python main.py -i "ForBiggerFun.mp4" -e libx265 -c "preset slow crf 24,preset me
 The table produced will look something like this:
 ```
 VMAF/PSNR/SSIM values are the mean of the per-frame scores. See the per-frame graphs for dips in quality.
-+------------------------+---------+--------------------+-----------+----------------------------------------+----------+--------+--------+-------+
-|      Combination       | Encoder | Transcode Time (s) |    Size   |  Video Bitrate | Confidence | Method   | Duration |  VMAF  |  PSNR  |  SSIM |
-+------------------------+---------+--------------------+-----------+----------------------------------------+----------+--------+--------+-------+
-|     Original Video     |   h264  |         -          | 12.917 MB | 1.526 Mbps | high | video packet sizes | 60.070 s |   -    |   -    |   -   |
-|  -preset slow -crf 24  | libx265 |       36.423       |  9.114 MB | 1.104 Mbps | high | video packet sizes | 60.073 s | 97.704 | 47.687 | 0.997 |
-| -preset medium -crf 23 | libx265 |       14.131       |  9.364 MB | 1.138 Mbps | high | video packet sizes | 60.073 s | 97.069 | 47.380 | 0.997 |
-+------------------------+---------+--------------------+-----------+----------------------------------------+----------+--------+--------+-------+
++------------------------+---------+--------------------+-----------+---------------+----------+--------+--------+-------+
+|      Combination       | Encoder | Transcode Time (s) |    Size   | Video Bitrate | Duration |  VMAF  |  PSNR  |  SSIM |
++------------------------+---------+--------------------+-----------+---------------+----------+--------+--------+-------+
+|     Original Video     |   h264  |         -          | 12.917 MB |   1.526 Mbps  | 60.070 s |   -    |   -    |   -   |
+|  -preset slow -crf 24  | libx265 |       36.423       |  9.114 MB |   1.104 Mbps  | 60.073 s | 97.704 | 47.687 | 0.997 |
+| -preset medium -crf 23 | libx265 |       14.131       |  9.364 MB |   1.138 Mbps  | 60.073 s | 97.069 | 47.380 | 0.997 |
++------------------------+---------+--------------------+-----------+---------------+----------+--------+--------+-------+
 ```
 A graph will also be produced, comparing each combination:
 

@@ -271,7 +271,7 @@ def process_video(
         "Encoder",
         "Transcode Time (s)",
         "Size",
-        "Video Bitrate | Confidence | Method",
+        "Video Bitrate",
         "Duration",
     ] + metrics
     table.add_row(["Original Video", codec, "-"] + original_video_details + ["-"] * len(metrics))

@@ -114,11 +114,10 @@ def get_frame_rate(info: dict) -> str:
 
 
 def describe_video_bitrate(video_path: str | Path, info: dict, decimal_places: int) -> str:
-    """
-    Return the video bitrate, how confident we are in it and the method used to find it,
-    e.g. "1.526 Mbps | high | video packet sizes".
+    """Return the video bitrate, e.g. "1.526 Mbps".
 
-    The most accurate method is tried first, falling back to less reliable methods.
+    The most accurate method is tried first, falling back to less reliable methods. How
+    confident we are in the bitrate and the method used to find it are logged.
     """
     duration = get_duration(info)
     streams = info["streams"]
@@ -128,8 +127,7 @@ def describe_video_bitrate(video_path: str | Path, info: dict, decimal_places: i
         log.info(
             f"Video Bitrate: {formatted_bitrate} | Confidence: {confidence} | Method: {method}"
         )
-        # The table's column header already names each part.
-        return f"{formatted_bitrate} | {confidence} | {method}"
+        return formatted_bitrate
 
     # Method 1: Total size of the video packets divided by the duration.
     if duration > 0:
