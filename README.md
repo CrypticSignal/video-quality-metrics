@@ -13,7 +13,7 @@ VQM will compare the VMAF, SSIM and PSNR achieved with different values of the s
 - [Code Structure](#code-structure)
 
 # What does VQM produce?
-VQM produces a report named `report.html`, which you can open in any web browser. It contains a table to show the metrics, and graphs that show the per-frame VMAF, SSIM and PSNR. The graphs are embedded in the report, so it is a single file that you can share. In the report, the best value in each column of the table is highlighted, and you can click a column's heading to sort the transcodes by it.
+VQM produces a report named `report.html`, which you can open in any web browser. It contains a table to show the metrics, and graphs that show the per-frame VMAF, SSIM and PSNR. The graphs are embedded in the report, so it is a single file that you can share. In the report, the highest VMAF, PSNR and SSIM values are highlighted in green, and you can click a column's heading to sort the transcodes by it.
 
 If you use the `-P` argument, the table is also printed in the terminal. It contains the following for each value of the specified encoder parameter:
 - Parameter value
@@ -41,7 +41,7 @@ Here's an example, as printed with `-P`:
 │ superfast      │ libx264 │              1.705 │ 15.967 MB │    2.017 Mbps │       60.073 │ 96.859 │ 47.502 │ 0.997 │
 │ ultrafast      │ libx264 │              1.185 │ 23.969 MB │    3.083 Mbps │       60.073 │ 97.982 │ 46.288 │ 0.996 │
 └────────────────┴─────────┴────────────────────┴───────────┴───────────────┴──────────────┴────────┴────────┴───────┘
-VMAF/PSNR/SSIM values are the mean of the per-frame scores. The best values are in bold.
+VMAF/PSNR/SSIM values are the mean of the per-frame scores. The best values are in green.
 Video bitrate confidence = high, method = video packet sizes
 Original File: ForBiggerFun.mp4
 FFmpeg output options: None
@@ -113,7 +113,7 @@ The table produced will look something like this:
 │ -preset slow -crf 24   │ libx265 │             36.423 │  9.114 MB │    1.104 Mbps │       60.073 │ 97.704 │ 47.687 │ 0.997 │
 │ -preset medium -crf 23 │ libx265 │             14.131 │  9.364 MB │    1.138 Mbps │       60.073 │ 97.069 │ 47.380 │ 0.997 │
 └────────────────────────┴─────────┴────────────────────┴───────────┴───────────────┴──────────────┴────────┴────────┴───────┘
-VMAF/PSNR/SSIM values are the mean of the per-frame scores. The best values are in bold.
+VMAF/PSNR/SSIM values are the mean of the per-frame scores. The best values are in green.
 ```
 A graph will also be produced, comparing each combination:
 

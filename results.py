@@ -32,11 +32,12 @@ class ResultRow:
 @dataclass
 class Column:
     name: str
-    # The raw value is used to sort the rows and to find the best value. None means "no value".
+    # The raw value is used to sort the rows and to find the highest value. None means "no value".
     value: Callable[[ResultRow], float | str | None]
     text: Callable[[ResultRow], str]
-    # Whether a "higher" or "lower" value is better, or None if neither is.
-    better: str | None = None
+    # Whether the highest value is highlighted, as the best one. Only the quality metrics are,
+    # because e.g. the smallest size or the lowest bitrate usually just means lower quality.
+    highlight_highest: bool = False
 
 
 def get_columns(first_column: str, metrics: list[str], decimal_places: int) -> list[Column]:
@@ -48,7 +49,7 @@ def get_columns(first_column: str, metrics: list[str], decimal_places: int) -> l
             metric,
             lambda row: row.mean_scores.get(metric),
             lambda row: number(row.mean_scores.get(metric)),
-            "higher",
+            highlight_highest=True,
         )
 
     return [
@@ -58,13 +59,11 @@ def get_columns(first_column: str, metrics: list[str], decimal_places: int) -> l
             "Transcode Time (s)",
             lambda row: row.transcode_time,
             lambda row: number(row.transcode_time),
-            "lower",
         ),
         Column(
             "Size",
             lambda row: row.size,
             lambda row: format_si(row.size, "B", decimal_places),
-            "lower",
         ),
         Column(
             "Video Bitrate",
@@ -72,22 +71,21 @@ def get_columns(first_column: str, metrics: list[str], decimal_places: int) -> l
             lambda row: (
                 "N/A" if row.bitrate is None else format_si(row.bitrate, "bps", decimal_places)
             ),
-            # A lower bitrate isn't necessarily better, because it usually means lower quality.
         ),
         Column("Duration (s)", lambda row: row.duration, lambda row: number(row.duration)),
     ] + [metric_column(metric) for metric in metrics]
 
 
 def is_best(column: Column, row: ResultRow, rows: list[ResultRow]) -> bool:
-    """Return whether the row has the best value in the column, out of the transcodes.
+    """Return whether the row has the highest value in a highlighted column, out of the
+    transcodes.
 
     Nothing is the best if there is only one transcode to compare.
     """
     values = [column.value(r) for r in rows if r.is_transcode and column.value(r) is not None]
-    if column.better is None or not row.is_transcode or len(values) < 2:
+    if not column.highlight_highest or not row.is_transcode or len(values) < 2:
         return False
-    best = max(values) if column.better == "higher" else min(values)
-    return column.value(row) == best
+    return column.value(row) == max(values)
 
 
 def describe_bitrate_sources(rows: list[ResultRow]) -> list[str]:
@@ -123,7 +121,7 @@ def print_results(
     columns = get_columns(first_column, metrics, decimal_places)
     caption = (
         f"{'/'.join(metrics)} values are the mean of the per-frame scores. "
-        "The best values are in bold."
+        "The best values are in green."
     )
 
     def cell(column: Column, row: ResultRow) -> Text:

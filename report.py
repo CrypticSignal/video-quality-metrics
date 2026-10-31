@@ -111,8 +111,8 @@ def write_report(
 <body>
 <h1>{escape(title)}</h1>
 <p>{escape("/".join(metrics))} values are the mean of the per-frame scores. The per-frame graphs
-below show any dips in quality. The best value in each column is highlighted. Click a column's
-heading to sort the transcodes by it.</p>
+below show any dips in quality. The best values are in green. Click a column's heading to sort
+the transcodes by it.</p>
 <table>
 <thead><tr>{headings}</tr></thead>
 <tbody class="fixed">{fixed_rows}</tbody>
