@@ -159,6 +159,10 @@ def calculate_quality_metrics(
         f"[distorted_scaled][reference_scaled]libvmaf={vmaf_options}"
     )
 
+    # As an input option, -r makes FFmpeg ignore the timestamps in the file and give the frames
+    # evenly spaced timestamps at that frame rate. Doing this to both videos means that libvmaf
+    # pairs the frames by their order, even if the timestamps differ (e.g. a variable frame rate
+    # or a different start time). The value itself doesn't matter, as long as both are the same.
     command = [
         "ffmpeg",
         "-r",
