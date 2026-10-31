@@ -116,7 +116,7 @@ def describe_video(
     and method of the bitrate, for underneath the table."""
     size = format_si(int(info["format"]["size"]), "B", args.decimal_places)
     bitrate, bitrate_source = describe_video_bitrate(video_path, info, args.decimal_places)
-    duration = f"{get_duration(info):.{args.decimal_places}f} s"
+    duration = f"{get_duration(info):.{args.decimal_places}f}"
     return [size, bitrate, duration], bitrate_source
 
 
@@ -293,7 +293,7 @@ def process_video(
         "Transcode Time (s)",
         "Size",
         "Video Bitrate",
-        "Duration",
+        "Duration (s)",
     ] + metrics
     table.add_row(["Original Video", codec, "-"] + original_video_details + ["-"] * len(metrics))
     bitrate_sources = {"Original Video": original_bitrate_source}
