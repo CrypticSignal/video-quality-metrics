@@ -31,6 +31,9 @@ from video_info import (
     probe,
 )
 
+# Update this whenever the program is changed.
+VERSION_DATE = "31st October 2026"
+
 
 def sanitise(name: str) -> str:
     """Replace any character that may not be valid in a file or folder name."""
@@ -204,10 +207,15 @@ def run_comparison(
         settings_path.write_text(json.dumps(settings, indent=2), encoding="utf-8")
 
     frame_numbers, scores = read_per_frame_scores(json_path, metrics)
+    mean_scores = {metric: fmean(scores[metric]) for metric in metrics}
     for metric in metrics:
-        mean_score = f"{fmean(scores[metric]):.{args.decimal_places}f}"
         plot_per_frame_graph(
-            metric, frame_numbers, scores[metric], mean_score, args.n_subsample, folder / metric
+            metric,
+            frame_numbers,
+            scores[metric],
+            f"{mean_scores[metric]:.{args.decimal_places}f}",
+            args.n_subsample,
+            folder / metric,
         )
 
     row = (
@@ -215,7 +223,7 @@ def run_comparison(
         + describe_video(transcoded_video, transcoded_info, args)
         + [summarise(scores[metric], args.decimal_places) for metric in metrics]
     )
-    return row, fmean(scores["VMAF"])
+    return row, mean_scores["VMAF"]
 
 
 def process_video(
@@ -378,7 +386,7 @@ def main() -> None:
     setup_logging()
     line()
     log.info("Video Quality Metrics")
-    log.info("Version Date: 30th October 2026")
+    log.info(f"Version Date: {VERSION_DATE}")
     check_ffmpeg()
 
     folder_names = get_folder_names(input_videos)
