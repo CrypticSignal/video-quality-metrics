@@ -15,7 +15,7 @@ VQM will compare the VMAF, SSIM and PSNR achieved with different values of the s
 # What does VQM produce?
 VQM produces a report named `report.html`, which you can open in any web browser. It contains a table to show the metrics, and graphs that show the per-frame VMAF, SSIM and PSNR. The graphs are embedded in the report, so it is a single file that you can share. In the report, the best value in each column of the table is highlighted, and you can click a column's heading to sort the transcodes by it.
 
-The table is also written to a file named `metrics_table.txt`. It contains the following for each value of the specified encoder parameter:
+If you use the `-P` argument, the table is also printed in the terminal. It contains the following for each value of the specified encoder parameter:
 - Parameter value
 - Time taken to transcode the video (seconds)
 - Filesize (MB)
@@ -24,7 +24,7 @@ The table is also written to a file named `metrics_table.txt`. It contains the f
 - Structural Similarity Index (SSIM)
 - Peak Signal-to-Noise-Ratio (PSNR)
 
-Here's an example:
+Here's an example, as printed with `-P`:
 ```
 VMAF/PSNR/SSIM values are the mean of the per-frame scores. See the per-frame graphs for dips in quality.
 +----------------+---------+--------------------+-----------+---------------+--------------+--------+--------+-------+

@@ -137,15 +137,6 @@ def text_table(
     return text_table.get_string()
 
 
-def write_table(table_path: Path, table: str, notes: list[str], metrics: list[str]) -> None:
-    with open(table_path, "w", encoding="utf-8") as f:
-        f.write(
-            f"{'/'.join(metrics)} values are the mean of the per-frame scores. "
-            "See the per-frame graphs in report.html for dips in quality.\n"
-        )
-        f.write(table + "\n" + "\n".join(notes))
-
-
 def get_notes(filename: str, rows: list[ResultRow], args: Namespace) -> list[str]:
     """Return the notes that go underneath the table."""
     notes = describe_bitrate_sources(rows) + [f"Original File: {filename}"]
@@ -318,23 +309,18 @@ def process_video(
     first_column = "Combination" if args.combinations else args.parameter
     title = f"Video Quality Metrics: {filename}"
     report_path = output_folder / "report.html"
-    table_path = output_folder / "metrics_table.txt"
 
-    def write_results(mean_vmaf_graph: str | None = None) -> str:
-        notes = get_notes(filename, rows, args)
-        table = text_table(first_column, metrics, rows, args)
-        write_table(table_path, table, notes, metrics)
+    def write_results(mean_vmaf_graph: str | None = None) -> None:
         write_report(
             report_path,
             title,
             first_column,
             metrics,
             rows,
-            notes,
+            get_notes(filename, rows, args),
             mean_vmaf_graph,
             args.decimal_places,
         )
-        return table + "\n" + "\n".join(notes)
 
     reference_frame_count = count_video_frames(reference_video)
     if args.video_filters:
@@ -365,13 +351,14 @@ def process_video(
         [row.mean_scores["VMAF"] for row in transcodes],
         args.decimal_places,
     )
-    results = write_results(mean_vmaf_graph)
+    write_results(mean_vmaf_graph)
 
     line()
     log.info(f"Open {report_path} in a web browser to see the results.")
 
     if args.print:
-        print(results)
+        print(text_table(first_column, metrics, rows, args))
+        print("\n".join(get_notes(filename, rows, args)))
 
 
 def main() -> None:
