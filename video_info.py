@@ -108,26 +108,29 @@ def get_frame_rate(info: dict) -> str:
     """Return the frame rate of the first video stream, e.g. "24000/1001 (23.976)"."""
     video_stream = get_video_stream(info)
     if video_stream is None:
-        return "N/A"
+        return "N/A", None
     fraction = video_stream["r_frame_rate"]
     return f"{fraction} ({float(Fraction(fraction)):.3f})"
 
 
-def describe_video_bitrate(video_path: str | Path, info: dict, decimal_places: int) -> str:
-    """Return the video bitrate, e.g. "1.526 Mbps".
+def describe_video_bitrate(
+    video_path: str | Path, info: dict, decimal_places: int
+) -> tuple[str, str | None]:
+    """Return the video bitrate and how it was found, e.g. ("1.526 Mbps", "high | video packet
+    sizes"), where the second part is the confidence and the method.
 
-    The most accurate method is tried first, falling back to less reliable methods. How
-    confident we are in the bitrate and the method used to find it are logged.
+    The most accurate method is tried first, falling back to less reliable methods. The second
+    part is None if the bitrate couldn't be determined.
     """
     duration = get_duration(info)
     streams = info["streams"]
 
-    def describe(bitrate: float, confidence: str, method: str) -> str:
+    def describe(bitrate: float, confidence: str, method: str) -> tuple[str, str]:
         formatted_bitrate = format_si(bitrate, "bps", decimal_places)
         log.info(
             f"Video Bitrate: {formatted_bitrate} | Confidence: {confidence} | Method: {method}"
         )
-        return formatted_bitrate
+        return formatted_bitrate, f"{confidence} | {method}"
 
     # Method 1: Total size of the video packets divided by the duration.
     if duration > 0:
@@ -154,7 +157,7 @@ def describe_video_bitrate(video_path: str | Path, info: dict, decimal_places: i
             return describe(video_bitrate, "low", "container derived (minus audio)")
 
     log.info("Unable to determine the video bitrate.")
-    return "N/A"
+    return "N/A", None
 
 
 def sum_video_packet_sizes(video_path: str | Path, duration: float) -> int:

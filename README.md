@@ -41,6 +41,7 @@ VMAF/PSNR/SSIM values are the mean of the per-frame scores. See the per-frame gr
 |   superfast    | libx264 |       1.705        | 15.967 MB |   2.017 Mbps  | 60.073 s | 96.859 | 47.502 | 0.997 |
 |   ultrafast    | libx264 |       1.185        | 23.969 MB |   3.083 Mbps  | 60.073 s | 97.982 | 46.288 | 0.996 |
 +----------------+---------+--------------------+-----------+---------------+----------+--------+--------+-------+
+Video bitrate confidence | method: high | video packet sizes
 Original File: ForBiggerFun.mp4
 FFmpeg output options: None
 libvmaf n_subsample: 1

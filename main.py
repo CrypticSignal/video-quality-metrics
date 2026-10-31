@@ -109,12 +109,32 @@ def get_output_folder(filename: str, args: Namespace, multiple_inputs: bool) -> 
     return output_folder
 
 
-def describe_video(video_path: str | Path, info: dict, args: Namespace) -> list[str]:
-    """Return the size, bitrate and duration of the video, for the table."""
+def describe_video(
+    video_path: str | Path, info: dict, args: Namespace
+) -> tuple[list[str], str | None]:
+    """Return the size, bitrate and duration of the video, for the table, and the confidence
+    and method of the bitrate, for underneath the table."""
     size = format_si(int(info["format"]["size"]), "B", args.decimal_places)
-    bitrate = describe_video_bitrate(video_path, info, args.decimal_places)
+    bitrate, bitrate_source = describe_video_bitrate(video_path, info, args.decimal_places)
     duration = f"{get_duration(info):.{args.decimal_places}f} s"
-    return [size, bitrate, duration]
+    return [size, bitrate, duration], bitrate_source
+
+
+def describe_bitrate_sources(bitrate_sources: dict[str, str | None]) -> str:
+    """Describe how each row's video bitrate was found, e.g.
+    "Video bitrate confidence | method: high | video packet sizes".
+
+    If the rows differ, each row is listed so that a less reliable bitrate stands out.
+    """
+    known_sources = {label: source for label, source in bitrate_sources.items() if source}
+    if not known_sources:
+        return ""
+    heading = "Video bitrate confidence | method"
+    if len(set(known_sources.values())) == 1:
+        return f"{heading}: {next(iter(known_sources.values()))}\n"
+    return f"{heading}:\n" + "".join(
+        f"  {label}: {source}\n" for label, source in known_sources.items()
+    )
 
 
 def write_table(table: PrettyTable, table_path: Path, metrics: list[str]) -> None:
@@ -151,10 +171,10 @@ def run_comparison(
     output_folder: Path,
     metrics: list[str],
     args: Namespace,
-) -> tuple[list, float]:
+) -> tuple[list, float, str | None]:
     """Transcode the reference video and calculate the quality metrics.
 
-    Returns the table row and the mean VMAF.
+    Returns the table row, the mean VMAF and the confidence and method of the video bitrate.
     """
     folder = output_folder / comparison.name
     folder.mkdir(exist_ok=True)
@@ -221,12 +241,13 @@ def run_comparison(
             folder / metric,
         )
 
+    details, bitrate_source = describe_video(transcoded_video, transcoded_info, args)
     row = (
         [comparison.label, args.encoder, transcode_time]
-        + describe_video(transcoded_video, transcoded_info, args)
+        + details
         + [f"{mean_scores[metric]:.{args.decimal_places}f}" for metric in metrics]
     )
-    return row, mean_scores["VMAF"]
+    return row, mean_scores["VMAF"], bitrate_source
 
 
 def process_video(
@@ -240,7 +261,7 @@ def process_video(
     info = probe(input_video)
     video_stream = get_video_stream(info)
     codec = video_stream.get("codec_name", "N/A") if video_stream else "N/A"
-    original_video_details = describe_video(input_video, info, args)
+    original_video_details, original_bitrate_source = describe_video(input_video, info, args)
     log.info(f"Frame rate: {get_frame_rate(info)} FPS")
     for stream in info["streams"]:
         log.info(
@@ -275,16 +296,18 @@ def process_video(
         "Duration",
     ] + metrics
     table.add_row(["Original Video", codec, "-"] + original_video_details + ["-"] * len(metrics))
+    bitrate_sources = {"Original Video": original_bitrate_source}
     if reference_video != input_video:
         # The transcodes are made from the cut or overview video, so their size and duration
         # should be compared with it rather than with the whole original video.
         reference_info = probe(reference_video)
         reference_stream = get_video_stream(reference_info)
         reference_codec = reference_stream.get("codec_name", "N/A") if reference_stream else "N/A"
+        reference_details, bitrate_sources["Reference Video"] = describe_video(
+            reference_video, reference_info, args
+        )
         table.add_row(
-            ["Reference Video", reference_codec, "-"]
-            + describe_video(reference_video, reference_info, args)
-            + ["-"] * len(metrics)
+            ["Reference Video", reference_codec, "-"] + reference_details + ["-"] * len(metrics)
         )
     table_path = output_folder / "metrics_table.txt"
 
@@ -297,7 +320,7 @@ def process_video(
     log.info(f"Comparing: {', '.join(c.label for c in comparisons)}")
     mean_vmafs = []
     for comparison in comparisons:
-        row, mean_vmaf = run_comparison(
+        row, mean_vmaf, bitrate_sources[comparison.label] = run_comparison(
             comparison,
             reference_video,
             reference_frame_count,
@@ -312,7 +335,9 @@ def process_video(
         write_table(table, table_path, metrics)
 
     supplementary_info = (
-        f"\nOriginal File: {filename}\n"
+        "\n"
+        + describe_bitrate_sources(bitrate_sources)
+        + f"Original File: {filename}\n"
         + (
             f"Only the first {args.transcode_length:g}s was used.\n"
             if args.transcode_length
