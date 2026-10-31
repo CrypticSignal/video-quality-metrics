@@ -1,4 +1,5 @@
 import glob
+import json
 import re
 import sys
 from argparse import Namespace
@@ -9,7 +10,12 @@ from statistics import fmean
 from prettytable import PrettyTable
 
 from args import parser
-from ffmpeg_tasks import calculate_quality_metrics, check_ffmpeg, transcode
+from ffmpeg_tasks import (
+    calculate_quality_metrics,
+    check_ffmpeg,
+    quality_metrics_settings,
+    transcode,
+)
 from graphs import plot_mean_vmaf_graph, plot_per_frame_graph
 from metrics import enabled_metrics, read_per_frame_scores, summarise
 from reference_video import create_overview_video, cut_video
@@ -96,6 +102,23 @@ def write_table(table: PrettyTable, table_path: Path, metrics: list[str]) -> Non
         f.write(table.get_string())
 
 
+def reason_to_recalculate(
+    json_path: Path, settings_path: Path, transcoded_video: Path, settings: dict
+) -> str | None:
+    """Return why the saved quality metrics can't be reused, or None if they can."""
+    if not json_path.exists():
+        return "it does not exist"
+    if json_path.stat().st_mtime <= transcoded_video.stat().st_mtime:
+        return "it is older than the transcoded video"
+    try:
+        saved_settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "the settings used to calculate it are unknown"
+    if saved_settings != settings:
+        return "it was calculated with different settings"
+    return None
+
+
 def run_comparison(
     comparison: Comparison,
     reference_video: str | Path,
@@ -130,17 +153,21 @@ def run_comparison(
             f"{reference_frame_count}, so the quality metrics may be inaccurate."
         )
 
-    # The scores are only reused if they were calculated after the video was last transcoded.
-    if (
-        args.skip_libvmaf
-        and json_path.exists()
-        and json_path.stat().st_mtime > transcoded_video.stat().st_mtime
-    ):
+    # The scores are only reused if they were calculated after the video was last transcoded,
+    # and with the same settings. Otherwise, e.g. a metric that was disabled last time would be
+    # missing, or scores calculated with a different model would be shown.
+    settings_path = folder / "per_frame_metrics_settings.json"
+    settings = quality_metrics_settings(args)
+    reason = None
+    if args.skip_libvmaf:
+        reason = reason_to_recalculate(json_path, settings_path, transcoded_video, settings)
+    if args.skip_libvmaf and reason is None:
         log.info(f"{json_path} exists. Skipping quality metrics calculation.")
     else:
-        if args.skip_libvmaf and json_path.exists():
-            log.info(f"{json_path} is older than {transcoded_video}, so it will be replaced.")
+        if reason:
+            log.info(f"Not reusing {json_path} because {reason}.")
         calculate_quality_metrics(reference_video, transcoded_video, json_path, args)
+        settings_path.write_text(json.dumps(settings, indent=2), encoding="utf-8")
 
     frame_numbers, scores = read_per_frame_scores(json_path, metrics)
     for metric in metrics:

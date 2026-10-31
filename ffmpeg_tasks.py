@@ -98,6 +98,18 @@ def transcode(
     return time_taken
 
 
+def quality_metrics_settings(args: Namespace) -> dict:
+    """Return the settings that affect the quality metrics, so that saved scores are only
+    reused if they were calculated with the same settings."""
+    return {
+        "metrics": enabled_metrics(args),
+        "model": VMAF_MODEL_PATH.name,
+        "phone_model": args.phone_model,
+        "n_subsample": args.n_subsample,
+        "video_filters": args.video_filters,
+    }
+
+
 def calculate_quality_metrics(
     reference_video: str | Path,
     distorted_video: Path,
