@@ -76,13 +76,15 @@ def get_output_folder(filename: str, args: Namespace, multiple_inputs: bool) -> 
     else:
         name = filename
 
+    # The user's own folder is used as given, so that it can be a path or contain spaces.
+    # Only the names that this program generates are sanitised.
     if not args.output_folder:
         output_folder = Path(sanitise(name))
     elif multiple_inputs:
         # Give each video its own subfolder so that the results don't overwrite each other.
-        output_folder = Path(sanitise(args.output_folder)) / sanitise(name)
+        output_folder = Path(args.output_folder) / sanitise(name)
     else:
-        output_folder = Path(sanitise(args.output_folder))
+        output_folder = Path(args.output_folder)
 
     output_folder.mkdir(parents=True, exist_ok=True)
     return output_folder

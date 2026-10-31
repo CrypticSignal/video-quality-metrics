@@ -75,8 +75,8 @@ general_args.add_argument(
     "-o",
     "--output-folder",
     type=str,
-    help="Use this argument if you want a specific name for the output folder. "
-    "If you want the name of the output folder to contain a space, the string must be surrounded in double quotes.\n"
+    help="The folder to save the results in. It can be a relative or absolute path, e.g. results/run1\n"
+    "If the path contains a space, it must be surrounded in double quotes.\n"
     "If the input is a glob pattern that matches multiple videos, each video's results are saved in a subfolder of this folder.",
 )
 

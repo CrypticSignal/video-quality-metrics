@@ -142,7 +142,8 @@ General Arguments:
                         This cut version of the original video is what will be transcoded and used as the reference video.
                         You cannot use this option in conjunction with Overview Mode (--interval).
   -o OUTPUT_FOLDER, --output-folder OUTPUT_FOLDER
-                        Use this argument if you want a specific name for the output folder. If you want the name of the output folder to contain a space, the string must be surrounded in double quotes.
+                        The folder to save the results in. It can be a relative or absolute path, e.g. results/run1
+                        If the path contains a space, it must be surrounded in double quotes.
                         If the input is a glob pattern that matches multiple videos, each video's results are saved in a subfolder of this folder.
   -vf VIDEO_FILTERS, --video-filters VIDEO_FILTERS
                         Apply video filter(s) to the original video before calculating quality metrics. Each filter must be separated by a comma.
