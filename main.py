@@ -23,6 +23,7 @@ from utils import line, log, setup_logging
 from video_info import (
     count_video_frames,
     get_frame_rate,
+    get_hdr_format,
     get_resolution,
     get_video_bitrate,
     get_video_stream,
@@ -118,7 +119,9 @@ def get_codec(info: dict) -> str:
     return video_stream.get("codec_name", "N/A") if video_stream else "N/A"
 
 
-def get_notes(filename: str, rows: list[ResultRow], args: Namespace) -> list[str]:
+def get_notes(
+    filename: str, rows: list[ResultRow], hdr_format: str | None, args: Namespace
+) -> list[str]:
     """Return the notes that go underneath the table."""
     notes = describe_bitrate_sources(rows) + [f"Original File: {filename}"]
     # e.g. "Original video codec: h264". The transcodes' codec is shown as the encoder below.
@@ -139,6 +142,16 @@ def get_notes(filename: str, rows: list[ResultRow], args: Namespace) -> list[str
             f"{args.video_filters}"
         )
     notes.append(f"libvmaf n_subsample: {args.n_subsample}")
+    if hdr_format:
+        notes.append(hdr_warning(filename, hdr_format))
+    luma_metrics = [metric for metric in enabled_metrics(args) if metric != "VMAF"]
+    if luma_metrics:
+        # e.g. "PSNR (Y) and SSIM (Y) are calculated from the luma (brightness) channel only."
+        verb = "is" if len(luma_metrics) == 1 else "are"
+        notes.append(
+            f"{' and '.join(luma_metrics)} {verb} calculated from the luma (brightness) "
+            "channel only."
+        )
     return notes
 
 
@@ -272,6 +285,13 @@ def run_comparison(
     return row
 
 
+def hdr_warning(filename: str, hdr_format: str) -> str:
+    return (
+        f"Warning: {filename} is HDR ({hdr_format}), but the VMAF models were made for SDR video, "
+        "so the VMAF scores may not reflect the quality that people see."
+    )
+
+
 def process_video(
     input_video: str, folder_name: str, args: Namespace, multiple_inputs: bool
 ) -> None:
@@ -288,6 +308,9 @@ def process_video(
             f"Stream {stream['index']} | {stream['codec_type']} | "
             f"Codec: {stream.get('codec_long_name', 'N/A')}"
         )
+    hdr_format = get_hdr_format(info)
+    if hdr_format:
+        log.warning(hdr_warning(filename, hdr_format))
     line()
 
     if args.video_filters:
@@ -323,7 +346,7 @@ def process_video(
             first_column,
             metrics,
             rows,
-            get_notes(filename, rows, args),
+            get_notes(filename, rows, hdr_format, args),
             mean_vmaf_graph,
             args.decimal_places,
         )
@@ -361,7 +384,11 @@ def process_video(
 
     if args.print:
         print_results(
-            first_column, metrics, rows, get_notes(filename, rows, args), args.decimal_places
+            first_column,
+            metrics,
+            rows,
+            get_notes(filename, rows, hdr_format, args),
+            args.decimal_places,
         )
 
 

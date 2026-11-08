@@ -1,0 +1,43 @@
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the requirements and Ruff
+        run: pip install -r requirements.txt ruff
+
+      - name: Check the formatting and lint the code
+        run: |
+          ruff format --check .
+          ruff check .
+
+      # Ubuntu's FFmpeg doesn't have the libvmaf filter, which the end-to-end tests need.
+      # BtbN's builds do.
+      - name: Install FFmpeg with libvmaf
+        run: |
+          curl -sSL -o ffmpeg.tar.xz https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
+          mkdir "$RUNNER_TEMP/ffmpeg"
+          tar -xf ffmpeg.tar.xz -C "$RUNNER_TEMP/ffmpeg" --strip-components=1
+          rm ffmpeg.tar.xz
+          echo "$RUNNER_TEMP/ffmpeg/bin" >> "$GITHUB_PATH"
+
+      # Without libvmaf, the end-to-end tests would be skipped instead of failing.
+      - name: Check that FFmpeg has libvmaf
+        run: |
+          ffmpeg -version | head -1
+          ffmpeg -hide_banner -filters | grep libvmaf
+
+      - name: Run the tests
+        run: python -m unittest tests -v
