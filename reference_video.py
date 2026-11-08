@@ -8,10 +8,10 @@ from utils import exit_program, line, log
 from video_info import get_duration, probe
 
 
-def run_ffmpeg(command: list[str]) -> None:
-    """Run an FFmpeg command, which prints its own errors, and exit if it fails."""
+def run_ffmpeg_quietly(options: list[str]) -> None:
+    """Run FFmpeg with the options, showing only its progress and errors. Exit if it fails."""
     try:
-        subprocess.run(command, check=True)
+        subprocess.run(["ffmpeg", "-loglevel", "error", "-stats", "-y", *options], check=True)
     except subprocess.CalledProcessError:
         exit_program("FFmpeg failed. Its error message is above.")
 
@@ -22,12 +22,8 @@ def cut_video(video_path: str, output_folder: Path, length: float) -> Path:
     output_path = output_folder / f"{Path(video_path).stem} [{length:g}s].mkv"
 
     log.info(f"Cutting the video to a length of {length:g} seconds...")
-    run_ffmpeg(
+    run_ffmpeg_quietly(
         [
-            "ffmpeg",
-            "-loglevel",
-            "error",
-            "-y",
             "-i",
             video_path,
             "-t",
@@ -76,13 +72,8 @@ def create_overview_video(
         clip_name = f"clip{clip_number}.mkv"
         clip_names.append(clip_name)
         log.info(f"Creating clip {clip_number} of {clip_count}...")
-        run_ffmpeg(
+        run_ffmpeg_quietly(
             [
-                "ffmpeg",
-                "-loglevel",
-                "error",
-                "-stats",
-                "-y",
                 "-ss",
                 str((clip_number - 1) * interval),
                 "-i",
@@ -110,13 +101,8 @@ def create_overview_video(
 
     line()
     log.info("Concatenating the clips to create the overview video...")
-    run_ffmpeg(
+    run_ffmpeg_quietly(
         [
-            "ffmpeg",
-            "-loglevel",
-            "error",
-            "-stats",
-            "-y",
             "-f",
             "concat",
             "-safe",

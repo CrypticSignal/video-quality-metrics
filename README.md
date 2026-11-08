@@ -11,6 +11,7 @@ VQM will compare the VMAF, SSIM and PSNR achieved with different values of the s
 - [FFmpeg Builds](#ffmpeg-builds)
 - [About the model files](#about-the-model-files)
 - [Code Structure](#code-structure)
+- [Running the Tests](#running-the-tests)
 
 # What does VQM produce?
 VQM produces a report named `report.html`, which you can open in any web browser. When VQM finishes, it prints the path of the report. The report contains:
@@ -277,3 +278,10 @@ The source of the quoted text, plus additional information about VMAF (such as t
 | `report.py` | Writes the HTML report. |
 | `graphs.py` | Plots the per-frame graphs and the mean VMAF bar graph, for the report. |
 | `utils.py` | Logging and formatting helpers. |
+| `tests.py` | The tests. See [Running the Tests](#running-the-tests). |
+
+# Running the Tests
+```
+python -m unittest tests -v
+```
+The end-to-end tests run VQM on `ForBiggerFun.mp4` in each mode and check the results. They need an FFmpeg build with the libvmaf filter, and take about a minute. If your FFmpeg doesn't have libvmaf, they are skipped and only the quicker tests run.

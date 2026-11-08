@@ -11,8 +11,8 @@ from args import parser
 from ffmpeg_tasks import (
     calculate_quality_metrics,
     check_ffmpeg,
-    quality_metrics_settings,
     transcode,
+    vmaf_model_path,
 )
 from graphs import plot_mean_vmaf_graph, plot_per_frame_graph
 from metrics import enabled_metrics, read_per_frame_scores
@@ -22,7 +22,6 @@ from results import ResultRow, describe_bitrate_sources, print_results
 from utils import line, log, setup_logging
 from video_info import (
     count_video_frames,
-    get_filtered_resolution,
     get_frame_rate,
     get_resolution,
     get_video_bitrate,
@@ -148,6 +147,17 @@ def get_notes(filename: str, rows: list[ResultRow], args: Namespace) -> list[str
 SETTINGS_KEY = "vqm_settings"
 
 
+def quality_metrics_settings(args: Namespace) -> dict:
+    """Return the settings that affect the quality metrics."""
+    return {
+        "metrics": enabled_metrics(args),
+        "model": vmaf_model_path(args).name,
+        "phone_model": args.phone_model,
+        "n_subsample": args.n_subsample,
+        "video_filters": args.video_filters,
+    }
+
+
 def save_settings(json_path: Path, settings: dict) -> None:
     """Add the settings used to calculate the quality metrics to libvmaf's JSON log."""
     data = json.loads(json_path.read_text(encoding="utf-8"))
@@ -170,6 +180,37 @@ def reason_to_recalculate(json_path: Path, transcoded_video: Path, settings: dic
     if saved_settings != settings:
         return "it was calculated with different settings"
     return None
+
+
+def warn_if_mismatched(
+    transcoded_video: Path,
+    reference_frame_count: int | None,
+    reference_resolution: tuple[int, int] | None,
+    args: Namespace,
+) -> None:
+    """Warn if the transcode's frame count or resolution differs from the reference video's."""
+    # libvmaf compares the frames in order, so a frame that was dropped or duplicated when
+    # transcoding means that every frame after it is compared against the wrong frame.
+    frame_count = count_video_frames(transcoded_video)
+    if reference_frame_count and frame_count and frame_count != reference_frame_count:
+        log.warning(
+            f"Warning: {transcoded_video} has {frame_count} frames but the reference video has "
+            f"{reference_frame_count}, so the quality metrics may be inaccurate."
+        )
+
+    # The transcode is scaled to the reference's resolution so that libvmaf can compare them.
+    # This is expected if the transcode was scaled on purpose, but it also happens if e.g. the
+    # reference was cropped with -vf and the transcode wasn't, which makes the scores meaningless.
+    resolution = get_resolution(transcoded_video)
+    if reference_resolution and resolution and resolution != reference_resolution:
+        log.warning(
+            f"Warning: {transcoded_video} is {resolution[0]}x{resolution[1]} but the reference "
+            f"video is {reference_resolution[0]}x{reference_resolution[1]}"
+            + (" after the -vf filter(s)" if args.video_filters else "")
+            + ", so the transcode will be scaled to that resolution before the quality metrics "
+            "are calculated. If you didn't intend to change the resolution, check that the "
+            "same filters were applied to the transcode (e.g. with --output-options)."
+        )
 
 
 def run_comparison(
@@ -195,43 +236,25 @@ def run_comparison(
             reference_video, comparison.encoder_options, transcoded_video, args
         )
 
-    # libvmaf compares the frames in order, so a frame that was dropped or duplicated when
-    # transcoding means that every frame after it is compared against the wrong frame.
-    frame_count = count_video_frames(transcoded_video)
-    if reference_frame_count and frame_count and frame_count != reference_frame_count:
-        log.warning(
-            f"Warning: {transcoded_video} has {frame_count} frames but the reference video has "
-            f"{reference_frame_count}, so the quality metrics may be inaccurate."
-        )
-
-    # The transcode is scaled to the reference's resolution so that libvmaf can compare them.
-    # This is expected if the transcode was scaled on purpose, but it also happens if e.g. the
-    # reference was cropped with -vf and the transcode wasn't, which makes the scores meaningless.
     transcoded_info = probe(transcoded_video)
-    resolution = get_resolution(transcoded_info)
-    if reference_resolution and resolution and resolution != reference_resolution:
-        log.warning(
-            f"Warning: {transcoded_video} is {resolution[0]}x{resolution[1]} but the reference "
-            f"video is {reference_resolution[0]}x{reference_resolution[1]}"
-            + (" after the -vf filter(s)" if args.video_filters else "")
-            + ", so the transcode will be scaled to that resolution before the quality metrics "
-            "are calculated. If you didn't intend to change the resolution, check that the "
-            "same filters were applied to the transcode (e.g. with --output-options)."
-        )
+    warn_if_mismatched(transcoded_video, reference_frame_count, reference_resolution, args)
 
     # The scores are only reused if they were calculated after the video was last transcoded,
     # and with the same settings. Otherwise, e.g. a metric that was disabled last time would be
     # missing, or scores calculated with a different model would be shown.
     settings = quality_metrics_settings(args)
-    reason = None
+    reuse_scores = False
     if args.skip_libvmaf:
         reason = reason_to_recalculate(json_path, transcoded_video, settings)
-    if args.skip_libvmaf and reason is None:
-        log.info(f"{json_path} exists. Skipping quality metrics calculation.")
-    else:
-        if reason:
+        reuse_scores = reason is None
+        if reuse_scores:
+            log.info(f"{json_path} exists. Skipping quality metrics calculation.")
+        else:
             log.info(f"Not reusing {json_path} because {reason}.")
-        calculate_quality_metrics(reference_video, transcoded_video, json_path, args)
+    if not reuse_scores:
+        calculate_quality_metrics(
+            reference_video, transcoded_video, json_path, reference_resolution, args
+        )
         save_settings(json_path, settings)
 
     frame_numbers, scores = read_per_frame_scores(json_path, metrics)
@@ -306,10 +329,7 @@ def process_video(
         )
 
     reference_frame_count = count_video_frames(reference_video)
-    if args.video_filters:
-        reference_resolution = get_filtered_resolution(reference_video, args.video_filters)
-    else:
-        reference_resolution = get_resolution(probe(reference_video))
+    reference_resolution = get_resolution(reference_video, args.video_filters)
     comparisons = get_comparisons(args)
     log.info(f"Comparing: {', '.join(c.label for c in comparisons)}")
     for comparison in comparisons:
