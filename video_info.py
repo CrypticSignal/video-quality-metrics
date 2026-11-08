@@ -40,6 +40,16 @@ def get_video_stream(info: dict) -> dict | None:
     return next((stream for stream in info["streams"] if stream["codec_type"] == "video"), None)
 
 
+# The transfer characteristics that HDR video uses, as FFprobe names them.
+HDR_FORMATS = {"smpte2084": "PQ", "arib-std-b67": "HLG"}
+
+
+def get_hdr_format(info: dict) -> str | None:
+    """Return "PQ" or "HLG" if the first video stream is HDR, or None if it isn't."""
+    video_stream = get_video_stream(info) or {}
+    return HDR_FORMATS.get(video_stream.get("color_transfer"))
+
+
 def get_resolution(
     video_path: str | Path, video_filters: str | None = None
 ) -> tuple[int, int] | None:

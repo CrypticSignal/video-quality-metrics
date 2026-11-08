@@ -31,32 +31,38 @@ The table contains the following for the original video and each value of the sp
 - Mean Peak Signal-to-Noise-Ratio (PSNR)
 - Mean Structural Similarity Index (SSIM)
 
+PSNR and SSIM are calculated from the luma (brightness) channel only, so they are labelled "PSNR (Y)" and "SSIM (Y)". VMAF also only uses the luma.
+
+The VMAF models were made for SDR video. If the input video is HDR (PQ or HLG), VQM warns that the VMAF scores may not reflect the quality that people see.
+
 If you use the `-t` argument or Overview Mode, the table also contains a row for the reference video, i.e. the shorter video that was transcoded.
 
 If you use the `-P` argument, the table is also printed in the terminal. Here's an example of the table, as printed with `-P`:
 ```
-┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
-┃ preset         ┃ Time Taken (s) ┃      Size ┃ Video Bitrate ┃   VMAF ┃   PSNR ┃  SSIM ┃
-┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
-│ Original Video │              - │ 12.917 MB │    1.526 Mbps │      - │      - │     - │
-├────────────────┼────────────────┼───────────┼───────────────┼────────┼────────┼───────┤
-│ veryslow       │         23.073 │ 11.016 MB │    1.358 Mbps │ 97.371 │ 47.691 │ 0.997 │
-│ slower         │         15.238 │ 11.877 MB │    1.473 Mbps │ 97.401 │ 47.844 │ 0.998 │
-│ slow           │          6.144 │ 11.755 MB │    1.456 Mbps │ 97.342 │ 47.800 │ 0.998 │
-│ medium         │          4.360 │ 12.163 MB │    1.511 Mbps │ 97.490 │ 47.958 │ 0.998 │
-│ fast           │          3.904 │ 12.632 MB │    1.573 Mbps │ 97.460 │ 48.016 │ 0.998 │
-│ faster         │          2.999 │ 12.487 MB │    1.554 Mbps │ 97.257 │ 48.006 │ 0.998 │
-│ veryfast       │          2.303 │ 11.107 MB │    1.370 Mbps │ 95.400 │ 46.612 │ 0.997 │
-│ superfast      │          1.705 │ 15.967 MB │    2.017 Mbps │ 96.859 │ 47.502 │ 0.997 │
-│ ultrafast      │          1.185 │ 23.969 MB │    3.083 Mbps │ 97.982 │ 46.288 │ 0.996 │
-└────────────────┴────────────────┴───────────┴───────────────┴────────┴────────┴───────┘
-VMAF/PSNR/SSIM values are the mean of the per-frame scores. The best values are in green.
+┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┓
+┃ preset         ┃ Time Taken (s) ┃      Size ┃ Video Bitrate ┃   VMAF ┃ PSNR (Y) ┃ SSIM (Y) ┃
+┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━┩
+│ Original Video │              - │ 12.917 MB │    1.526 Mbps │      - │        - │        - │
+├────────────────┼────────────────┼───────────┼───────────────┼────────┼──────────┼──────────┤
+│ veryslow       │         23.073 │ 11.016 MB │    1.358 Mbps │ 97.371 │   47.691 │    0.997 │
+│ slower         │         15.238 │ 11.877 MB │    1.473 Mbps │ 97.401 │   47.844 │    0.998 │
+│ slow           │          6.144 │ 11.755 MB │    1.456 Mbps │ 97.342 │   47.800 │    0.998 │
+│ medium         │          4.360 │ 12.163 MB │    1.511 Mbps │ 97.490 │   47.958 │    0.998 │
+│ fast           │          3.904 │ 12.632 MB │    1.573 Mbps │ 97.460 │   48.016 │    0.998 │
+│ faster         │          2.999 │ 12.487 MB │    1.554 Mbps │ 97.257 │   48.006 │    0.998 │
+│ veryfast       │          2.303 │ 11.107 MB │    1.370 Mbps │ 95.400 │   46.612 │    0.997 │
+│ superfast      │          1.705 │ 15.967 MB │    2.017 Mbps │ 96.859 │   47.502 │    0.997 │
+│ ultrafast      │          1.185 │ 23.969 MB │    3.083 Mbps │ 97.982 │   46.288 │    0.996 │
+└────────────────┴────────────────┴───────────┴───────────────┴────────┴──────────┴──────────┘
+VMAF/PSNR (Y)/SSIM (Y) values are the mean of the per-frame scores. The best values are in
+green.
 Video bitrate confidence = high, method = video packet sizes
 Original File: ForBiggerFun.mp4
 Original video codec: h264
 Transcoded with: libx264
 FFmpeg output options: None
 libvmaf n_subsample: 1
+PSNR (Y) and SSIM (Y) are calculated from the luma (brightness) channel only.
 ```
 _Command used: `python main.py -i ForBiggerFun.mp4 -e libx264 -p preset -v veryslow slower slow medium fast faster veryfast superfast ultrafast`_
 
@@ -125,15 +131,15 @@ python main.py -i "ForBiggerFun.mp4" -e libx265 -c "preset slow crf 24,preset me
 ```
 The table produced will look something like this:
 ```
-┏━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
-┃ Combination            ┃ Time Taken (s) ┃      Size ┃ Video Bitrate ┃   VMAF ┃   PSNR ┃  SSIM ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
-│ Original Video         │              - │ 12.917 MB │    1.526 Mbps │      - │      - │     - │
-├────────────────────────┼────────────────┼───────────┼───────────────┼────────┼────────┼───────┤
-│ -preset slow -crf 24   │         36.423 │  9.114 MB │    1.104 Mbps │ 97.704 │ 47.687 │ 0.997 │
-│ -preset medium -crf 23 │         14.131 │  9.364 MB │    1.138 Mbps │ 97.069 │ 47.380 │ 0.997 │
-└────────────────────────┴────────────────┴───────────┴───────────────┴────────┴────────┴───────┘
-VMAF/PSNR/SSIM values are the mean of the per-frame scores. The best values are in green.
+┏━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┓
+┃ Combination            ┃ Time Taken (s) ┃      Size ┃ Video Bitrate ┃   VMAF ┃ PSNR (Y) ┃ SSIM (Y) ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━┩
+│ Original Video         │              - │ 12.917 MB │    1.526 Mbps │      - │        - │        - │
+├────────────────────────┼────────────────┼───────────┼───────────────┼────────┼──────────┼──────────┤
+│ -preset slow -crf 24   │         36.423 │  9.114 MB │    1.104 Mbps │ 97.704 │   47.687 │    0.997 │
+│ -preset medium -crf 23 │         14.131 │  9.364 MB │    1.138 Mbps │ 97.069 │   47.380 │    0.997 │
+└────────────────────────┴────────────────┴───────────┴───────────────┴────────┴──────────┴──────────┘
+VMAF/PSNR (Y)/SSIM (Y) values are the mean of the per-frame scores. The best values are in green.
 ```
 The report will also contain a graph comparing each combination:
 
@@ -285,3 +291,5 @@ The source of the quoted text, plus additional information about VMAF (such as t
 python -m unittest tests -v
 ```
 The end-to-end tests run VQM on `ForBiggerFun.mp4` in each mode and check the results. They need an FFmpeg build with the libvmaf filter, and take about a minute. If your FFmpeg doesn't have libvmaf, they are skipped and only the quicker tests run.
+
+The tests also run on GitHub Actions for every pull request and every push to `master`, with an FFmpeg build that has libvmaf.

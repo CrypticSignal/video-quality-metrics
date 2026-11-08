@@ -2,16 +2,17 @@ import json
 from argparse import Namespace
 from pathlib import Path
 
-# The name that libvmaf uses for each metric in its JSON log.
-LIBVMAF_NAMES = {"VMAF": "vmaf", "PSNR": "psnr_y", "SSIM": "float_ssim"}
+# The name that libvmaf uses for each metric in its JSON log. PSNR and SSIM are only calculated
+# from the luma (Y) channel, which the "(Y)" in their names says.
+LIBVMAF_NAMES = {"VMAF": "vmaf", "PSNR (Y)": "psnr_y", "SSIM (Y)": "float_ssim"}
 
 
 def enabled_metrics(args: Namespace) -> list[str]:
     metrics = ["VMAF"]
     if not args.disable_psnr:
-        metrics.append("PSNR")
+        metrics.append("PSNR (Y)")
     if not args.disable_ssim:
-        metrics.append("SSIM")
+        metrics.append("SSIM (Y)")
     return metrics
 
 
@@ -21,7 +22,7 @@ def read_per_frame_scores(
     """Read libvmaf's JSON log.
 
     Returns the frame numbers and the per-frame scores of each metric, e.g.
-    ([0, 1, ...], {"VMAF": [95.1, 94.8, ...], "PSNR": [...]})
+    ([0, 1, ...], {"VMAF": [95.1, 94.8, ...], "PSNR (Y)": [...]})
     """
     with open(json_path, encoding="utf-8") as f:
         frames = json.load(f)["frames"]

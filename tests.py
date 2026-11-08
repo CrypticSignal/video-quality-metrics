@@ -13,9 +13,10 @@ import unittest
 from argparse import Namespace
 from pathlib import Path
 
-from main import get_comparisons, get_folder_names, reason_to_recalculate
+from main import get_comparisons, get_folder_names, get_notes, reason_to_recalculate
 from results import ResultRow, describe_bitrate_sources, get_columns, is_best
 from utils import format_si
+from video_info import get_hdr_format
 
 REPO_FOLDER = Path(__file__).parent
 VIDEO = REPO_FOLDER / "ForBiggerFun.mp4"
@@ -122,6 +123,54 @@ class TestResults(unittest.TestCase):
             describe_bitrate_sources(different),
             ["Video bitrate:", "  a: confidence = high", "  b: confidence = low"],
         )
+
+
+class TestNotes(unittest.TestCase):
+    """The notes underneath the table."""
+
+    def notes(self, hdr_format: str | None = None, **disabled: bool) -> str:
+        """Return the notes as one string, with the default arguments apart from these."""
+        args = Namespace(
+            transcode_length=None,
+            interval=None,
+            encoder="libx264",
+            output_options=None,
+            video_filters=None,
+            n_subsample=1,
+            disable_psnr=disabled.get("disable_psnr", False),
+            disable_ssim=disabled.get("disable_ssim", False),
+        )
+        return "\n".join(get_notes("clip.mp4", [], hdr_format, args))
+
+    def test_psnr_and_ssim_are_described_as_luma_only(self):
+        """The notes say that PSNR (Y) and SSIM (Y) only use the luma, if they're calculated."""
+        self.assertIn(
+            "PSNR (Y) and SSIM (Y) are calculated from the luma (brightness) channel only.",
+            self.notes(),
+        )
+        self.assertIn(
+            "SSIM (Y) is calculated from the luma (brightness) channel only.",
+            self.notes(disable_psnr=True),
+        )
+        self.assertNotIn("luma", self.notes(disable_psnr=True, disable_ssim=True))
+
+    def test_hdr_warning(self):
+        """HDR videos get a warning, because the VMAF models were made for SDR video."""
+        self.assertIn("clip.mp4 is HDR (PQ)", self.notes(hdr_format="PQ"))
+        self.assertNotIn("HDR", self.notes())
+
+    def test_hdr_format(self):
+        """PQ and HLG are recognised as HDR from FFprobe's color_transfer."""
+
+        def info(color_transfer: str) -> dict:
+            return {"streams": [{"codec_type": "video", "color_transfer": color_transfer}]}
+
+        self.assertEqual(get_hdr_format(info("smpte2084")), "PQ")
+        self.assertEqual(get_hdr_format(info("arib-std-b67")), "HLG")
+        self.assertIsNone(get_hdr_format(info("bt709")))
+        # A file without a video stream, or without color_transfer, isn't HDR.
+        self.assertIsNone(get_hdr_format({"streams": []}))
+        self.assertIsNone(get_hdr_format({"streams": [{"codec_type": "video"}]}))
 
 
 class TestReusingSavedScores(unittest.TestCase):
@@ -269,7 +318,12 @@ class TestEndToEnd(unittest.TestCase):
         for crf in ("30", "40"):
             self.assert_scores(f"libx264_crf_{crf}", ["vmaf", "psnr_y", "float_ssim"])
         # -t 1 cuts the video, so the report has a row for the cut "Reference Video".
-        self.assert_report("Reference Video", "Only the first 1s was used.")
+        self.assert_report(
+            "Reference Video",
+            "Only the first 1s was used.",
+            "PSNR (Y)",
+            "PSNR (Y) and SSIM (Y) are calculated from the luma (brightness) channel only.",
+        )
         # -P prints the table.
         self.assertIn("Time Taken (s)", output)
 
@@ -342,6 +396,37 @@ class TestEndToEnd(unittest.TestCase):
         self.assert_scores("libx264_crf_40", ["vmaf", "psnr_y", "float_ssim"])
         # Both videos are 720x1280 when decoded, so there is no resolution mismatch.
         self.assertNotIn("Warning", result.stdout)
+
+    def test_hdr_video(self):
+        """An HDR video is compared as usual, with a warning in the output and the report."""
+        # A copy of the first second, labelled as HDR (PQ). Only the label changes, not the
+        # pixels, but that is all that VQM checks.
+        hdr_video = self.output_folder.parent / "hdr.mkv"
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-loglevel",
+                "error",
+                "-i",
+                str(VIDEO),
+                "-t",
+                "1",
+                "-map",
+                "0:V",
+                "-c",
+                "copy",
+                "-bsf:v",
+                "h264_metadata=colour_primaries=9:transfer_characteristics=16:matrix_coefficients=9",
+                str(hdr_video),
+            ],
+            check=True,
+        )
+        result = run_main(
+            "-i", str(hdr_video), "-o", str(self.output_folder), "-p", "crf", "-v", "40"
+        )
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("hdr.mkv is HDR (PQ)", result.stdout)
+        self.assert_report("hdr.mkv is HDR (PQ)")
 
     def test_skipping_transcoding_and_reusing_scores(self):
         """-st and -sl reuse the previous run's transcode and scores, if they are still valid."""
