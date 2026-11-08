@@ -40,18 +40,16 @@ def get_video_stream(info: dict) -> dict | None:
     return next((stream for stream in info["streams"] if stream["codec_type"] == "video"), None)
 
 
-def get_resolution(info: dict) -> tuple[int, int] | None:
-    """Return the width and height of the first video stream, or None if there isn't one."""
-    video_stream = get_video_stream(info)
-    if video_stream is None or "width" not in video_stream:
-        return None
-    return video_stream["width"], video_stream["height"]
+def get_resolution(
+    video_path: str | Path, video_filters: str | None = None
+) -> tuple[int, int] | None:
+    """Return the resolution of the video's frames as FFmpeg decodes them, after the filters
+    (if any) are applied to them, e.g. a crop.
 
-
-def get_filtered_resolution(video_path: str | Path, video_filters: str) -> tuple[int, int] | None:
-    """Return the resolution of the video after the filters are applied to it, e.g. a crop.
-
-    Returns None if it can't be found, e.g. because a filter is invalid.
+    This is the resolution that libvmaf sees. It can differ from the resolution that FFprobe
+    reports, e.g. FFmpeg rotates a phone video that is stored as 1920x1080 with a rotation of
+    90 degrees, so its frames are 1080x1920. Returns None if it can't be found, e.g. because a
+    filter is invalid.
     """
     # The showinfo filter logs each frame's size, e.g. " s:1920x800 ".
     result = subprocess.run(
@@ -68,7 +66,7 @@ def get_filtered_resolution(video_path: str | Path, video_filters: str) -> tuple
             "-frames:v",
             "1",
             "-vf",
-            f"{video_filters},showinfo",
+            f"{video_filters},showinfo" if video_filters else "showinfo",
             "-f",
             "null",
             "-",
@@ -108,7 +106,7 @@ def get_frame_rate(info: dict) -> str:
     """Return the frame rate of the first video stream, e.g. "24000/1001 (23.976)"."""
     video_stream = get_video_stream(info)
     if video_stream is None:
-        return None, None
+        return "N/A"
     fraction = video_stream["r_frame_rate"]
     return f"{fraction} ({float(Fraction(fraction)):.3f})"
 

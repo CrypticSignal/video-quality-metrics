@@ -103,27 +103,17 @@ def transcode(
     return time_taken
 
 
-def quality_metrics_settings(args: Namespace) -> dict:
-    """Return the settings that affect the quality metrics, so that saved scores are only
-    reused if they were calculated with the same settings."""
-    return {
-        "metrics": enabled_metrics(args),
-        "model": vmaf_model_path(args).name,
-        "phone_model": args.phone_model,
-        "n_subsample": args.n_subsample,
-        "video_filters": args.video_filters,
-    }
-
-
 def calculate_quality_metrics(
     reference_video: str | Path,
     distorted_video: Path,
     json_path: Path,
+    reference_resolution: tuple[int, int] | None,
     args: Namespace,
 ) -> None:
     """Use libvmaf to compare the distorted video against the reference video.
 
-    The per-frame scores are saved to json_path.
+    The per-frame scores are saved to json_path. reference_resolution is the reference video's
+    resolution after the -vf filters, or None if it couldn't be found.
     """
     # The model option is parsed again by libvmaf, as key=value pairs separated by colons.
     # This matters for absolute paths, e.g. "C:/Users" or "/Users/Sam's Mac".
@@ -150,13 +140,18 @@ def calculate_quality_metrics(
         vmaf_options += f":feature={'|'.join(features)}"
 
     video_filters = f"{args.video_filters}," if args.video_filters else ""
+    # libvmaf needs both videos to have the same resolution, so if the transcode was scaled
+    # (e.g. with --output-options), scale it back. This does nothing if they already match.
+    # The scale2ref filter isn't used for this because it has two outputs, and a filter with
+    # several outputs can make FFmpeg 7 fail with "Assertion best_input >= 0 failed".
+    scale = ""
+    if reference_resolution:
+        width, height = reference_resolution
+        scale = f"scale={width}:{height}:flags=bicubic,"
     filtergraph = (
         f"[0:V]{video_filters}setpts=PTS-STARTPTS[reference];"
-        f"[1:V]setpts=PTS-STARTPTS[distorted];"
-        # libvmaf needs both videos to have the same resolution, so if the transcode was scaled
-        # (e.g. with --output-options), scale it back. This does nothing if they already match.
-        f"[distorted][reference]scale2ref=flags=bicubic[distorted_scaled][reference_scaled];"
-        f"[distorted_scaled][reference_scaled]libvmaf={vmaf_options}[vmaf]"
+        f"[1:V]{scale}setpts=PTS-STARTPTS[distorted];"
+        f"[distorted][reference]libvmaf={vmaf_options}[vmaf]"
     )
 
     # As an input option, -r makes FFmpeg ignore the timestamps in the file and give the frames
