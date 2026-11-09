@@ -25,7 +25,19 @@ def line() -> None:
     log.info("-" * width)
 
 
+class VideoError(Exception):
+    """An error that stops one input video from being processed, but not the others."""
+
+
+def fail(message: str) -> NoReturn:
+    """Stop processing the current input video. main.py logs the message and moves on to the
+    next input video, if there is one."""
+    raise VideoError(message)
+
+
 def exit_program(message: str) -> NoReturn:
+    """Exit because of an error that would affect every input video, e.g. FFmpeg not being
+    installed."""
     line()
     log.error(f"{message}\nThis program will now exit.")
     line()

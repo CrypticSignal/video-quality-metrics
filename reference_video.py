@@ -4,16 +4,19 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from utils import exit_program, line, log
+from utils import fail, line, log
 from video_info import get_duration, probe
 
 
 def run_ffmpeg_quietly(options: list[str]) -> None:
-    """Run FFmpeg with the options, showing only its progress and errors. Exit if it fails."""
+    """Run FFmpeg with the options, showing only its progress and errors.
+
+    If it fails, processing of the current input video stops.
+    """
     try:
         subprocess.run(["ffmpeg", "-loglevel", "error", "-stats", "-y", *options], check=True)
     except subprocess.CalledProcessError:
-        exit_program("FFmpeg failed. Its error message is above.")
+        fail("FFmpeg failed. Its error message is above.")
 
 
 def cut_video(video_path: str, output_folder: Path, length: float) -> Path:
@@ -53,11 +56,9 @@ def create_overview_video(
     """
     duration = get_duration(probe(video_path))
     if interval > duration:
-        exit_program(f"The interval ({interval}s) may not be longer than the video ({duration}s).")
+        fail(f"The interval ({interval}s) may not be longer than the video ({duration}s).")
     if clip_length > duration:
-        exit_program(
-            f"The clip length ({clip_length}s) may not be longer than the video ({duration}s)."
-        )
+        fail(f"The clip length ({clip_length}s) may not be longer than the video ({duration}s).")
 
     clips_folder = output_folder / "clips"
     clips_folder.mkdir(exist_ok=True)

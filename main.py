@@ -19,19 +19,19 @@ from metrics import enabled_metrics, read_per_frame_scores
 from reference_video import create_overview_video, cut_video
 from report import write_report
 from results import ResultRow, describe_bitrate_sources, print_results
-from utils import line, log, setup_logging
+from utils import VideoError, line, log, setup_logging
 from video_info import (
-    count_video_frames,
     get_frame_rate,
     get_hdr_format,
     get_resolution,
     get_video_bitrate,
     get_video_stream,
     probe,
+    read_video_packets,
 )
 
 # Update this whenever the program is changed.
-VERSION_DATE = "31st October 2026"
+VERSION_DATE = "9th November 2026"
 
 
 def sanitise(name: str) -> str:
@@ -110,8 +110,16 @@ def get_output_folder(filename: str, args: Namespace, multiple_inputs: bool) -> 
 
 def video_row(label: str, video_path: str | Path, info: dict, args: Namespace) -> ResultRow:
     """Return the table row of a video, without any quality metrics."""
-    bitrate, bitrate_source = get_video_bitrate(video_path, info, args.decimal_places)
-    return ResultRow(label, get_codec(info), int(info["format"]["size"]), bitrate, bitrate_source)
+    packets = read_video_packets(video_path, info)
+    bitrate, bitrate_source = get_video_bitrate(info, packets.total_size, args.decimal_places)
+    return ResultRow(
+        label,
+        get_codec(info),
+        int(info["format"]["size"]),
+        bitrate,
+        bitrate_source,
+        frame_count=packets.count or None,
+    )
 
 
 def get_codec(info: dict) -> str:
@@ -197,6 +205,7 @@ def reason_to_recalculate(json_path: Path, transcoded_video: Path, settings: dic
 
 def warn_if_mismatched(
     transcoded_video: Path,
+    frame_count: int | None,
     reference_frame_count: int | None,
     reference_resolution: tuple[int, int] | None,
     args: Namespace,
@@ -204,7 +213,6 @@ def warn_if_mismatched(
     """Warn if the transcode's frame count or resolution differs from the reference video's."""
     # libvmaf compares the frames in order, so a frame that was dropped or duplicated when
     # transcoding means that every frame after it is compared against the wrong frame.
-    frame_count = count_video_frames(transcoded_video)
     if reference_frame_count and frame_count and frame_count != reference_frame_count:
         log.warning(
             f"Warning: {transcoded_video} has {frame_count} frames but the reference video has "
@@ -249,8 +257,11 @@ def run_comparison(
             reference_video, comparison.encoder_options, transcoded_video, args
         )
 
-    transcoded_info = probe(transcoded_video)
-    warn_if_mismatched(transcoded_video, reference_frame_count, reference_resolution, args)
+    row = video_row(comparison.label, transcoded_video, probe(transcoded_video), args)
+    row.transcode_time = transcode_time
+    warn_if_mismatched(
+        transcoded_video, row.frame_count, reference_frame_count, reference_resolution, args
+    )
 
     # The scores are only reused if they were calculated after the video was last transcoded,
     # and with the same settings. Otherwise, e.g. a metric that was disabled last time would be
@@ -271,8 +282,6 @@ def run_comparison(
         save_settings(json_path, settings)
 
     frame_numbers, scores = read_per_frame_scores(json_path, metrics)
-    row = video_row(comparison.label, transcoded_video, transcoded_info, args)
-    row.transcode_time = transcode_time
     for metric in metrics:
         row.mean_scores[metric] = fmean(scores[metric])
         row.per_frame_graphs[metric] = plot_per_frame_graph(
@@ -351,7 +360,9 @@ def process_video(
             args.decimal_places,
         )
 
-    reference_frame_count = count_video_frames(reference_video)
+    # The last row is the reference video's: the original video's, or the cut or overview
+    # video's if one was made.
+    reference_frame_count = rows[-1].frame_count
     reference_resolution = get_resolution(reference_video, args.video_filters)
     comparisons = get_comparisons(args)
     log.info(f"Comparing: {', '.join(c.label for c in comparisons)}")
@@ -433,8 +444,26 @@ def main() -> None:
     check_ffmpeg()
 
     folder_names = get_folder_names(input_videos)
+    failed_videos = []
     for input_video in input_videos:
-        process_video(input_video, folder_names[input_video], args, len(input_videos) > 1)
+        # An error with one video (e.g. a file that FFmpeg can't read) doesn't stop the others
+        # from being processed.
+        try:
+            process_video(input_video, folder_names[input_video], args, len(input_videos) > 1)
+        except VideoError as error:
+            line()
+            log.error(f"Unable to process {input_video}:\n{error}")
+            failed_videos.append(input_video)
+
+    if failed_videos:
+        if len(input_videos) > 1:
+            line()
+            log.error(
+                f"{len(failed_videos)} of {len(input_videos)} videos could not be processed:\n"
+                + "\n".join(failed_videos)
+            )
+        line()
+        sys.exit(1)
 
 
 if __name__ == "__main__":

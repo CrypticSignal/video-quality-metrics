@@ -1,11 +1,12 @@
 import json
 import re
 import subprocess
+from dataclasses import dataclass
 from fractions import Fraction
 from pathlib import Path
 from time import perf_counter
 
-from utils import exit_program, format_si, log
+from utils import fail, format_si, log
 
 
 def probe(video_path: str | Path) -> dict:
@@ -27,12 +28,36 @@ def probe(video_path: str | Path) -> dict:
             check=True,
         )
     except subprocess.CalledProcessError as error:
-        exit_program(f"FFprobe was unable to read {video_path}:\n{error.stderr.strip()}")
+        fail(f"FFprobe was unable to read {video_path}:\n{error.stderr.strip()}")
     return json.loads(result.stdout)
 
 
 def get_duration(info: dict) -> float:
+    """Return the container's duration in seconds, or 0 if it is unknown."""
     return float(info["format"].get("duration", 0))
+
+
+def get_video_duration(info: dict) -> float:
+    """Return the duration of the first video stream in seconds, or the container's duration
+    if the stream's is unknown.
+
+    The container's duration is the longest of its streams, so it is too long for the video if
+    e.g. the audio carries on after the video ends, which makes the video bitrate too low.
+    """
+    video_stream = get_video_stream(info) or {}
+    try:
+        # MP4 and MOV store each stream's duration.
+        if video_stream.get("duration"):
+            return float(video_stream["duration"])
+        # MKV stores it as a tag, e.g. "DURATION": "00:00:10.010000000". The tag can have a
+        # language suffix, e.g. "DURATION-eng".
+        for key, value in video_stream.get("tags", {}).items():
+            if key.upper().startswith("DURATION"):
+                hours, minutes, seconds = value.split(":")
+                return int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+    except ValueError:
+        pass
+    return get_duration(info)
 
 
 def get_video_stream(info: dict) -> dict | None:
@@ -88,30 +113,6 @@ def get_resolution(
     return (int(match[1]), int(match[2])) if match else None
 
 
-def count_video_frames(video_path: str | Path) -> int | None:
-    """Return the number of frames in the first video stream, or None if it can't be counted."""
-    # Each packet of a video stream holds one frame. Counting them is much faster than decoding.
-    result = subprocess.run(
-        [
-            "ffprobe",
-            "-v",
-            "error",
-            "-select_streams",
-            "V:0",
-            "-count_packets",
-            "-show_entries",
-            "stream=nb_read_packets",
-            "-of",
-            "csv=p=0",
-            str(video_path),
-        ],
-        capture_output=True,
-        text=True,
-    )
-    output = result.stdout.strip()
-    return int(output) if output.isdigit() else None
-
-
 def get_frame_rate(info: dict) -> str:
     """Return the frame rate of the first video stream, e.g. "24000/1001 (23.976)"."""
     video_stream = get_video_stream(info)
@@ -122,15 +123,16 @@ def get_frame_rate(info: dict) -> str:
 
 
 def get_video_bitrate(
-    video_path: str | Path, info: dict, decimal_places: int
+    info: dict, video_packets_size: int, decimal_places: int
 ) -> tuple[float | None, str | None]:
     """Return the video bitrate in bits per second and how it was found, e.g. (1526000,
-    "confidence = high, method = video packet sizes"). decimal_places is used for logging.
+    "confidence = high, method = video packet sizes"). video_packets_size is the total size of
+    the video packets in bytes, from read_video_packets. decimal_places is used for logging.
 
     The most accurate method is tried first, falling back to less reliable methods. Both are
     None if the bitrate couldn't be determined.
     """
-    duration = get_duration(info)
+    duration = get_video_duration(info)
     streams = info["streams"]
 
     def describe(bitrate: float, confidence: str, method: str) -> tuple[float, str]:
@@ -140,12 +142,9 @@ def get_video_bitrate(
         )
         return bitrate, f"confidence = {confidence}, method = {method}"
 
-    # Method 1: Total size of the video packets divided by the duration.
-    if duration > 0:
-        log.info(f"Calculating the video bitrate of {video_path} from its packet sizes...")
-        total_bytes = sum_video_packet_sizes(video_path, duration)
-        if total_bytes > 0:
-            return describe(total_bytes * 8 / duration, "high", "video packet sizes")
+    # Method 1: Total size of the video packets divided by the video's duration.
+    if duration > 0 and video_packets_size > 0:
+        return describe(video_packets_size * 8 / duration, "high", "video packet sizes")
 
     # Method 2: The bitrate reported in the video stream's metadata.
     for stream in streams:
@@ -168,8 +167,18 @@ def get_video_bitrate(
     return None, None
 
 
-def sum_video_packet_sizes(video_path: str | Path, duration: float) -> int:
-    """Return the total size (in bytes) of the first video stream's packets."""
+@dataclass
+class VideoPackets:
+    total_size: int  # In bytes.
+    count: int  # Each packet of a video stream holds one frame, so this is the frame count.
+
+
+def read_video_packets(video_path: str | Path, info: dict) -> VideoPackets:
+    """Return the total size and the number of the first video stream's packets.
+
+    Both are found in one pass over the file, because reading every packet of a long video
+    takes a while. Both are 0 if FFprobe can't read the packets.
+    """
     command = [
         "ffprobe",
         "-v",
@@ -183,7 +192,10 @@ def sum_video_packet_sizes(video_path: str | Path, duration: float) -> int:
         str(video_path),
     ]
 
-    total_bytes = 0
+    log.info(f"Reading the video packets of {video_path}...")
+    duration = get_video_duration(info)
+    total_size = 0
+    count = 0
     last_progress_update = perf_counter()
 
     # Each line of output is "<pts_time>,<size>". This can take a while for long videos,
@@ -192,13 +204,14 @@ def sum_video_packet_sizes(video_path: str | Path, duration: float) -> int:
         for output_line in process.stdout:
             pts_time, _, size = output_line.strip().partition(",")
             if size.isdigit():
-                total_bytes += int(size)
+                total_size += int(size)
+                count += 1
 
-            if perf_counter() - last_progress_update >= 1:
+            if duration > 0 and perf_counter() - last_progress_update >= 1:
                 try:
                     log.info(f"Progress: {min(float(pts_time) / duration, 1):.1%}")
                 except ValueError:
                     pass
                 last_progress_update = perf_counter()
 
-    return total_bytes
+    return VideoPackets(total_size, count)

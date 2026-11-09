@@ -6,6 +6,7 @@ filter. They are skipped if FFmpeg doesn't have it. The other tests only need th
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -16,7 +17,7 @@ from pathlib import Path
 from main import get_comparisons, get_folder_names, get_notes, reason_to_recalculate
 from results import ResultRow, describe_bitrate_sources, get_columns, is_best
 from utils import format_si
-from video_info import get_hdr_format
+from video_info import get_hdr_format, get_video_duration, probe, read_video_packets
 
 REPO_FOLDER = Path(__file__).parent
 VIDEO = REPO_FOLDER / "ForBiggerFun.mp4"
@@ -171,6 +172,55 @@ class TestNotes(unittest.TestCase):
         # A file without a video stream, or without color_transfer, isn't HDR.
         self.assertIsNone(get_hdr_format({"streams": []}))
         self.assertIsNone(get_hdr_format({"streams": [{"codec_type": "video"}]}))
+
+
+class TestVideoDuration(unittest.TestCase):
+    """The video bitrate is calculated from the video stream's duration, not the container's."""
+
+    def test_video_duration(self):
+        def info(stream: dict, container_duration: str = "12.5") -> dict:
+            return {
+                "format": {"duration": container_duration},
+                "streams": [{"codec_type": "video", **stream}],
+            }
+
+        # MP4 and MOV store the stream's duration.
+        self.assertEqual(get_video_duration(info({"duration": "10.0"})), 10.0)
+        # MKV stores it as a tag, which can have a language suffix.
+        self.assertEqual(
+            get_video_duration(info({"tags": {"DURATION": "00:01:02.500000000"}})), 62.5
+        )
+        self.assertEqual(get_video_duration(info({"tags": {"DURATION-eng": "01:00:00.0"}})), 3600)
+        # Without either, or if the tag can't be read, the container's duration is used.
+        self.assertEqual(get_video_duration(info({})), 12.5)
+        self.assertEqual(get_video_duration(info({"tags": {"DURATION": "N/A"}})), 12.5)
+
+
+@unittest.skipUnless(shutil.which("ffprobe"), "FFprobe is not installed")
+class TestReadingVideoPackets(unittest.TestCase):
+    def test_packet_count_is_the_frame_count(self):
+        """One pass over the packets gives the same frame count as FFprobe's -count_frames."""
+        frame_count = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "V:0",
+                "-count_frames",
+                "-show_entries",
+                "stream=nb_read_frames",
+                "-of",
+                "csv=p=0",
+                str(VIDEO),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        packets = read_video_packets(VIDEO, probe(VIDEO))
+        self.assertEqual(packets.count, int(frame_count))
+        self.assertGreater(packets.total_size, 0)
 
 
 class TestReusingSavedScores(unittest.TestCase):
@@ -427,6 +477,43 @@ class TestEndToEnd(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout)
         self.assertIn("hdr.mkv is HDR (PQ)", result.stdout)
         self.assert_report("hdr.mkv is HDR (PQ)")
+
+    def test_one_failed_video_does_not_stop_the_others(self):
+        """If one of the videos that a glob pattern matches can't be read, the others are still
+        processed, and the failed ones are listed at the end."""
+        videos_folder = self.output_folder.parent / "videos"
+        videos_folder.mkdir()
+        (videos_folder / "a_broken.mp4").write_text("This is not a video.")
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-loglevel",
+                "error",
+                "-i",
+                str(VIDEO),
+                "-t",
+                "1",
+                "-c",
+                "copy",
+                str(videos_folder / "b_working.mp4"),
+            ],
+            check=True,
+        )
+        result = run_main(
+            "-i",
+            str(videos_folder / "*.mp4"),
+            "-o",
+            str(self.output_folder),
+            "-p",
+            "crf",
+            "-v",
+            "40",
+        )
+        # The broken video is first, so the working one is processed after the error.
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("1 of 2 videos could not be processed", result.stdout)
+        self.assertNotIn("Traceback", result.stdout)
+        self.assertTrue((self.output_folder / "b_working_mp4" / "report.html").exists())
 
     def test_skipping_transcoding_and_reusing_scores(self):
         """-st and -sl reuse the previous run's transcode and scores, if they are still valid."""
