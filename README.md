@@ -69,7 +69,7 @@ _Command used: `python main.py -i ForBiggerFun.mp4 -e libx264 -p preset -v verys
 ## Output folder
 The results are saved in a folder named after the input video (e.g. `ForBiggerFun_mp4`), unless you specify one with `-o`. It contains:
 - `report.html`
-- A subfolder for each encoder parameter value or combination, containing the transcoded video (in the original video's container if it can hold the transcode's video and audio, otherwise MKV) and `per_frame_metrics.json` (libvmaf's per-frame scores, which `-sl` reuses).
+- A subfolder for each encoder parameter value or combination, containing the transcoded video (in the original video's container if it can hold the transcode's video and audio, otherwise MKV) and `per_frame_metrics.json` (libvmaf's per-frame scores, which `-sl` reuses) and `transcode_settings.json` (the settings the transcode was made with, which `-st` checks).
 - The reference video, if you use the `-t` argument or Overview Mode.
 
 ## Graphs
@@ -182,7 +182,8 @@ General Arguments:
   -sl, --skip-libvmaf   Skip quality metrics calculation if its output file exists, is newer than the transcoded video
                         and was calculated with the same settings (metrics, model, -n and -vf).
   -st, --skip-transcoding
-                        Skip encoding if output file exists.
+                        Skip transcoding if the transcode exists, finished, and was made from the same video with the same
+                        options (encoder, encoder options, --input-options, --output-options, -t and Overview Mode).
   -d, --debug           Print debug message and command line.
   -P, --print           Print the metrics table in the terminal.
   --input-options INPUT_OPTIONS

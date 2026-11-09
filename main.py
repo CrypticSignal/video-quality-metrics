@@ -9,10 +9,12 @@ from statistics import fmean
 
 from args import parser
 from ffmpeg_tasks import (
+    CONTAINERS,
     calculate_quality_metrics,
     check_ffmpeg,
     choose_container,
     transcode,
+    transcode_command,
     vmaf_model_path,
 )
 from graphs import plot_mean_vmaf_graph, plot_per_frame_graph
@@ -50,27 +52,57 @@ class Comparison:
 
 
 def get_comparisons(args: Namespace) -> list[Comparison]:
+    """Return the encoder options to compare.
+
+    Raises ValueError if a combination is empty or isn't made of parameter-value pairs, or if two
+    comparisons are the same.
+    """
+    comparisons = []
     if args.combinations:
-        comparisons = []
         # e.g. "preset slow crf 24,preset medium crf 23"
         for combination in args.combinations.split(","):
             words = combination.split()
+            if not words:
+                raise ValueError(
+                    f"One of the combinations in '{args.combinations}' is empty. Check for an "
+                    "extra comma."
+                )
+            if len(words) % 2 != 0:
+                raise ValueError(
+                    f"'{combination.strip()}' must be pairs of a parameter and its value, e.g. "
+                    "'preset slow crf 24'."
+                )
             # e.g. ["preset", "slow", "crf", "24"] -> ["-preset", "slow", "-crf", "24"]
             options = [f"-{word}" if i % 2 == 0 else word for i, word in enumerate(words)]
             name = "_".join(words)
             comparisons.append(
                 Comparison(" ".join(options), options, sanitise(f"{args.encoder}_{name}"))
             )
-        return comparisons
+    else:
+        comparisons = [
+            Comparison(
+                value,
+                [f"-{args.parameter}", value],
+                sanitise(f"{args.encoder}_{args.parameter}_{value}"),
+            )
+            for value in args.values
+        ]
 
-    return [
-        Comparison(
-            value,
-            [f"-{args.parameter}", value],
-            sanitise(f"{args.encoder}_{args.parameter}_{value}"),
+    # Each comparison is saved in a folder named after it, so two with the same name would
+    # overwrite each other's results.
+    folders: dict[str, Comparison] = {}
+    for comparison in comparisons:
+        other = folders.setdefault(comparison.name, comparison)
+        if other is comparison:
+            continue
+        if other.label == comparison.label:
+            raise ValueError(f"'{comparison.label}' is listed more than once.")
+        raise ValueError(
+            f"'{other.label}' and '{comparison.label}' would be saved in the same folder "
+            f"({comparison.name}), because characters other than letters, numbers, - and _ are "
+            "replaced with _ in folder names."
         )
-        for value in args.values
-    ]
+    return comparisons
 
 
 def get_folder_names(input_videos: list[str]) -> dict[str, str]:
@@ -204,6 +236,49 @@ def reason_to_recalculate(json_path: Path, transcoded_video: Path, settings: dic
     return None
 
 
+# The file that the settings used to make a transcode are saved in, in the transcode's folder.
+TRANSCODE_SETTINGS_FILE = "transcode_settings.json"
+
+
+def transcode_settings(
+    comparison: Comparison, original_video: str, reference_video: str | Path, args: Namespace
+) -> dict:
+    """Return the settings that affect the transcode.
+
+    The cut or overview video is made again on each run, so the original video and the options
+    used to make the reference video from it are saved, not the reference video itself.
+    """
+    original = Path(original_video).resolve()
+    stat = original.stat()
+    # The FFmpeg command without "ffmpeg" and the output path, whose extension can differ.
+    command = transcode_command(reference_video, comparison.encoder_options, Path(), args)
+    return {
+        "original_video": {"path": str(original), "size": stat.st_size, "mtime": stat.st_mtime},
+        "transcode_length": args.transcode_length,
+        "interval": args.interval,
+        "clip_length": args.clip_length if args.interval else None,
+        "command": command[1:-1],
+    }
+
+
+def reusable_transcode(folder: Path, settings: dict) -> tuple[Path | None, str | None]:
+    """Return the transcode that -st can reuse, or None and the reason that there isn't one."""
+    settings_path = folder / TRANSCODE_SETTINGS_FILE
+    try:
+        saved = json.loads(settings_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        # No transcode has finished in this folder, or it was made by an older version of VQM.
+        return None, "the settings used to make it are unknown"
+    except (OSError, ValueError):
+        return None, f"{settings_path} could not be read"
+    transcoded_video = folder / saved.get("file", "")
+    if not saved.get("file") or not transcoded_video.is_file():
+        return None, "it does not exist"
+    if saved.get("settings") != settings:
+        return None, "it was made with different settings"
+    return transcoded_video, None
+
+
 def warn_if_mismatched(
     transcoded_video: Path,
     frame_count: int | None,
@@ -250,29 +325,40 @@ def run_comparison(
     folder.mkdir(exist_ok=True)
     json_path = folder / "per_frame_metrics.json"
 
-    # The transcode is in the original video's container if it can be, otherwise MKV.
-    possible_paths = [
-        folder / f"{comparison.name}{extension}"
-        for extension in dict.fromkeys([Path(original_video).suffix.lower(), ".mkv"])
-    ]
-    existing_paths = [path for path in possible_paths if path.exists()]
+    # -st only reuses a transcode that finished, and was made from the same video with the
+    # same options. Otherwise, e.g. a change to --output-options would be silently ignored.
+    settings_path = folder / TRANSCODE_SETTINGS_FILE
+    settings_of_transcode = transcode_settings(comparison, original_video, reference_video, args)
+    transcoded_video = None
+    if args.skip_transcoding:
+        transcoded_video, reason = reusable_transcode(folder, settings_of_transcode)
+        if transcoded_video:
+            log.info(f"{transcoded_video} exists. Skipping transcoding.")
+        else:
+            log.info(f"Not reusing the previous transcode in {folder} because {reason}.")
 
-    if args.skip_transcoding and existing_paths:
-        transcoded_video = existing_paths[0]
-        log.info(f"{transcoded_video} exists. Skipping transcoding.")
-        transcode_time = None
-    else:
+    transcode_time = None
+    if transcoded_video is None:
+        # The transcode is in the original video's container if it can be, otherwise MKV.
         extension = choose_container(
             original_video, reference_video, comparison.encoder_options, folder, args
         )
         transcoded_video = folder / f"{comparison.name}{extension}"
-        # Delete a transcode in the other container from a previous run, so that -st can't
-        # reuse it instead of this one.
-        for path in existing_paths:
-            if path != transcoded_video:
-                path.unlink()
+        # The settings are deleted first and only saved once the transcode has finished, so a
+        # transcode that was interrupted is never reused.
+        settings_path.unlink(missing_ok=True)
+        # Delete a transcode in another container from a previous run.
+        for old_transcode in folder.glob(f"{comparison.name}.*"):
+            if old_transcode.suffix.lower() in CONTAINERS and old_transcode != transcoded_video:
+                old_transcode.unlink()
         transcode_time = transcode(
             reference_video, comparison.encoder_options, transcoded_video, args
+        )
+        settings_path.write_text(
+            json.dumps(
+                {"file": transcoded_video.name, "settings": settings_of_transcode}, indent=2
+            ),
+            encoding="utf-8",
         )
 
     row = video_row(comparison.label, transcoded_video, probe(transcoded_video), args)
@@ -444,6 +530,10 @@ def main() -> None:
             f"The clip length ({args.clip_length}s) may not be longer than the interval "
             f"({args.interval}s)."
         )
+    try:
+        get_comparisons(args)
+    except ValueError as error:
+        parser.error(str(error))
 
     # The input can be a path or a glob pattern.
     if Path(args.input_video).exists():

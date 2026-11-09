@@ -102,7 +102,8 @@ general_args.add_argument(
     "--skip-transcoding",
     action="store_true",
     default=False,
-    help="Skip transcoding if output file exists.",
+    help="Skip transcoding if the transcode exists, finished, and was made from the same video with the same\n"
+    "options (encoder, encoder options, --input-options, --output-options, -t and Overview Mode).",
 )
 
 general_args.add_argument(

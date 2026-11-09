@@ -15,7 +15,13 @@ from argparse import Namespace
 from pathlib import Path
 
 from ffmpeg_tasks import choose_container
-from main import get_comparisons, get_folder_names, get_notes, reason_to_recalculate
+from main import (
+    get_comparisons,
+    get_folder_names,
+    get_notes,
+    reason_to_recalculate,
+    reusable_transcode,
+)
 from results import ResultRow, describe_bitrate_sources, get_columns, is_best
 from utils import format_si
 from video_info import get_hdr_format, get_video_duration, probe, read_video_packets
@@ -70,6 +76,27 @@ class TestComparisons(unittest.TestCase):
         )
         self.assertEqual(comparisons[0].encoder_options, ["-preset", "slow", "-crf", "24"])
         self.assertEqual(comparisons[0].name, "libx264_preset_slow_crf_24")
+
+    def assert_invalid(self, message: str, combinations: str | None = None, values=None) -> None:
+        args = Namespace(
+            combinations=combinations, encoder="libx264", parameter="crf", values=values
+        )
+        with self.assertRaises(ValueError) as context:
+            get_comparisons(args)
+        self.assertIn(message, str(context.exception))
+
+    def test_invalid_comparisons(self):
+        """Combinations that aren't parameter-value pairs, and repeated comparisons, are
+        rejected rather than passed to FFmpeg."""
+        # A parameter without a value would make FFmpeg read the output path as its value.
+        self.assert_invalid("must be pairs of a parameter and its value", "preset slow crf")
+        # A trailing comma would add a transcode without any options.
+        self.assert_invalid("is empty", "crf 23,")
+        # The same transcode would be made twice, in the same folder.
+        self.assert_invalid("'-crf 23' is listed more than once", "crf 23, crf 23")
+        self.assert_invalid("'23' is listed more than once", values=["23", "23"])
+        # Different values, but the same folder name once "." is replaced.
+        self.assert_invalid("would be saved in the same folder", "crf 23.5,crf 23_5")
 
     def test_folder_names_only_use_the_path_when_filenames_clash(self):
         """Videos with the same filename get different folders, so results aren't overwritten."""
@@ -311,6 +338,43 @@ class TestReusingSavedScores(unittest.TestCase):
         self.assertEqual(self.reason(), "it was calculated with different settings")
 
 
+class TestReusingTranscodes(unittest.TestCase):
+    """When -st reuses the transcode made by a previous run instead of transcoding again."""
+
+    def setUp(self):
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.folder = Path(folder.name)
+        self.video = self.folder / "libx264_crf_23.mp4"
+
+    def save(self, settings: dict, file: str = "libx264_crf_23.mp4") -> None:
+        data = {"file": file, "settings": settings}
+        (self.folder / "transcode_settings.json").write_text(json.dumps(data))
+
+    def test_reused_if_made_with_the_same_settings(self):
+        self.video.write_text("")
+        self.save({"command": ["-crf", "23"]})
+        self.assertEqual(
+            reusable_transcode(self.folder, {"command": ["-crf", "23"]}), (self.video, None)
+        )
+
+    def test_not_reused(self):
+        def reason() -> str | None:
+            return reusable_transcode(self.folder, {"command": ["-crf", "23"]})[1]
+
+        # The transcode was interrupted (the settings are only saved once it finishes), or was
+        # made by an older version of VQM.
+        self.video.write_text("")
+        self.assertEqual(reason(), "the settings used to make it are unknown")
+        # The options changed, e.g. --output-options.
+        self.save({"command": ["-crf", "23", "-g", "60"]})
+        self.assertEqual(reason(), "it was made with different settings")
+        # The transcode was deleted.
+        self.save({"command": ["-crf", "23"]})
+        self.video.unlink()
+        self.assertEqual(reason(), "it does not exist")
+
+
 class TestArgumentErrors(unittest.TestCase):
     """Invalid arguments are rejected with an error message.
 
@@ -349,6 +413,8 @@ class TestArgumentErrors(unittest.TestCase):
             "--interval",
             "5",
         )
+        # A combination needs a value for each parameter.
+        self.assert_error("must be pairs of a parameter and its value", "-c", "preset slow crf")
         # 3s clips taken every 2s would overlap.
         self.assert_error(
             "may not be longer than the interval",
@@ -603,6 +669,11 @@ class TestEndToEnd(unittest.TestCase):
         output = self.run_vqm("-p", "crf", "-v", "40", "-t", "1", "-st", "-sl", "--disable-ssim")
         self.assertIn("calculated with different settings", output)
         self.assert_scores("libx264_crf_40", ["vmaf", "psnr_y"])
+
+        # The video is transcoded again if its options change.
+        output = self.run_vqm("-p", "crf", "-v", "40", "-t", "1", "-st", "--output-options=-g 30")
+        self.assertIn("made with different settings", output)
+        self.assertNotIn("Skipping transcoding", output)
 
 
 if __name__ == "__main__":
