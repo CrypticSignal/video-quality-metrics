@@ -14,6 +14,7 @@ import unittest
 from argparse import Namespace
 from pathlib import Path
 
+from ffmpeg_tasks import choose_container
 from main import get_comparisons, get_folder_names, get_notes, reason_to_recalculate
 from results import ResultRow, describe_bitrate_sources, get_columns, is_best
 from utils import format_si
@@ -221,6 +222,50 @@ class TestReadingVideoPackets(unittest.TestCase):
         packets = read_video_packets(VIDEO, probe(VIDEO))
         self.assertEqual(packets.count, int(frame_count))
         self.assertGreater(packets.total_size, 0)
+
+
+def ffmpeg_has_libx264() -> bool:
+    """Return whether FFmpeg is installed and has the libx264 encoder."""
+    try:
+        encoders = subprocess.run(
+            ["ffmpeg", "-hide_banner", "-encoders"], capture_output=True, text=True
+        ).stdout
+    except OSError:
+        return False
+    return " libx264 " in encoders
+
+
+@unittest.skipUnless(ffmpeg_has_libx264(), "FFmpeg does not have the libx264 encoder")
+class TestChoosingTheContainer(unittest.TestCase):
+    """A transcode is saved in the original video's container if it can hold its streams."""
+
+    def setUp(self):
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.folder = Path(folder.name)
+
+    def container(self, original_video: str, output_options: str | None = None) -> str:
+        """Return the extension that a libx264 -crf 40 transcode of ForBiggerFun.mp4 (H.264
+        video and AAC audio) is saved with, if the original video had this filename."""
+        args = Namespace(
+            encoder="libx264", input_options=None, output_options=output_options, av1_cpu_used=5
+        )
+        return choose_container(original_video, VIDEO, ["-crf", "40"], self.folder, args)
+
+    def test_container(self):
+        # MP4 can hold H.264 and AAC, and the test transcode is deleted.
+        self.assertEqual(self.container("video.mp4"), ".mp4")
+        self.assertEqual(list(self.folder.iterdir()), [])
+        # The extension's case doesn't matter.
+        self.assertEqual(self.container("video.MOV"), ".mov")
+        # WebM can't hold H.264.
+        self.assertEqual(self.container("video.webm"), ".mkv")
+        # Raw streams, uncompressed formats, AVI and files without an extension use MKV.
+        for original_video in ("video.h264", "video.y4m", "video.avi", "video"):
+            self.assertEqual(self.container(original_video), ".mkv")
+        # An invalid output option makes the test transcode fail, so MKV is used. The real
+        # transcode then fails with FFmpeg's error message.
+        self.assertEqual(self.container("video.mp4", "-not-an-option 1"), ".mkv")
 
 
 class TestReusingSavedScores(unittest.TestCase):
@@ -514,6 +559,35 @@ class TestEndToEnd(unittest.TestCase):
         self.assertIn("1 of 2 videos could not be processed", result.stdout)
         self.assertNotIn("Traceback", result.stdout)
         self.assertTrue((self.output_folder / "b_working_mp4" / "report.html").exists())
+
+    def audio_codec(self, video: Path) -> str:
+        return subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "a:0",
+                "-show_entries",
+                "stream=codec_name",
+                "-of",
+                "csv=p=0",
+                str(video),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+
+    def test_transcode_container_and_audio(self):
+        """The transcode is an MP4 like the original, with the audio copied, unless an audio
+        codec is set with --output-options."""
+        self.run_vqm("-p", "crf", "-v", "40", "-t", "1")
+        transcode = self.output_folder / "libx264_crf_40" / "libx264_crf_40.mp4"
+        self.assertEqual(self.audio_codec(transcode), "aac")
+
+        self.run_vqm("-p", "crf", "-v", "40", "-t", "1", "--output-options=-c:a libopus")
+        self.assertEqual(self.audio_codec(transcode), "opus")
 
     def test_skipping_transcoding_and_reusing_scores(self):
         """-st and -sl reuse the previous run's transcode and scores, if they are still valid."""

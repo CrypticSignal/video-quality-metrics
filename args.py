@@ -135,7 +135,8 @@ general_args.add_argument(
     help="Set general FFmpeg output options.\n"
     "Use FFmpeg syntax and wrap it in double quotes. Examples:\n"
     '--output-options="-c:a aac -b:a 128k"\n'
-    '--output-options="-x264-params keyint=123:min-keyint=20"',
+    '--output-options="-x264-params keyint=123:min-keyint=20"\n'
+    "The audio is copied unless an audio codec (or -an) is set here.",
 )
 
 encoder_args.add_argument(

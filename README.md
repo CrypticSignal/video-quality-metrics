@@ -69,7 +69,7 @@ _Command used: `python main.py -i ForBiggerFun.mp4 -e libx264 -p preset -v verys
 ## Output folder
 The results are saved in a folder named after the input video (e.g. `ForBiggerFun_mp4`), unless you specify one with `-o`. It contains:
 - `report.html`
-- A subfolder for each encoder parameter value or combination, containing the transcoded video and `per_frame_metrics.json` (libvmaf's per-frame scores, which `-sl` reuses).
+- A subfolder for each encoder parameter value or combination, containing the transcoded video (in the original video's container if it can hold the transcode's video and audio, otherwise MKV) and `per_frame_metrics.json` (libvmaf's per-frame scores, which `-sl` reuses).
 - The reference video, if you use the `-t` argument or Overview Mode.
 
 ## Graphs
@@ -192,7 +192,9 @@ General Arguments:
   --output-options OUTPUT_OPTIONS
                         Set general FFmpeg output options.
                         Use FFmpeg syntax and wrap it in double quotes. Examples:
-                        --output-options="-c:a aac -b:a 128k"--output-options="-x264-params keyint=123:min-keyint=20"
+                        --output-options="-c:a aac -b:a 128k"
+                        --output-options="-x264-params keyint=123:min-keyint=20"
+                        The audio is copied unless an audio codec (or -an) is set here.
 
 Encoder Arguments:
   --av1-cpu-used <1-8>  Only applicable if the libaom-av1 (AV1) encoder is chosen. Set the quality/encoding speed tradeoff.

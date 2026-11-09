@@ -11,6 +11,7 @@ from args import parser
 from ffmpeg_tasks import (
     calculate_quality_metrics,
     check_ffmpeg,
+    choose_container,
     transcode,
     vmaf_model_path,
 )
@@ -236,6 +237,7 @@ def warn_if_mismatched(
 
 def run_comparison(
     comparison: Comparison,
+    original_video: str,
     reference_video: str | Path,
     reference_frame_count: int | None,
     reference_resolution: tuple[int, int] | None,
@@ -246,13 +248,29 @@ def run_comparison(
     """Transcode the reference video, calculate the quality metrics and return the table row."""
     folder = output_folder / comparison.name
     folder.mkdir(exist_ok=True)
-    transcoded_video = folder / f"{comparison.name}.mkv"
     json_path = folder / "per_frame_metrics.json"
 
-    if args.skip_transcoding and transcoded_video.exists():
+    # The transcode is in the original video's container if it can be, otherwise MKV.
+    possible_paths = [
+        folder / f"{comparison.name}{extension}"
+        for extension in dict.fromkeys([Path(original_video).suffix.lower(), ".mkv"])
+    ]
+    existing_paths = [path for path in possible_paths if path.exists()]
+
+    if args.skip_transcoding and existing_paths:
+        transcoded_video = existing_paths[0]
         log.info(f"{transcoded_video} exists. Skipping transcoding.")
         transcode_time = None
     else:
+        extension = choose_container(
+            original_video, reference_video, comparison.encoder_options, folder, args
+        )
+        transcoded_video = folder / f"{comparison.name}{extension}"
+        # Delete a transcode in the other container from a previous run, so that -st can't
+        # reuse it instead of this one.
+        for path in existing_paths:
+            if path != transcoded_video:
+                path.unlink()
         transcode_time = transcode(
             reference_video, comparison.encoder_options, transcoded_video, args
         )
@@ -370,6 +388,7 @@ def process_video(
         rows.append(
             run_comparison(
                 comparison,
+                input_video,
                 reference_video,
                 reference_frame_count,
                 reference_resolution,

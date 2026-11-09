@@ -77,6 +77,73 @@ def run_ffmpeg(command: list[str], message: str, args: Namespace) -> float:
     return time_taken
 
 
+def transcode_command(
+    reference_video: str | Path, encoder_options: list[str], output_path: Path, args: Namespace
+) -> list[str]:
+    """Return the FFmpeg command that transcodes the video using the encoder options."""
+    command = ["ffmpeg", "-y"]
+    if args.input_options:
+        command += shlex.split(args.input_options)
+    # The audio is copied rather than re-encoded, so that the time taken is only the video
+    # encoder's. FFmpeg uses the last value of an option, so an audio codec (or -an) in
+    # --output-options replaces "-c:a copy".
+    command += ["-i", str(reference_video), "-c:v", args.encoder, "-c:a", "copy"]
+    if args.output_options:
+        command += shlex.split(args.output_options)
+    if args.encoder == "libaom-av1":
+        command += ["-b:v", "0", "-cpu-used", str(args.av1_cpu_used)]
+    return command + encoder_options + [str(output_path)]
+
+
+# The containers that a transcode can be saved in if the original video is in one, so that the
+# Size column compares like with like. Other formats are raw streams without timestamps (e.g.
+# .h264) or can't hold compressed video (e.g. .y4m), so MKV is used for them. AVI isn't
+# included because it can't store the timestamps of B-frames, which most encoders use.
+CONTAINERS = {".mp4", ".m4v", ".mov", ".mkv", ".webm", ".ts", ".m2ts", ".mts"}
+
+
+def choose_container(
+    original_video: str | Path,
+    reference_video: str | Path,
+    encoder_options: list[str],
+    folder: Path,
+    args: Namespace,
+) -> str:
+    """Return the file extension to save the transcode with, e.g. ".mp4".
+
+    This is the original video's extension if its container can hold the transcode's streams,
+    otherwise ".mkv", which can hold almost any codec. FFmpeg doesn't have a way of asking
+    whether a container supports a codec, so a test transcode of the first frame is made.
+    """
+    extension = Path(original_video).suffix.lower()
+    if extension == ".mkv":
+        return extension
+    if extension not in CONTAINERS:
+        name = extension or "a file without an extension"
+        log.info(
+            f"The transcode will be saved as MKV, because {name} is not one of the containers "
+            "that transcodes can be saved in."
+        )
+        return ".mkv"
+
+    test_path = folder / f"container_test{extension}"
+    command = transcode_command(reference_video, encoder_options, test_path, args)
+    # -frames:v and -t go just before the output path, so that they replace any in the options.
+    command[-1:-1] = ["-frames:v", "1", "-t", "1"]
+    result = subprocess.run(
+        command[:1] + ["-v", "error"] + command[1:], capture_output=True, text=True
+    )
+    test_path.unlink(missing_ok=True)
+
+    if result.returncode == 0:
+        return extension
+    log.info(
+        f"The transcode will be saved as MKV, because FFmpeg could not save a test transcode as "
+        f"{extension}. Its error was:\n{result.stderr.strip()}"
+    )
+    return ".mkv"
+
+
 def transcode(
     reference_video: str | Path,
     encoder_options: list[str],
@@ -87,16 +154,7 @@ def transcode(
 
     Returns the time taken in seconds.
     """
-    command = ["ffmpeg", "-y"]
-    if args.input_options:
-        command += shlex.split(args.input_options)
-    command += ["-i", str(reference_video), "-c:v", args.encoder]
-    if args.output_options:
-        command += shlex.split(args.output_options)
-    if args.encoder == "libaom-av1":
-        command += ["-b:v", "0", "-cpu-used", str(args.av1_cpu_used)]
-    command += encoder_options + [str(output_path)]
-
+    command = transcode_command(reference_video, encoder_options, output_path, args)
     description = " ".join(encoder_options)
     time_taken = run_ffmpeg(command, f"Transcoding {reference_video} using '{description}'", args)
     log.info(f"Output file: {output_path}")
