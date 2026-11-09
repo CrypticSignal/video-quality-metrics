@@ -213,6 +213,8 @@ Encoder Arguments:
                         The list of combinations must be surrounded in quotes, and each combination must be separated by a comma.
                         For example, if you want to compare the combination of preset veryslow and CRF 18, with the combination of preset slower and CRF 16:
                         -c 'preset veryslow crf 18,preset slower crf 16'
+                        A combination can also be a single parameter, e.g. -c 'crf 22,crf 23,preset slow crf 24'
+                        If this option is used, -p and -v are ignored.
 
 Overview Mode Arguments:
   -cl <1-60>, --clip-length <1-60>
